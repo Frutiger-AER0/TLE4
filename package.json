@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "support/node_modules/.bin/expo start",
-    "android": "support/node_modules/.bin/expo start --android",
-    "ios": "support/node_modules/.bin/expo start --ios",
-    "web": "support/node_modules/.bin/expo start --web"
+    "start": "node_modules/.bin/expo start",
+    "android": "node_modules/.bin/expo start --android",
+    "ios": "node_modules/.bin/expo start --ios",
+    "web": "node_modules/.bin/expo start --web"
   },
   "dependencies": {
     "expo": "~54.0.34",
