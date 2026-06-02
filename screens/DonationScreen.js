@@ -1,5 +1,6 @@
 import React from "react";
 import {Text, View} from "react-native";
+import DonationForm from "../components/forms/DonationForm";
 
 export default function DonationScreen() {
     return (
@@ -9,6 +10,7 @@ export default function DonationScreen() {
             <Text style={{fontSize: 24, marginBottom: 20, color: 'black'}}>Doneer!</Text>
 
             {/*form*/}
+            <DonationForm/>
 
             {/*nav*/}
         </View>
