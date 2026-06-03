@@ -4,6 +4,7 @@ import {NavigationContainer, DefaultTheme} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {Ionicons} from '@expo/vector-icons';
 import Ontdek from "../../Home";
+import MapScreen from "../../screens/MapScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -55,7 +56,7 @@ export default function AppNavigator() {
                     />
                     <Tab.Screen
                         name="map"
-                        component={Ontdek}
+                        component={MapScreen}
                         options={{title: 'Kaart'}}
                     />
                     <Tab.Screen
