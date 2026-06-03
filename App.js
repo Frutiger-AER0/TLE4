@@ -17,8 +17,8 @@ export default function App() {
           <NavigationContainer>
               <Stack.Navigator initialRouteName="Opening">
                   <Stack.Screen name="Opening" component={OpeningScreen} options={{ headerShown: false }} />
-                  <Stack.Screen name="Login" component={LoginScreen} />
-                  <Stack.Screen name="Registry" component={RegistryScreen} />
+                  <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+                  <Stack.Screen name="Registry" component={RegistryScreen} options={{ headerShown: false }} />
               </Stack.Navigator>
           </NavigationContainer>
       </GestureHandlerRootView>

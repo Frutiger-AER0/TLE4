@@ -3,9 +3,9 @@ import React from "react";
 
 export default function RegistryScreen() {
     return (
-        <View>
+        <View className="flex-1 items-center justify-center bg-offWhite">
             {/*header*/}
-            <Text>Registry</Text>
+            <Text className="text-xl">Registreer (placeholder)</Text>
         </View>
     );
 }
