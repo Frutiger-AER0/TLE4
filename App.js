@@ -1,12 +1,12 @@
 import {NavigationContainer} from "@react-navigation/native";
-import RegistryScreen from "./screens/RegistryScreen";
+import OpeningScreen from "./screens/OpeningScreen";
 
 import "./global.css"
 
 export default function App() {
   return (
     <NavigationContainer>
-        <RegistryScreen/>
+        <OpeningScreen/>
     </NavigationContainer>
   );
 }
