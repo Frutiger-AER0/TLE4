@@ -97,7 +97,7 @@ function DonationForm({onSubmit, initialData, isSubmitting}) {
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.card}>
                     <View className="mb-4">
-                        <Text style={styles.title}>Doneren</Text> </View>
+                        <Text style={styles.title}>Doneren</Text></View>
                     <View className="space-y-4">
                         {/* Onderwerp */}
                         <View className="mb-4">
@@ -199,7 +199,7 @@ function DonationForm({onSubmit, initialData, isSubmitting}) {
                             </View>
 
                             <View className="w-[48%] mb-4">
-                                <Text style={styles.label}>>Achternaam*</Text>
+                                <Text style={styles.label}>Achternaam*</Text>
                                 <TextInput style={styles.input}
                                            value={formData.lastName}
                                            onChangeText={(text) => handleInputChange('lastName', text)}
