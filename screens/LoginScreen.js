@@ -1,11 +1,16 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View } from "react-native";
+import AppHeader from "../components/layout/AppHeader";
+import LoginForm from "../components/LoginForm";
+import {SafeAreaView} from "react-native-safe-area-context";
 
-export default function LoginScreen() {
+export default function LoginScreen({ navigation }) {
     return (
-        <View className="flex-1 items-center justify-center bg-offWhite">
-            {/*header*/}
-            <Text className="text-xl">Login screen (placeholder)</Text>
-        </View>
+        <SafeAreaView className="flex-1 bg-offWhite">
+            <AppHeader/>
+            <View className="flex-1 items-center justify-center pt-6">
+                <LoginForm onSuccess={() => navigation.navigate("Home")} />
+            </View>
+        </SafeAreaView>
     );
 }

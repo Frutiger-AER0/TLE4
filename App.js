@@ -6,6 +6,7 @@ import {createStackNavigator} from "@react-navigation/stack";
 import OpeningScreen from "./screens/OpeningScreen";
 import LoginScreen from "./screens/LoginScreen";
 import RegistryScreen from "./screens/RegistryScreen";
+import HomeScreen from "./screens/HomeScreen";
 
 import "./global.css"
 
@@ -19,6 +20,7 @@ export default function App() {
                   <Stack.Screen name="Opening" component={OpeningScreen} options={{ headerShown: false }} />
                   <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
                   <Stack.Screen name="Registry" component={RegistryScreen} options={{ headerShown: false }} />
+                  <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
               </Stack.Navigator>
           </NavigationContainer>
       </GestureHandlerRootView>

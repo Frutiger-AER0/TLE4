@@ -3,7 +3,7 @@ import {View} from 'react-native';
 import {NavigationContainer, DefaultTheme} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {Ionicons} from '@expo/vector-icons';
-import Ontdek from "../../Home";
+import Ontdek from "../../screens/HomeScreen";
 
 const Tab = createBottomTabNavigator();
 
