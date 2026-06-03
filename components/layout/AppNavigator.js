@@ -3,7 +3,7 @@ import {View} from 'react-native';
 import {NavigationContainer, DefaultTheme} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {Ionicons} from '@expo/vector-icons';
-import Home from "../../screens/Homescreen";
+import HomeScreen from "../../screens/Homescreen";
 import MapScreen from "../../screens/MapScreen";
 
 const Tab = createBottomTabNavigator();
@@ -51,8 +51,8 @@ export default function AppNavigator() {
                     {/*Bij component moeten de pagina's worden gezet*/}
                     <Tab.Screen
                         name="search"
-                        component={Ontdek}
-                        options={{title: 'Ontdek'}}
+                        component={HomeScreen}
+                        options={{title: 'Home'}}
                     />
                     <Tab.Screen
                         name="map"
@@ -61,12 +61,12 @@ export default function AppNavigator() {
                     />
                     <Tab.Screen
                         name="calendar"
-                        component={Ontdek}
+                        component={HomeScreen}
                         options={{title: 'Agenda'}}
                     />
                     <Tab.Screen
                         name="person"
-                        component={Ontdek}
+                        component={HomeScreen}
                         options={{title: 'Profiel'}}
                     />
                 </Tab.Navigator>
