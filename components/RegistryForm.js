@@ -1,5 +1,5 @@
-import {useState} from "react";
-import {ActivityIndicator, Alert, TextInput, TouchableOpacity, View} from "react-native";
+import React, {useState} from "react";
+import {ActivityIndicator, Text, Alert, TextInput, TouchableOpacity, View} from "react-native";
 
 export default function RegistryForm({ onSuccess }) {
     const [username, setUsername] = useState("");
@@ -69,16 +69,16 @@ export default function RegistryForm({ onSuccess }) {
 
     return (
         <View className="w-full px-6">
-            <Text className="text-lg font-semibold text-darkBlue mb-2">Register</Text>
-            <TextInput className="w-full border border-gray-300 rounded-md px-3 py-2 mb-3 bg-white" placeholder="Username"        value={username}        onChangeText={setUsername}        autoCapitalize="none"        returnKeyType="next"      />
-            <TextInput className="w-full border border-gray-300 rounded-md px-3 py-2 mb-3 bg-white"        placeholder="Email"        value={email}        onChangeText={setEmail}        keyboardType="email-address"        autoCapitalize="none"        returnKeyType="next"      />
-            <TextInput className="w-full border border-gray-300 rounded-md px-3 py-2 mb-3 bg-white"        placeholder="Password"        value={password}        onChangeText={setPassword}        secureTextEntry        returnKeyType="next"      />
-            <TextInput className="w-full border border-gray-300 rounded-md px-3 py-2 mb-4 bg-white"        placeholder="Confirm password"        value={password2}        onChangeText={setPassword2}        secureTextEntry        returnKeyType="done"      />
-            <TouchableOpacity className="w-full bg-blue py-3 rounded-md items-center mb-3" onPress={handleSubmit}        disabled={loading}        accessibilityLabel="Register"      >
+            <Text className="text-3xl text-center font-semibold text-darkBlue mb-2">Registreer</Text>
+            <TextInput className="w-full border border-gray-300 rounded-md px-3 py-2 mb-3 bg-white" placeholder="Gebruikersnaam" value={username} onChangeText={setUsername} autoCapitalize="none" returnKeyType="next"/>
+            <TextInput className="w-full border border-gray-300 rounded-md px-3 py-2 mb-3 bg-white" placeholder="Email" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" returnKeyType="next"/>
+            <TextInput className="w-full border border-gray-300 rounded-md px-3 py-2 mb-3 bg-white" placeholder="Wachtwoord" value={password} onChangeText={setPassword} secureTextEntry returnKeyType="next"/>
+            <TextInput className="w-full border border-gray-300 rounded-md px-3 py-2 mb-4 bg-white" placeholder="Wachtwoord voor Verificatie" value={verifyPassword} onChangeText={setVerifyPassword} secureTextEntry returnKeyType="done"/>
+            <TouchableOpacity className="w-full bg-blue py-3 rounded-md items-center mb-3" onPress={handleSubmit} disabled={loading} accessibilityLabel="Registreer account">
                 {loading ? (
                     <ActivityIndicator color="#fff" />
                 ) : (
-                    <Text className="text-white text-base font-semibold">Create account</Text>
+                    <Text className="text-white text-base font-semibold">Maak account</Text>
                 )}
             </TouchableOpacity>
         </View>
