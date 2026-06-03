@@ -1,19 +1,10 @@
-import React from 'react';
-import {StyleSheet, Text, View} from 'react-native';
+import React from "react";
+import { View, Text } from "react-native";
 
-export default function HomeScreen({ navigation }) {
-
+export default function HomeScreen() {
     return (
-        <View style={styles.container}>
-            <Text>Dit is de Ontdek page</Text>
+        <View className="flex-1 items-center justify-center bg-offWhite">
+            <Text>Dit is de Home page</Text>
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-});

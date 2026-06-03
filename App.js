@@ -6,7 +6,7 @@ import {StatusBar} from 'expo-status-bar';
 import OpeningScreen from "./screens/OpeningScreen";
 import LoginScreen from "./screens/LoginScreen";
 import RegistryScreen from "./screens/RegistryScreen";
-import HomeScreen from "./screens/HomeScreen";
+import MainTabs from "./components/layout/MainTabs";
 
 import "./global.css"
 
@@ -21,7 +21,7 @@ export default function App() {
                   <Stack.Screen name="Opening" component={OpeningScreen} options={{ headerShown: false }} />
                   <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
                   <Stack.Screen name="Registry" component={RegistryScreen} options={{ headerShown: false }} />
-                  <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+                  <Stack.Screen name="Home" component={MainTabs} options={{ headerShown: false }} />
               </Stack.Navigator>
           </NavigationContainer>
       </GestureHandlerRootView>
