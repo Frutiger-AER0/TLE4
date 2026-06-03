@@ -4,7 +4,7 @@ import {NavigationContainer, DefaultTheme} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {Ionicons} from '@expo/vector-icons';
 import Ontdek from "../../Home";
-import DonationScreen from "../../screens/DonationScreen";
+import ActionScreen from "../../screens/ActionScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -51,7 +51,7 @@ export default function AppNavigator() {
                     {/*Bij component moeten de pagina's worden gezet*/}
                     <Tab.Screen
                         name="search"
-                        component={DonationScreen}
+                        component={ActionScreen}
                         options={{title: 'Ontdek'}}
                     />
                     <Tab.Screen
