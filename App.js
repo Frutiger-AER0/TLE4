@@ -1,12 +1,26 @@
+import React from "react";
+import {GestureHandlerRootView} from "react-native-gesture-handler";
 import {NavigationContainer} from "@react-navigation/native";
+import {createStackNavigator} from "@react-navigation/stack";
+
 import OpeningScreen from "./screens/OpeningScreen";
+import LoginScreen from "./screens/LoginScreen";
+import RegistryScreen from "./screens/RegistryScreen";
 
 import "./global.css"
 
+const Stack = createStackNavigator();
+
 export default function App() {
   return (
-    <NavigationContainer>
-        <OpeningScreen/>
-    </NavigationContainer>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+          <NavigationContainer>
+              <Stack.Navigator initialRouteName="Opening">
+                  <Stack.Screen name="Opening" component={OpeningScreen} options={{ headerShown: false }} />
+                  <Stack.Screen name="Login" component={LoginScreen} />
+                  <Stack.Screen name="Registry" component={RegistryScreen} />
+              </Stack.Navigator>
+          </NavigationContainer>
+      </GestureHandlerRootView>
   );
 }
