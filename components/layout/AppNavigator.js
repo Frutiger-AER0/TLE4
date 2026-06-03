@@ -1,21 +1,28 @@
 import React from 'react';
-import {View, StyleSheet} from 'react-native';
-import {NavigationContainer} from '@react-navigation/native';
+import {View} from 'react-native';
+import {NavigationContainer, DefaultTheme} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {Ionicons} from '@expo/vector-icons';
 import Ontdek from "../../Home";
 
 const Tab = createBottomTabNavigator();
 
+const MyTheme = {
+    ...DefaultTheme,
+    colors: {
+        ...DefaultTheme.colors,
+        background: '#F8F9FA',
+    },
+};
 export default function AppNavigator() {
     return (
-        <View style={styles.container}>
-            <NavigationContainer>
+        <View className="flex-1">
+            <NavigationContainer theme={MyTheme}>
                 <Tab.Navigator
                     initialRouteName="search"
                     screenOptions={({route}) => ({
                         headerShown: false,
-                        tabBarActiveTintColor: '#F8F9FA',
+                        tabBarActiveTintColor: '#F4C430',
                         tabBarInactiveTintColor: '#F8F9FA',
                         tabBarStyle: {
                             backgroundColor: '#14213D',
@@ -40,7 +47,7 @@ export default function AppNavigator() {
                         },
                     })}
                 >
-                    {/*Verander de component naam naar de pagina waar je heen wilt*/}
+                    {/*Bij component moeten de pagina's worden gezet*/}
                     <Tab.Screen
                         name="search"
                         component={Ontdek}
@@ -64,12 +71,5 @@ export default function AppNavigator() {
                 </Tab.Navigator>
             </NavigationContainer>
         </View>
-
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-});

@@ -1,46 +1,20 @@
 import React from 'react';
-import {StyleSheet, Text, View, Dimensions, Image} from 'react-native';
+import {Text, View, Image} from 'react-native';
 import {SafeAreaView} from "react-native-safe-area-context";
-
-const {width} = Dimensions.get('window');
 
 export default function AppHeader() {
     return (
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
-            <View style={styles.headerContainer}>
+        <SafeAreaView className="bg-darkBlue w-full" edges={['top']}>
+            <View className="bg-darkBlue h-20 w-full flex-row justify-start pl-5 items-center gap-2.5">
                 <Image
                     source={require('../../assets/logo.png')}
-                    style={styles.headerLogo}
+                    className="w-9 h-9"
+                    resizeMode="contain"
                 />
-                <Text style={styles.headerTitle}>SupporT</Text>
+                <Text className="text-white text-2xl font-bold">
+                    SupporT
+                </Text>
             </View>
         </SafeAreaView>
     );
 }
-
-const styles = StyleSheet.create({
-    safeArea: {
-        backgroundColor: "#14213D",
-        width: width,
-    },
-    headerContainer: {
-        backgroundColor: "#14213D",
-        height: 60,
-        width: '100%',
-        flexDirection: 'row',
-        justifyContent: 'left',
-        paddingStart: 20,
-        alignItems: 'center',
-        gap: 10,
-    },
-    headerLogo: {
-        width: 30,
-        height: 30,
-        resizeMode: 'contain',
-    },
-    headerTitle: {
-        color: '#FFFFFF',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-});
