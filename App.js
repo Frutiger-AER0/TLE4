@@ -6,6 +6,8 @@ import {SafeAreaProvider} from 'react-native-safe-area-context';
 import AppNavigator from './components/layout/AppNavigator';
 import AppHeader from "./components/layout/AppHeader";
 
+import "./global.css"
+
 export default function App() {
     return (
         <SafeAreaProvider>
