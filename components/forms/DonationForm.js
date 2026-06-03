@@ -1,11 +1,11 @@
 import React, {useState, useEffect} from "react";
+import {StyleSheet} from "react-native";
 import {
     View,
     Text,
     TextInput,
     TouchableOpacity,
     Switch,
-    ActivityIndicator,
     ScrollView,
     Platform,
     Button
@@ -93,25 +93,20 @@ function DonationForm({onSubmit, initialData, isSubmitting}) {
     const paymentOptions = ["iDeal", "Creditcard", "PayPal"];
 
     return (
-        <SafeAreaView className="flex-1 bg-gray-100">
-            <ScrollView
-                className="flex-1"
-                contentContainerStyle={{flexGrow: 1, justifyContent: 'center'}} // Vertical centering
-            >
+        <SafeAreaView style={styles.screen}>
+            <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View
                     className="bg-white mx-auto p-4 rounded-xl shadow-sm border border-gray-100 overflow-hidden w-11/12 max-w-lg">
-                    <View className="mb-4"> {/* Wrapper View for the title */}
-                        <Text className="text-center text-xl font-bold text-gray-800">Doneren</Text>
-                    </View>
+                    <View className="mb-4">
+                        <Text style={styles.title}>Doneren</Text> </View>
                     <View className="space-y-4">
                         {/* Onderwerp */}
                         <View className="mb-4">
-                            <Text className="text-sm font-medium text-gray-700 mb-1">Onderwerp*</Text>
-                            <TouchableOpacity
-                                className="border border-gray-300 rounded-lg px-4 py-3 bg-gray-50 justify-center min-h-[50px]"
-                                onPress={() => setTopicPickerVisible(!isTopicPickerVisible)}
+                            <Text style={styles.label}>Onderwerp*</Text>
+                            <TouchableOpacity style={styles.pickerButton}
+                                              onPress={() => setTopicPickerVisible(!isTopicPickerVisible)}
                             >
-                                <Text className="text-base text-gray-800">
+                                <Text style={styles.pickerText}>
                                     {formData.topic || "Kies een onderwerp..."}
                                 </Text>
                             </TouchableOpacity>
@@ -142,7 +137,7 @@ function DonationForm({onSubmit, initialData, isSubmitting}) {
 
                         {/* Bedrag (Amount) Radio Buttons */}
                         <View className="mb-4">
-                            <Text className="text-sm font-medium text-gray-700 mb-1">Welk bedrag wil je doneren?*</Text>
+                            <Text style={styles.label}>Welk bedrag wil je doneren?*</Text>
                             <View className="mt-2">
                                 {predefinedAmounts.map((amount) => (
                                     <RadioButton
@@ -161,12 +156,11 @@ function DonationForm({onSubmit, initialData, isSubmitting}) {
                                 />
                             </View>
                             {formData.selectedAmount === 'other' && (
-                                <TextInput
-                                    className="block w-full px-4 py-3 rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors outline-none mt-2"
-                                    keyboardType="numeric"
-                                    placeholder="Voer hier je bedrag in"
-                                    value={formData.customAmount}
-                                    onChangeText={(text) => handleInputChange('customAmount', text)}
+                                <TextInput style={styles.input}
+                                           keyboardType="numeric"
+                                           placeholder="Voer hier je bedrag in"
+                                           value={formData.customAmount}
+                                           onChangeText={(text) => handleInputChange('customAmount', text)}
                                 />
                             )}
                         </View>
@@ -174,8 +168,8 @@ function DonationForm({onSubmit, initialData, isSubmitting}) {
                         <View
                             className="flex-row flex-wrap justify-between">
                             {/* Aanhef (Salutation) Radio Buttons */}
-                            <View className="w-[48%] mb-4"> {/* w-[48%] to account for gap */}
-                                <Text className="text-sm font-medium text-gray-700 mb-1">Aanhef*</Text>
+                            <View className="w-[48%] mb-4">
+                                <Text style={styles.label}>Aanhef*</Text>
                                 <View className="mt-2">
                                     {salutationOptions.map((option) => (
                                         <RadioButton
@@ -190,44 +184,40 @@ function DonationForm({onSubmit, initialData, isSubmitting}) {
                             </View>
 
                             <View className="w-[48%] mb-4">
-                                <Text className="text-sm font-medium text-gray-700 mb-1">Voornaam*</Text>
-                                <TextInput
-                                    className="block w-full px-4 py-3 rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors outline-none"
-                                    value={formData.firstName}
-                                    onChangeText={(text) => handleInputChange('firstName', text)}
+                                <Text style={styles.label}>Voornaam*</Text>
+                                <TextInput style={styles.input}
+                                           value={formData.firstName}
+                                           onChangeText={(text) => handleInputChange('firstName', text)}
                                 />
                             </View>
 
                             <View className="w-[48%] mb-4">
-                                <Text className="text-sm font-medium text-gray-700 mb-1">Tussenvoegsel</Text>
-                                <TextInput
-                                    className="block w-full px-4 py-3 rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors outline-none"
-                                    value={formData.infix}
-                                    onChangeText={(text) => handleInputChange('infix', text)}
+                                <Text style={styles.label}>Tussenvoegsel</Text>
+                                <TextInput style={styles.input}
+                                           value={formData.infix}
+                                           onChangeText={(text) => handleInputChange('infix', text)}
                                 />
                             </View>
 
                             <View className="w-[48%] mb-4">
-                                <Text className="text-sm font-medium text-gray-700 mb-1">Achternaam*</Text>
-                                <TextInput
-                                    className="block w-full px-4 py-3 rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors outline-none"
-                                    value={formData.lastName}
-                                    onChangeText={(text) => handleInputChange('lastName', text)}
+                                <Text style={styles.label}>>Achternaam*</Text>
+                                <TextInput style={styles.input}
+                                           value={formData.lastName}
+                                           onChangeText={(text) => handleInputChange('lastName', text)}
                                 />
                             </View>
 
-                            <View className="w-full mb-4"> {/* Full width for email */}
-                                <Text className="text-sm font-medium text-gray-700 mb-1">E-mail*</Text>
-                                <TextInput
-                                    className="block w-full px-4 py-3 rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors outline-none"
-                                    keyboardType="email-address"
-                                    value={formData.email}
-                                    onChangeText={(text) => handleInputChange('email', text)}
+                            <View className="w-full mb-4">
+                                <Text style={styles.label}>E-mail*</Text>
+                                <TextInput style={styles.input}
+                                           keyboardType="email-address"
+                                           value={formData.email}
+                                           onChangeText={(text) => handleInputChange('email', text)}
                                 />
                             </View>
 
                             {/* Email Updates Checkbox (Switch) */}
-                            <View className="flex-row items-center mb-4 w-full"> {/* col-span-full for full width */}
+                            <View className="flex-row items-center mb-4 w-full">
                                 <Switch
                                     onValueChange={(value) => handleInputChange('receiveEmailUpdates', value, true)}
                                     value={formData.receiveEmailUpdates}
@@ -236,14 +226,13 @@ function DonationForm({onSubmit, initialData, isSubmitting}) {
                                     ontvangen.</Text>
                             </View>
 
-                            <View className="w-full mb-4"> {/* Full width for payment */}
-                                <Text className="text-sm font-medium text-gray-700 mb-1">Selecteer een
+                            <View className="w-full mb-4">
+                                <Text style={styles.label}>Selecteer een
                                     betaalmethode*</Text>
-                                <TouchableOpacity
-                                    className="border border-gray-300 rounded-lg px-4 py-3 bg-gray-50 justify-center min-h-[50px]"
-                                    onPress={() => setPaymentPickerVisible(!isPaymentPickerVisible)}
+                                <TouchableOpacity style={styles.pickerButton}
+                                                  onPress={() => setPaymentPickerVisible(!isPaymentPickerVisible)}
                                 >
-                                    <Text className="text-base text-gray-800">
+                                    <Text style={styles.pickerText}>
                                         {formData.payment || "Kies een betaalmethode..."}
                                     </Text>
                                 </TouchableOpacity>
@@ -282,5 +271,130 @@ function DonationForm({onSubmit, initialData, isSubmitting}) {
         </SafeAreaView>
     );
 }
+
+const styles = StyleSheet.create({
+    screen: {
+        flex: 1,
+        backgroundColor: "#F5F5F5",
+    },
+
+    scrollContent: {
+        padding: 20,
+    },
+
+    card: {
+        backgroundColor: "#E8DFF0",
+        borderRadius: 12,
+        padding: 16,
+    },
+
+    title: {
+        fontSize: 24,
+        fontWeight: "700",
+        marginBottom: 20,
+        color: "#222",
+    },
+
+    section: {
+        marginBottom: 18,
+    },
+
+    label: {
+        fontSize: 12,
+        color: "#333",
+        marginBottom: 6,
+    },
+
+    input: {
+        backgroundColor: "#DCCFE8",
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        minHeight: 42,
+    },
+
+    pickerButton: {
+        backgroundColor: "#DCCFE8",
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        justifyContent: "center",
+        minHeight: 42,
+    },
+
+    pickerText: {
+        color: "#333",
+        fontSize: 14,
+    },
+
+    pickerContainer: {
+        backgroundColor: "#DCCFE8",
+        borderRadius: 8,
+        marginTop: 4,
+    },
+
+    row: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+    },
+
+    half: {
+        width: "48%",
+    },
+
+    radioButtonContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 8,
+    },
+
+    radioCircle: {
+        width: 18,
+        height: 18,
+        borderRadius: 9,
+        borderWidth: 2,
+        borderColor: "#0D5BCF",
+        justifyContent: "center",
+        alignItems: "center",
+        marginRight: 8,
+    },
+
+    selectedRadioCircle: {
+        width: 10,
+        height: 10,
+        borderRadius: 5,
+        backgroundColor: "#0D5BCF",
+    },
+
+    radioLabel: {
+        fontSize: 13,
+        color: "#333",
+    },
+
+    switchContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 20,
+    },
+
+    switchLabel: {
+        marginLeft: 10,
+        flex: 1,
+        fontSize: 12,
+    },
+
+    donateButton: {
+        backgroundColor: "#7B2CBF",
+        borderRadius: 8,
+        paddingVertical: 12,
+        alignItems: "center",
+        marginTop: 10,
+    },
+
+    donateButtonText: {
+        color: "#FFF",
+        fontWeight: "600",
+        fontSize: 15,
+    },
+});
 
 export default DonationForm;
