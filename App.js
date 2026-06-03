@@ -1,11 +1,10 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
 import {NavigationContainer} from "@react-navigation/native";
+import RegistryScreen from "./screens/RegistryScreen";
 
 export default function App() {
   return (
     <NavigationContainer>
-
+        <RegistryScreen/>
     </NavigationContainer>
   );
 }
