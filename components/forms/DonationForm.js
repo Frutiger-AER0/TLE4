@@ -1,14 +1,14 @@
 import React, {useState, useEffect} from "react";
-import {StyleSheet} from "react-native";
 import {
     View,
     Text,
     TextInput,
     TouchableOpacity,
-    Switch,
     ScrollView,
     Platform,
-    Button
+    Button,
+    Modal, // Import Modal
+    Pressable // Import Pressable for background dismissal
 } from "react-native";
 import {Picker} from '@react-native-picker/picker';
 import {SafeAreaView} from "react-native-safe-area-context"; // Keep SafeAreaView
@@ -17,12 +17,71 @@ import {SafeAreaView} from "react-native-safe-area-context"; // Keep SafeAreaVie
 const RadioButton = ({label, selected, onSelect, value}) => (
     <TouchableOpacity className="flex-row items-center mb-2" onPress={() => onSelect(value)}>
         <View
-            className={`h-5 w-5 rounded-full border-2 ${selected ? 'border-blue-500' : 'border-gray-400'} items-center justify-center mr-2`}>
-            {selected && <View className="w-3 h-3 rounded-full bg-blue-500"/>}
+            className={`h-5 w-5 rounded-full border-2 ${
+                selected ? 'border-blue' : 'border-purple'
+            } items-center justify-center mr-2`}
+        >
+            {selected && <View className="w-3 h-3 rounded-full bg-blue"/>}
         </View>
-        <Text className="text-sm text-gray-700">{label}</Text>
+
+        <Text className="text-sm text-darkBlue">
+            {label}
+        </Text>
     </TouchableOpacity>
 );
+
+// Custom Checkbox component
+const Checkbox = ({label, selected, onSelect}) => (
+    <TouchableOpacity className="flex-row items-center" onPress={onSelect}>
+        <View
+            className={`h-5 w-5 border-2 ${selected ? 'border-blue bg-blue' : 'border-purple'} items-center justify-center mr-2`}
+        >
+            {selected && <Text className="text-white text-xs">✓</Text>}
+        </View>
+        <Text className="text-sm text-darkBlue">{label}</Text>
+    </TouchableOpacity>
+);
+
+// Generic Picker Modal component
+const PickerModal = ({isVisible, onClose, selectedValue, onValueChange, options, placeholder, title}) => {
+    return (
+        <Modal
+            animationType="fade"
+            transparent={true}
+            visible={isVisible}
+            onRequestClose={onClose} // For Android hardware back button
+        >
+            <Pressable className="flex-1 justify-center items-center bg-black/50" onPress={onClose}>
+                <Pressable className="bg-white rounded-lg p-5 w-11/12 max-w-sm">
+                    <Text className="text-lg font-bold mb-3 text-darkBlue">{title}</Text>
+                    <Picker
+                        selectedValue={selectedValue}
+                        onValueChange={(itemValue) => {
+                            onValueChange(itemValue);
+                            onClose(); // Close after selection
+                        }}
+                        className="h-[50px] w-full text-darkBlue bg-transparent"
+                        itemStyle={Platform.OS === 'ios' ? {fontSize: 16, color: '#1f2937'} : {}}
+                        mode={Platform.OS === 'android' ? 'dialog' : 'dropdown'} // Keep original mode for Picker itself
+                    >
+                        <Picker.Item label={placeholder} value=""/>
+                        {options.map(option => (
+                            <Picker.Item key={option.value || option} label={option.label || option}
+                                         value={option.value || option}/>
+                        ))}
+                    </Picker>
+                    <TouchableOpacity
+                        className="mt-4 bg-purple py-3 px-4 rounded-lg items-center"
+                        onPress={onClose}
+                    >
+                        <Text className="text-offWhite font-semibold text-base">Annuleren</Text>
+                    </TouchableOpacity>
+                </Pressable>
+            </Pressable>
+        </Modal>
+    );
+};
+
 
 function DonationForm({onSubmit, initialData, isSubmitting}) {
     const [formData, setFormData] = useState({
@@ -89,314 +148,192 @@ function DonationForm({onSubmit, initialData, isSubmitting}) {
         {label: "Mevr.", value: "Mevr."},
         {label: "Anders", value: "Anders"},
     ];
-    const topicOptions = ["Palenstina", "Arbeid", "LHBTQI+"];
-    const paymentOptions = ["iDeal", "Creditcard", "PayPal"];
+    // Converted to array of objects for PickerModal
+    const topicOptions = [
+        {label: "Palenstina", value: "Palenstina"},
+        {label: "Arbeid", value: "Arbeid"},
+        {label: "LHBTQI+", value: "LHBTQI+"}
+    ];
+    // Converted to array of objects for PickerModal
+    const paymentOptions = [
+        {label: "iDeal", value: "iDeal"},
+        {label: "Creditcard", value: "Creditcard"},
+        {label: "PayPal", value: "PayPal"}
+    ];
 
     return (
-        <SafeAreaView style={styles.screen}>
-            <ScrollView contentContainerStyle={styles.scrollContent}>
-                <View style={styles.card}>
+        <SafeAreaView className="flex-1 bg-offWhite">
+            <ScrollView contentContainerStyle={{flexGrow: 1, justifyContent: 'center', alignItems: 'center'}}>
+                <View
+                    className="bg-lightPurple/50 mx-auto p-5 rounded-xl w-11/12 max-w-lg">
                     <View className="mb-4">
-                        <Text style={styles.title}>Doneren</Text></View>
-                    <View className="space-y-4">
-                        {/* Onderwerp */}
-                        <View className="mb-4">
-                            <Text style={styles.label}>Onderwerp*</Text>
-                            <TouchableOpacity style={styles.pickerButton}
-                                              onPress={() => setTopicPickerVisible(!isTopicPickerVisible)}
-                            >
-                                <Text style={styles.pickerText}>
-                                    {formData.topic || "Kies een onderwerp..."}
-                                </Text>
-                            </TouchableOpacity>
-                            {isTopicPickerVisible && (
-                                <View
-                                    className="border border-gray-300 rounded-lg bg-gray-50 mt-1 overflow-hidden z-10">
-                                    <Picker
-                                        selectedValue={formData.topic}
-                                        onValueChange={(itemValue) => {
-                                            handleInputChange('topic', itemValue);
-                                            setTopicPickerVisible(false);
-                                        }}
-                                        className="h-[50px] w-full text-gray-800 bg-transparent"
-                                        itemStyle={Platform.OS === 'ios' ? {
-                                            fontSize: 16,
-                                            color: '#1f2937'
-                                        } : {}} // itemStyle is iOS only
-                                        mode={Platform.OS === 'android' ? 'dialog' : 'dropdown'}
-                                    >
-                                        <Picker.Item label="Kies een onderwerp..." value=""/>
-                                        {topicOptions.map(option => (
-                                            <Picker.Item key={option} label={option} value={option}/>
-                                        ))}
-                                    </Picker>
-                                </View>
-                            )}
-                        </View>
+                        <Text className="text-left text-xl font-bold text-darkBlue">Doneren</Text>
+                    </View>
 
-                        {/* Bedrag (Amount) Radio Buttons */}
-                        <View className="mb-4">
-                            <Text style={styles.label}>Welk bedrag wil je doneren?*</Text>
-                            <View className="mt-2">
-                                {predefinedAmounts.map((amount) => (
-                                    <RadioButton
-                                        key={amount}
-                                        label={`€${amount}`}
-                                        value={String(amount)}
-                                        selected={formData.selectedAmount === String(amount)}
-                                        onSelect={(value) => handleInputChange('selectedAmount', value)}
-                                    />
-                                ))}
-                                <RadioButton
-                                    label="Overig"
-                                    value="other"
-                                    selected={formData.selectedAmount === 'other'}
-                                    onSelect={(value) => handleInputChange('selectedAmount', value)}
-                                />
-                            </View>
-                            {formData.selectedAmount === 'other' && (
-                                <TextInput style={styles.input}
-                                           keyboardType="numeric"
-                                           placeholder="Voer hier je bedrag in"
-                                           value={formData.customAmount}
-                                           onChangeText={(text) => handleInputChange('customAmount', text)}
-                                />
-                            )}
-                        </View>
-
-                        <View
-                            className="flex-row flex-wrap justify-between">
-                            {/* Aanhef (Salutation) Radio Buttons */}
-                            <View className="w-[48%] mb-4">
-                                <Text style={styles.label}>Aanhef*</Text>
-                                <View className="mt-2">
-                                    {salutationOptions.map((option) => (
-                                        <RadioButton
-                                            key={option.value}
-                                            label={option.label}
-                                            value={option.value}
-                                            selected={formData.salutation === option.value}
-                                            onSelect={(value) => handleInputChange('salutation', value)}
-                                        />
-                                    ))}
-                                </View>
-                            </View>
-
-                            <View className="w-[48%] mb-4">
-                                <Text style={styles.label}>Voornaam*</Text>
-                                <TextInput style={styles.input}
-                                           value={formData.firstName}
-                                           onChangeText={(text) => handleInputChange('firstName', text)}
-                                />
-                            </View>
-
-                            <View className="w-[48%] mb-4">
-                                <Text style={styles.label}>Tussenvoegsel</Text>
-                                <TextInput style={styles.input}
-                                           value={formData.infix}
-                                           onChangeText={(text) => handleInputChange('infix', text)}
-                                />
-                            </View>
-
-                            <View className="w-[48%] mb-4">
-                                <Text style={styles.label}>Achternaam*</Text>
-                                <TextInput style={styles.input}
-                                           value={formData.lastName}
-                                           onChangeText={(text) => handleInputChange('lastName', text)}
-                                />
-                            </View>
-
-                            <View className="w-full mb-4">
-                                <Text style={styles.label}>E-mail*</Text>
-                                <TextInput style={styles.input}
-                                           keyboardType="email-address"
-                                           value={formData.email}
-                                           onChangeText={(text) => handleInputChange('email', text)}
-                                />
-                            </View>
-
-                            {/* Email Updates Checkbox (Switch) */}
-                            <View className="flex-row items-center mb-4 w-full">
-                                <Switch
-                                    onValueChange={(value) => handleInputChange('receiveEmailUpdates', value, true)}
-                                    value={formData.receiveEmailUpdates}
-                                />
-                                <Text className="ml-3 text-sm text-gray-700">Ik wil graag e-mail updates
-                                    ontvangen.</Text>
-                            </View>
-
-                            <View className="w-full mb-4">
-                                <Text style={styles.label}>Selecteer een
-                                    betaalmethode*</Text>
-                                <TouchableOpacity style={styles.pickerButton}
-                                                  onPress={() => setPaymentPickerVisible(!isPaymentPickerVisible)}
-                                >
-                                    <Text style={styles.pickerText}>
-                                        {formData.payment || "Kies een betaalmethode..."}
-                                    </Text>
-                                </TouchableOpacity>
-                                {isPaymentPickerVisible && (
-                                    <View
-                                        className="border border-gray-300 rounded-lg bg-gray-50 mt-1 overflow-hidden z-10">
-                                        <Picker
-                                            selectedValue={formData.payment}
-                                            onValueChange={(itemValue) => {
-                                                handleInputChange('payment', itemValue);
-                                                setPaymentPickerVisible(false);
-                                            }}
-                                            className="h-[50px] w-full text-gray-800 bg-transparent"
-                                            itemStyle={Platform.OS === 'ios' ? {fontSize: 16, color: '#1f2937'} : {}}
-                                            mode={Platform.OS === 'android' ? 'dialog' : 'dropdown'}
-                                        >
-                                            <Picker.Item label="Kies een betaalmethode..." value=""/>
-                                            {paymentOptions.map(option => (
-                                                <Picker.Item key={option} label={option} value={option}/>
-                                            ))}
-                                        </Picker>
-                                    </View>
-                                )}
-                            </View>
-                        </View>
-
+                    {/* Topic input */}
+                    <View className="mb-4">
+                        <Text className="text-sm font-medium text-darkBlue mb-1">Onderwerp*</Text>
                         <TouchableOpacity
-                            style={styles.donateButton}
-                            onPress={handleSubmit}
-                            disabled={isSubmitting}
+                            className="bg-lightPurple rounded-lg px-4 py-3 justify-center min-h-[50px]"
+                            onPress={() => setTopicPickerVisible(true)} // Open modal
                         >
-                            <Text style={styles.donateButtonText}>
-                                {isSubmitting ? "Bezig..." : "Doneren"}
+                            <Text className="text-base text-darkBlue">
+                                {formData.topic || "Kies een onderwerp..."}
                             </Text>
                         </TouchableOpacity>
                     </View>
+
+                    {/* Topic Picker Modal */}
+                    <PickerModal
+                        isVisible={isTopicPickerVisible}
+                        onClose={() => setTopicPickerVisible(false)}
+                        selectedValue={formData.topic}
+                        onValueChange={(itemValue) => handleInputChange('topic', itemValue)}
+                        options={topicOptions}
+                        placeholder="Kies een onderwerp..."
+                        title="Selecteer een onderwerp"
+                    />
+
+                    {/* Amount Radio Buttons */}
+                    <View className="mb-4">
+                        <Text className="text-sm font-medium text-darkBlue mb-1">Welk bedrag wil je
+                            doneren?*</Text>
+                        <View className="mt-2">
+                            {predefinedAmounts.map((amount) => (
+                                <RadioButton
+                                    key={amount}
+                                    label={`€${amount}`}
+                                    value={String(amount)}
+                                    selected={formData.selectedAmount === String(amount)}
+                                    onSelect={(value) => handleInputChange('selectedAmount', value)}
+                                />
+                            ))}
+                            <RadioButton
+                                label="Overig"
+                                value="other"
+                                selected={formData.selectedAmount === 'other'}
+                                onSelect={(value) => handleInputChange('selectedAmount', value)}
+                            />
+                        </View>
+                        {formData.selectedAmount === 'other' && (
+                            <TextInput
+                                className="w-full px-4 py-3 rounded-lg bg-lightPurple text-darkBlue"
+                                keyboardType="numeric"
+                                placeholder="Voer hier je bedrag in"
+                                value={formData.customAmount}
+                                onChangeText={(text) => handleInputChange('customAmount', text)}
+                            />
+                        )}
+                    </View>
+
+                    {/* Salutation input */}
+                    <View
+                        className="flex-row flex-wrap justify-between">
+                        {/* Aanhef (Salutation) Radio Buttons */}
+                        <View className="w-full mb-4">
+                            <Text className="text-sm font-medium text-darkBlue mb-1">Aanhef*</Text>
+                            <View className="mt-2">
+                                {salutationOptions.map((option) => (
+                                    <RadioButton
+                                        key={option.value}
+                                        label={option.label}
+                                        value={option.value}
+                                        selected={formData.salutation === option.value}
+                                        onSelect={(value) => handleInputChange('salutation', value)}
+                                    />
+                                ))}
+                            </View>
+                        </View>
+
+                        {/* Firstname input */}
+                        <View className="w-full mb-4">
+                            <Text className="text-sm font-medium text-darkBlue mb-1">Voornaam*</Text>
+                            <TextInput
+                                className="w-full px-4 py-3 rounded-lg bg-lightPurple text-darkBlue"
+                                value={formData.firstName}
+                                onChangeText={(text) => handleInputChange('firstName', text)}
+                            />
+                        </View>
+
+                        {/* Infix input */}
+                        <View className="w-[48%] mb-4">
+                            <Text className="text-sm font-medium text-darkBlue mb-1">Tussenvoegsel</Text>
+                            <TextInput
+                                className="w-full px-4 py-3 rounded-lg bg-lightPurple text-darkBlue"
+                                value={formData.infix}
+                                onChangeText={(text) => handleInputChange('infix', text)}
+                            />
+                        </View>
+
+                        {/* Lastname input */}
+                        <View className="w-[48%] mb-4">
+                            <Text className="text-sm font-medium text-darkBlue mb-1">Achternaam*</Text>
+                            <TextInput
+                                className="w-full px-4 py-3 rounded-lg bg-lightPurple text-darkBlue"
+                                value={formData.lastName}
+                                onChangeText={(text) => handleInputChange('lastName', text)}
+                            />
+                        </View>
+
+                        {/* Email input */}
+                        <View className="w-full mb-4">
+                            <Text className="text-sm font-medium text-darkBlue mb-1">E-mail*</Text>
+                            <TextInput
+                                className="w-full px-4 py-3 rounded-lg bg-lightPurple text-darkBlue"
+                                keyboardType="email-address"
+                                value={formData.email}
+                                onChangeText={(text) => handleInputChange('email', text)}
+                            />
+                        </View>
+
+                        {/* Email Updates Checkbox */}
+                        <View className="w-full mb-4">
+                            <Checkbox
+                                label="Ik wil graag e-mail updates ontvangen."
+                                selected={formData.receiveEmailUpdates}
+                                onSelect={() => handleInputChange('receiveEmailUpdates', !formData.receiveEmailUpdates, true)}
+                            />
+                        </View>
+
+                        {/* Payment Method Picker */}
+                        <View className="w-full mb-4">
+                            <Text className="text-sm font-medium text-darkBlue mb-1">Selecteer een
+                                betaalmethode*</Text>
+                            <TouchableOpacity
+                                className="bg-lightPurple rounded-lg px-4 py-3 justify-center min-h-[50px]"
+                                onPress={() => setPaymentPickerVisible(true)} // Open modal
+                            >
+                                <Text className="text-base text-darkBlue">
+                                    {formData.payment || "Kies een betaalmethode..."}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Payment Picker Modal */}
+                        <PickerModal
+                            isVisible={isPaymentPickerVisible}
+                            onClose={() => setPaymentPickerVisible(false)}
+                            selectedValue={formData.payment}
+                            onValueChange={(itemValue) => handleInputChange('payment', itemValue)}
+                            options={paymentOptions}
+                            placeholder="Kies een betaalmethode..."
+                            title="Selecteer een betaalmethode"
+                        />
+                    </View>
+
+                    <TouchableOpacity
+                        className="bg-purple py-3 px-4 rounded-lg flex-row items-center justify-center"
+                        onPress={handleSubmit}
+                        disabled={isSubmitting}
+                    >
+                        <Text className="text-offWhite font-semibold text-base">
+                            {isSubmitting ? "Bezig..." : "Doneren"}
+                        </Text>
+                    </TouchableOpacity>
                 </View>
             </ScrollView>
         </SafeAreaView>
     );
 }
-
-const styles = StyleSheet.create({
-    screen: {
-        flex: 1,
-        backgroundColor: "#F5F5F5",
-    },
-
-    scrollContent: {
-        padding: 20,
-    },
-
-    card: {
-        backgroundColor: "#E8DFF0",
-        borderRadius: 12,
-        padding: 16,
-    },
-
-    title: {
-        fontSize: 24,
-        fontWeight: "700",
-        marginBottom: 20,
-        color: "#222",
-    },
-
-    section: {
-        marginBottom: 18,
-    },
-
-    label: {
-        fontSize: 12,
-        color: "#333",
-        marginBottom: 6,
-    },
-
-    input: {
-        backgroundColor: "#DCCFE8",
-        borderRadius: 8,
-        paddingHorizontal: 12,
-        paddingVertical: 10,
-        minHeight: 42,
-    },
-
-    pickerButton: {
-        backgroundColor: "#DCCFE8",
-        borderRadius: 8,
-        paddingHorizontal: 12,
-        justifyContent: "center",
-        minHeight: 42,
-    },
-
-    pickerText: {
-        color: "#333",
-        fontSize: 14,
-    },
-
-    pickerContainer: {
-        backgroundColor: "#DCCFE8",
-        borderRadius: 8,
-        marginTop: 4,
-    },
-
-    row: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-    },
-
-    half: {
-        width: "48%",
-    },
-
-    radioButtonContainer: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginBottom: 8,
-    },
-
-    radioCircle: {
-        width: 18,
-        height: 18,
-        borderRadius: 9,
-        borderWidth: 2,
-        borderColor: "#0D5BCF",
-        justifyContent: "center",
-        alignItems: "center",
-        marginRight: 8,
-    },
-
-    selectedRadioCircle: {
-        width: 10,
-        height: 10,
-        borderRadius: 5,
-        backgroundColor: "#0D5BCF",
-    },
-
-    radioLabel: {
-        fontSize: 13,
-        color: "#333",
-    },
-
-    switchContainer: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginBottom: 20,
-    },
-
-    switchLabel: {
-        marginLeft: 10,
-        flex: 1,
-        fontSize: 12,
-    },
-
-    donateButton: {
-        backgroundColor: "#7B2CBF",
-        borderRadius: 8,
-        paddingVertical: 12,
-        alignItems: "center",
-        marginTop: 10,
-    },
-
-    donateButtonText: {
-        color: "#FFF",
-        fontWeight: "600",
-        fontSize: 15,
-    },
-});
 
 export default DonationForm;
