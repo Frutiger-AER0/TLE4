@@ -95,8 +95,7 @@ function DonationForm({onSubmit, initialData, isSubmitting}) {
     return (
         <SafeAreaView style={styles.screen}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
-                <View
-                    className="bg-white mx-auto p-4 rounded-xl shadow-sm border border-gray-100 overflow-hidden w-11/12 max-w-lg">
+                <View style={styles.card}>
                     <View className="mb-4">
                         <Text style={styles.title}>Doneren</Text> </View>
                     <View className="space-y-4">
@@ -259,12 +258,15 @@ function DonationForm({onSubmit, initialData, isSubmitting}) {
                             </View>
                         </View>
 
-                        <Button
-                            title={isSubmitting ? "Bezig..." : "Doneer nu"}
+                        <TouchableOpacity
+                            style={styles.donateButton}
                             onPress={handleSubmit}
                             disabled={isSubmitting}
-                            color="#4f46e5" // Equivalent to bg-indigo-600
-                        />
+                        >
+                            <Text style={styles.donateButtonText}>
+                                {isSubmitting ? "Bezig..." : "Doneren"}
+                            </Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </ScrollView>
