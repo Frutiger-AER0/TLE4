@@ -163,8 +163,8 @@ function DonationForm({onSubmit, initialData, isSubmitting}) {
 
     return (
         <SafeAreaView className="flex-1 bg-offWhite">
-            <ScrollView contentContainerStyle={{flexGrow: 1, alignItems: 'center'}}
-                        className="flex-1">
+            <ScrollView contentContainerStyle={{flexGrow: 1, alignItems: 'center', paddingTop: 20, paddingBottom: 60}}
+                        className="flex-1 -my-20">
                 <View
                     className="bg-lightPurple/50 flex-1 flex-grow p-5 rounded-xl w-11-12 mx-4 max-w-lg">
                     <View className="mb-4">
