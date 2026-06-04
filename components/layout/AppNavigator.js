@@ -2,11 +2,23 @@ import React from 'react';
 import {View} from 'react-native';
 import {NavigationContainer, DefaultTheme} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {createStackNavigator} from '@react-navigation/stack'; // Import createStackNavigator
 import {Ionicons} from '@expo/vector-icons';
 import Ontdek from "../../Home";
 import ActionScreen from "../../screens/ActionScreen";
+import DonationScreen from "../../screens/DonationScreen"; // Import DonationScreen
 
 const Tab = createBottomTabNavigator();
+const ActionStack = createStackNavigator(); // Create a Stack Navigator for the Action flow
+
+function ActionStackScreen() {
+    return (
+        <ActionStack.Navigator screenOptions={{headerShown: false}}>
+            <ActionStack.Screen name="ActionScreen" component={ActionScreen}/>
+            <ActionStack.Screen name="DonationScreen" component={DonationScreen}/>
+        </ActionStack.Navigator>
+    );
+}
 
 const MyTheme = {
     ...DefaultTheme,
@@ -51,7 +63,7 @@ export default function AppNavigator() {
                     {/*Bij component moeten de pagina's worden gezet*/}
                     <Tab.Screen
                         name="search"
-                        component={ActionScreen}
+                        component={ActionStackScreen} // Use the Stack Navigator here
                         options={{title: 'Ontdek'}}
                     />
                     <Tab.Screen
