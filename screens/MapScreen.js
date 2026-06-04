@@ -1,15 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import React, {useEffect, useState} from 'react';
+import MapView, {Marker} from 'react-native-maps';
+import {StyleSheet, View, Text} from 'react-native';
 import * as Location from 'expo-location';
 
-export default function MapScreen({ route }) {
-    const item = route?.params?.item || {
-        latitude: 52.3702,
-        longitude: 4.8952,
-        name: 'Standaard',
-        address: 'Onbekend',
-    };
+export default function MapScreen({route}) {
+    const item = route?.params?.item || {latitude: 52.3702, longitude: 4.8952, name: "Standaard", address: "Onbekend"};
 
     const [location, setLocation] = useState(null);
     const [routeCoordinates, setRouteCoordinates] = useState([]);
@@ -18,7 +13,7 @@ export default function MapScreen({ route }) {
         let subscription;
 
         async function startWatching() {
-            let { status } = await Location.requestForegroundPermissionsAsync();
+            let {status} = await Location.requestForegroundPermissionsAsync();
             if (status !== 'granted') {
                 alert('Locatietoegang is geweigerd!');
                 return;
@@ -31,8 +26,8 @@ export default function MapScreen({ route }) {
                     distanceInterval: 50,
                 },
                 (newLocation) => {
-                    const { latitude, longitude } = newLocation.coords;
-                    const newCoord = { latitude, longitude };
+                    const {latitude, longitude} = newLocation.coords;
+                    const newCoord = {latitude, longitude};
                     setLocation(newCoord);
                     setRouteCoordinates((prevCoords) => [...prevCoords, newCoord]);
                 }
@@ -50,18 +45,18 @@ export default function MapScreen({ route }) {
 
     if (!location) {
         return (
-            <View style={[styles.container, { backgroundColor: '#ffffff' }]}>
-                <Text style={{ color: '#000000' }}>Locatie ophalen...</Text>
+            <View style={[styles.container, {backgroundColor: '#ffffff'}]}>
+                <Text style={{color: '#000000'}}>Locatie ophalen...</Text>
             </View>
         );
     }
 
     return (
-        <View style={[styles.container, { backgroundColor: '#ffffff' }]}>
+        <View style={[styles.container, {backgroundColor: '#ffffff'}]}>
             <MapView
                 style={styles.map}
                 showsUserLocation={true}
-                userInterfaceStyle="light"
+                userInterfaceStyle='light'
                 initialRegion={{
                     latitude: item.latitude,
                     longitude: item.longitude,
@@ -76,7 +71,7 @@ export default function MapScreen({ route }) {
                     }}
                     title={item.name}
                     description={item.address}
-                    pinColor="#849782"
+                    pinColor='#849782'
                 />
             </MapView>
         </View>
@@ -87,10 +82,10 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
     },
     map: {
         width: '100%',
-        height: '100%'
-    }
+        height: '100%',
+    },
 });
