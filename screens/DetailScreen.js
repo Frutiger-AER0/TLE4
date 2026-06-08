@@ -81,10 +81,7 @@ export default function DetailScreen({ route }) {
     return (
         <View style={tw`flex-1 bg-white`}>
             <ScrollView showsVerticalScrollIndicator={false}>
-                <View style={tw`bg-[#0A1A3A] flex-row items-center px-5 py-5`}>
-                    <Ionicons name="image-outline" size={30} color="#FFD21E" />
-                    <Text style={tw`text-white text-xl font-bold ml-3`}>SupporT</Text>
-                </View>
+                {/* Geen SupporT header meer hier, want AppHeader staat al globaal in App.js */}
 
                 <View>
                     <Image
@@ -114,7 +111,11 @@ export default function DetailScreen({ route }) {
                             onPress={shareProtest}
                             style={tw`bg-[#0057B8] w-10 h-10 rounded-lg items-center justify-center`}
                         >
-                            <Ionicons name="share-social-outline" size={24} color="white" />
+                            <Ionicons
+                                name="share-social-outline"
+                                size={24}
+                                color="white"
+                            />
                         </TouchableOpacity>
                     </View>
 
@@ -238,7 +239,9 @@ export default function DetailScreen({ route }) {
                             <View
                                 style={[
                                     tw`w-5 h-5 rounded items-center justify-center mr-3 mt-1`,
-                                    acceptedTerms ? tw`bg-[#333333]` : tw`border border-gray-400`,
+                                    acceptedTerms
+                                        ? tw`bg-[#333333]`
+                                        : tw`border border-gray-400`,
                                 ]}
                             >
                                 {acceptedTerms && (

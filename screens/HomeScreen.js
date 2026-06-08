@@ -12,12 +12,15 @@ import {
     Pressable,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import tw from "twrnc";
 
 import PreviewModal from "../components/PreviewModal";
 import { protests, helpOptions, filterOptions } from "../data/dummydata";
 
 export default function HomeScreen() {
+    const navigation = useNavigation();
+
     const [search, setSearch] = useState("");
     const [previewVisible, setPreviewVisible] = useState(false);
     const [selectedProtest, setSelectedProtest] = useState(null);
@@ -74,6 +77,14 @@ export default function HomeScreen() {
         });
     }, [search, selectedTopic, selectedAssignment, selectedMoment]);
 
+    function goBackToActions() {
+        if (navigation.canGoBack()) {
+            navigation.goBack();
+        } else {
+            navigation.navigate("ActionScreen");
+        }
+    }
+
     function openPreview(item) {
         setSelectedProtest(item);
         setPreviewVisible(true);
@@ -101,8 +112,15 @@ export default function HomeScreen() {
 
                 {item.points.map((point, index) => (
                     <View key={index} style={tw`flex-row mb-2`}>
-                        <Ionicons name="caret-forward" size={11} color="#7B2DD2" style={tw`mt-1 mr-1`} />
-                        <Text style={tw`text-[#0A1A3A] text-[10px] flex-1`}>{point}</Text>
+                        <Ionicons
+                            name="caret-forward"
+                            size={11}
+                            color="#7B2DD2"
+                            style={tw`mt-1 mr-1`}
+                        />
+                        <Text style={tw`text-[#0A1A3A] text-[10px] flex-1`}>
+                            {point}
+                        </Text>
                     </View>
                 ))}
             </View>
@@ -117,7 +135,11 @@ export default function HomeScreen() {
                 style={tw`mb-4 bg-[#E6D8F5] rounded-xl overflow-hidden`}
             >
                 <View>
-                    <Image source={item.image} style={tw`w-full h-28`} resizeMode="cover" />
+                    <Image
+                        source={item.image}
+                        style={tw`w-full h-28`}
+                        resizeMode="cover"
+                    />
 
                     <TouchableOpacity
                         onPress={() => openPreview(item)}
@@ -128,23 +150,34 @@ export default function HomeScreen() {
                 </View>
 
                 <View style={tw`p-3`}>
-                    <Text style={tw`text-[#0A1A3A] font-semibold text-base`}>{item.title}</Text>
-                    <Text style={tw`text-[#0A1A3A] italic text-xs mt-1`}>{item.subtitle}</Text>
+                    <Text style={tw`text-[#0A1A3A] font-semibold text-base`}>
+                        {item.title}
+                    </Text>
+
+                    <Text style={tw`text-[#0A1A3A] italic text-xs mt-1`}>
+                        {item.subtitle}
+                    </Text>
 
                     <View style={tw`flex-row items-center mt-4`}>
                         <View style={tw`flex-row items-center mr-4`}>
                             <Ionicons name="location" size={13} color="#7B2DD2" />
-                            <Text style={tw`text-[#0A1A3A] text-[10px] ml-1`}>{item.location}</Text>
+                            <Text style={tw`text-[#0A1A3A] text-[10px] ml-1`}>
+                                {item.location}
+                            </Text>
                         </View>
 
                         <View style={tw`flex-row items-center mr-4`}>
                             <Ionicons name="person-outline" size={13} color="#7B2DD2" />
-                            <Text style={tw`text-[#0A1A3A] text-[10px] ml-1`}>{item.participants}</Text>
+                            <Text style={tw`text-[#0A1A3A] text-[10px] ml-1`}>
+                                {item.participants}
+                            </Text>
                         </View>
 
                         <View style={tw`flex-row items-center`}>
                             <Ionicons name="pricetag-outline" size={13} color="#7B2DD2" />
-                            <Text style={tw`text-[#0A1A3A] text-[10px] ml-1`}>{item.type}</Text>
+                            <Text style={tw`text-[#0A1A3A] text-[10px] ml-1`}>
+                                {item.type}
+                            </Text>
                         </View>
                     </View>
                 </View>
@@ -182,12 +215,20 @@ export default function HomeScreen() {
                 contentContainerStyle={tw`px-5 pb-8`}
                 ListHeaderComponent={
                     <View>
-                        <View style={tw`-mx-5 bg-[#0A1A3A] flex-row items-center px-5 py-5`}>
-                            <Ionicons name="image-outline" size={30} color="#FFD21E" />
-                            <Text style={tw`text-white text-xl font-bold ml-3`}>SupporT</Text>
-                        </View>
+                        {/* Geen SupporT header meer hier, want AppHeader staat al globaal in App.js */}
 
-                        <View style={tw`mt-5 flex-row items-center`}>
+                        <TouchableOpacity
+                            onPress={goBackToActions}
+                            style={tw`flex-row items-center mt-5 mb-4`}
+                            activeOpacity={0.8}
+                        >
+                            <Ionicons name="arrow-back" size={30} color="#0A1A3A" />
+                            <Text style={tw`text-[#0A1A3A] text-2xl font-bold ml-3`}>
+                                Terug
+                            </Text>
+                        </TouchableOpacity>
+
+                        <View style={tw`mt-3 flex-row items-center`}>
                             <TextInput
                                 placeholder="zoeken..."
                                 placeholderTextColor="#827095"
@@ -273,19 +314,28 @@ export default function HomeScreen() {
                         <View style={tw`h-[1px] bg-[#E6D8F5]`} />
 
                         <View style={tw`px-5 pt-5`}>
-                            <Text style={tw`text-[#0A1A3A] text-sm mb-3`}>ONDERWERP</Text>
+                            <Text style={tw`text-[#0A1A3A] text-sm mb-3`}>
+                                ONDERWERP
+                            </Text>
+
                             <View style={tw`flex-row flex-wrap`}>
                                 {filterOptions.topics.map((topic) =>
                                     renderFilterButton(
                                         topic,
                                         selectedTopic,
-                                        () => setSelectedTopic(selectedTopic === topic ? null : topic),
+                                        () =>
+                                            setSelectedTopic(
+                                                selectedTopic === topic ? null : topic
+                                            ),
                                         true
                                     )
                                 )}
                             </View>
 
-                            <Text style={tw`text-[#0A1A3A] text-sm mt-3 mb-3`}>OPDRACHTEN</Text>
+                            <Text style={tw`text-[#0A1A3A] text-sm mt-3 mb-3`}>
+                                OPDRACHTEN
+                            </Text>
+
                             <View style={tw`flex-row flex-wrap`}>
                                 {filterOptions.assignments.map((assignment) =>
                                     renderFilterButton(
@@ -296,7 +346,10 @@ export default function HomeScreen() {
                                 )}
                             </View>
 
-                            <Text style={tw`text-[#0A1A3A] text-sm mt-3 mb-3`}>WANNEER</Text>
+                            <Text style={tw`text-[#0A1A3A] text-sm mt-3 mb-3`}>
+                                WANNEER
+                            </Text>
+
                             <View style={tw`flex-row flex-wrap`}>
                                 {filterOptions.moments.map((moment) =>
                                     renderFilterButton(
@@ -320,7 +373,9 @@ export default function HomeScreen() {
                                 onPress={applyFilters}
                                 style={tw`flex-1 bg-[#0A1A3A] rounded-xl py-4 items-center ml-2`}
                             >
-                                <Text style={tw`text-white font-bold`}>Toon resultaten</Text>
+                                <Text style={tw`text-white font-bold`}>
+                                    Toon resultaten
+                                </Text>
                             </TouchableOpacity>
                         </View>
                     </View>
