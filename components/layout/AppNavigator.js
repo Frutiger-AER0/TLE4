@@ -1,3 +1,5 @@
+// components/layout/AppNavigator.js
+
 import React from "react";
 import { View } from "react-native";
 import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
@@ -10,9 +12,11 @@ import ActionScreen from "../../screens/ActionScreen";
 import HomeScreen from "../../screens/HomeScreen";
 import DetailScreen from "../../screens/DetailScreen";
 import DonationScreen from "../../screens/DonationScreen";
+import AgendaScreen from "../../screens/AgendaScreen";
 
 const Tab = createBottomTabNavigator();
 const ActionStack = createStackNavigator();
+const AgendaStack = createStackNavigator();
 
 function ActionStackScreen() {
     return (
@@ -22,30 +26,47 @@ function ActionStackScreen() {
                 headerShown: false,
             }}
         >
-            {/* Hoofdpagina met projecten */}
             <ActionStack.Screen
                 name="ActionScreen"
                 component={ActionScreen}
             />
 
-            {/* Jouw demonstratie-overzichtspagina */}
             <ActionStack.Screen
                 name="HomeScreen"
                 component={HomeScreen}
             />
 
-            {/* Detailpagina van een demonstratie */}
             <ActionStack.Screen
                 name="Detail"
                 component={DetailScreen}
             />
 
-            {/* Bestaande donatiepagina */}
             <ActionStack.Screen
                 name="DonationScreen"
                 component={DonationScreen}
             />
         </ActionStack.Navigator>
+    );
+}
+
+function AgendaStackScreen() {
+    return (
+        <AgendaStack.Navigator
+            initialRouteName="AgendaScreen"
+            screenOptions={{
+                headerShown: false,
+            }}
+        >
+            <AgendaStack.Screen
+                name="AgendaScreen"
+                component={AgendaScreen}
+            />
+
+            <AgendaStack.Screen
+                name="AgendaDetail"
+                component={DetailScreen}
+            />
+        </AgendaStack.Navigator>
     );
 }
 
@@ -65,13 +86,27 @@ export default function AppNavigator() {
                     initialRouteName="search"
                     screenOptions={({ route }) => ({
                         headerShown: false,
-                        tabBarActiveTintColor: "#F4C430",
+                        tabBarActiveTintColor: "#F8F9FA",
                         tabBarInactiveTintColor: "#F8F9FA",
                         tabBarStyle: {
+                            position: "absolute",
+                            left: 16,
+                            right: 16,
+                            bottom: 18,
                             backgroundColor: "#14213D",
-                            height: 90,
-                            paddingTop: 14,
+                            height: 78,
+                            borderRadius: 16,
+                            paddingTop: 10,
                             paddingBottom: 8,
+                            borderTopWidth: 0,
+                        },
+                        tabBarLabelStyle: {
+                            fontSize: 10,
+                            marginTop: 2,
+                        },
+                        tabBarItemStyle: {
+                            borderRadius: 16,
+                            marginHorizontal: 6,
                         },
                         tabBarIcon: ({ focused, color, size }) => {
                             let iconName = "ellipse-outline";
@@ -87,11 +122,22 @@ export default function AppNavigator() {
                             }
 
                             return (
-                                <Ionicons
-                                    name={iconName}
-                                    size={size}
-                                    color={color}
-                                />
+                                <View
+                                    style={{
+                                        backgroundColor: focused ? "#0D4899" : "transparent",
+                                        width: 70,
+                                        height: 58,
+                                        borderRadius: 16,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                    }}
+                                >
+                                    <Ionicons
+                                        name={iconName}
+                                        size={focused ? 30 : size}
+                                        color={color}
+                                    />
+                                </View>
                             );
                         },
                     })}
@@ -110,7 +156,7 @@ export default function AppNavigator() {
 
                     <Tab.Screen
                         name="calendar"
-                        component={Ontdek}
+                        component={AgendaStackScreen}
                         options={{ title: "Agenda" }}
                     />
 

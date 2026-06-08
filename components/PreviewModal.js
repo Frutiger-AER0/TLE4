@@ -37,7 +37,18 @@ export default function PreviewModal({ visible, onClose, protest }) {
 
     function goToDetail() {
         onClose();
-        navigation.navigate("Detail", { protest });
+
+        const state = navigation.getState();
+        const currentRoutes = state?.routeNames || [];
+
+        if (currentRoutes.includes("Detail")) {
+            navigation.navigate("Detail", { protest });
+            return;
+        }
+
+        if (currentRoutes.includes("AgendaDetail")) {
+            navigation.navigate("AgendaDetail", { protest });
+        }
     }
 
     function removePreview() {
