@@ -4,12 +4,9 @@ import {NavigationContainer, DefaultTheme} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createStackNavigator} from '@react-navigation/stack'; // Import createStackNavigator
 import {Ionicons} from '@expo/vector-icons';
+import Ontdek from "../../Home";
 import ActionScreen from "../../screens/ActionScreen";
 import DonationScreen from "../../screens/DonationScreen"; // Import DonationScreen
-import { DefaultTheme } from "@react-navigation/native";
-
-import HomeScreen from "../../screens/HomeScreen";
-import MapScreen from "../../screens/MapScreen";
 
 const Tab = createBottomTabNavigator();
 const ActionStack = createStackNavigator(); // Create a Stack Navigator for the Action flow
@@ -27,10 +24,9 @@ const MyTheme = {
     ...DefaultTheme,
     colors: {
         ...DefaultTheme.colors,
-        background: "#F8F9FA",
+        background: '#F8F9FA',
     },
 };
-
 export default function AppNavigator() {
     return (
         <View className="flex-1">
@@ -72,17 +68,17 @@ export default function AppNavigator() {
                     />
                     <Tab.Screen
                         name="map"
-                        component={MapScreen}
+                        component={Ontdek}
                         options={{title: 'Kaart'}}
                     />
                     <Tab.Screen
                         name="calendar"
-                        component={HomeScreen}
+                        component={Ontdek}
                         options={{title: 'Agenda'}}
                     />
                     <Tab.Screen
                         name="person"
-                        component={HomeScreen}
+                        component={Ontdek}
                         options={{title: 'Profiel'}}
                     />
                 </Tab.Navigator>
