@@ -7,10 +7,13 @@ import AppHeader from "./AppHeader";
 import HomeScreen from "../../screens/HomeScreen";
 import MapScreen from "../../screens/MapScreen";
 import ActionScreen from "../../screens/ActionScreen";
+import AdminScreen from "../../screens/AdminScreen";
 
 const Tab = createBottomTabNavigator();
 
-export default function MainTabs() {
+export default function MainTabs({ route }) {
+    const isAdmin = route?.params?.isAdmin === true;
+
     return (
         <View className="flex-1 bg-offWhite">
             <AppHeader />
@@ -38,6 +41,8 @@ export default function MainTabs() {
                                 iconName = focused ? "calendar" : "calendar-outline";
                             } else if (route.name === "person") {
                                 iconName = focused ? "person" : "person-outline";
+                            } else if (route.name === "admin") {
+                                iconName = focused ? "shield-checkmark" : "shield-checkmark-outline";
                             }
 
                             return <Ionicons name={iconName} size={size} color={color} />;
@@ -64,6 +69,13 @@ export default function MainTabs() {
                         component={HomeScreen}
                         options={{ title: "Profiel" }}
                     />
+                    {isAdmin && (
+                        <Tab.Screen
+                            name="admin"
+                            component={AdminScreen}
+                            options={{ title: "Admin" }}
+                        />
+                    )}
                 </Tab.Navigator>
             </View>
         </View>
