@@ -1,5 +1,16 @@
+// components/PreviewModal.js
+
 import React, { useEffect, useRef } from "react";
-import { View, Text, Modal, Image, TouchableOpacity, Animated, Dimensions } from "react-native";
+import {
+    View,
+    Text,
+    Modal,
+    Image,
+    TouchableOpacity,
+    Animated,
+    Dimensions,
+    Pressable,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import tw from "twrnc";
 import { useNavigation } from "@react-navigation/native";
@@ -18,13 +29,9 @@ export default function PreviewModal({ visible, onClose, protest }) {
                 useNativeDriver: true,
             }).start();
         } else {
-            Animated.timing(translateY, {
-                toValue: -height,
-                duration: 250,
-                useNativeDriver: true,
-            }).start();
+            translateY.setValue(-height);
         }
-    }, [visible]);
+    }, [visible, translateY]);
 
     if (!protest) return null;
 
@@ -33,46 +40,130 @@ export default function PreviewModal({ visible, onClose, protest }) {
         navigation.navigate("Detail", { protest });
     }
 
+    function removePreview() {
+        /*
+            PSEUDOCODE VOOR LATER:
+
+            Als gebruiker demonstratie uit lijst wil verwijderen/verbergen:
+            await fetch(`/api/user-protests/${protest.id}`, {
+                method: "DELETE",
+            });
+
+            Daarna:
+            - modal sluiten
+            - lijst opnieuw ophalen
+            - of lokaal uit state filteren
+        */
+
+        onClose();
+    }
+
     function toggleBookmark() {
-        // placeholder: voeg je bookmark‑logic toe (state, API, async storage)
-        console.log("Bookmark toggled for", protest.id);
+        /*
+            PSEUDOCODE VOOR LATER:
+
+            await fetch(`/api/bookmarks`, {
+                method: "POST",
+                body: JSON.stringify({
+                    user_id: currentUser.id,
+                    protest_id: protest.id,
+                }),
+            });
+
+            Daarna bookmark icon actief maken.
+        */
+
+        console.log("Bookmark toggled:", protest.id);
     }
 
     return (
-        <Modal visible={visible} transparent animationType="none">
-            {/* semi-transparante overlay */}
-            <View style={tw`flex-1 bg-black/40`}>
+        <Modal
+            visible={visible}
+            transparent
+            animationType="none"
+            statusBarTranslucent
+            onRequestClose={onClose}
+        >
+            <View style={tw`flex-1 bg-black/35`}>
+                <Pressable style={tw`absolute inset-0`} onPress={onClose} />
 
-                {/* Animated container die van boven naar beneden schuift */}
-                <Animated.View style={[tw`bg-[#E6D8F5] rounded-b-2xl p-5`, { transform: [{ translateY }] }]}>
-                    <Image source={protest.image} style={tw`w-full h-44 rounded-xl mb-3`} resizeMode="cover" />
-                    <Text style={tw`text-xl font-bold text-[#0A1A3A]`}>{protest.title}</Text>
-                    <Text style={tw`italic text-gray-700 mt-1`}>{protest.subtitle}</Text>
+                <Animated.View
+                    style={[
+                        tw`bg-[#DCC7EA] rounded-b-3xl overflow-hidden border-b-2 border-[#0A1A3A]`,
+                        {
+                            transform: [{ translateY }],
+                        },
+                    ]}
+                >
+                    <View>
+                        <Image
+                            source={protest.image}
+                            style={tw`w-full h-48`}
+                            resizeMode="cover"
+                        />
 
-                    {/* Details only in preview */}
-                    <View style={tw`mt-3`}>
-                        <Text style={tw`text-sm text-gray-600`}>Datum: <Text style={tw`text-[#0A1A3A]`}>{protest.date} • {protest.timeStart}</Text></Text>
-                        <Text style={tw`text-sm text-gray-600 mt-1`}>Locatie: <Text style={tw`text-[#0A1A3A]`}>{protest.location}</Text></Text>
-                        <Text style={tw`text-sm text-gray-600 mt-1`}>Deelnemers: <Text style={tw`text-[#0A1A3A]`}>{protest.participants}</Text></Text>
+                        <TouchableOpacity
+                            onPress={toggleBookmark}
+                            style={tw`absolute top-3 right-3 bg-[#0057B8] rounded-lg p-2`}
+                        >
+                            <Ionicons name="bookmark-outline" size={24} color="white" />
+                        </TouchableOpacity>
                     </View>
 
-                    <Text style={tw`text-gray-700 mt-3`}>{protest.why}</Text>
+                    <View style={tw`p-4`}>
+                        <Text style={tw`text-[#0A1A3A] text-lg font-semibold`}>
+                            {protest.title}
+                        </Text>
 
-                    {/* Acties: bookmark + details + sluiten */}
-                    <View style={tw`flex-row mt-5 items-center justify-between`}>
-                        <TouchableOpacity onPress={toggleBookmark} style={tw`flex-row items-center bg-white px-4 py-2 rounded-lg`}>
-                            <Ionicons name="bookmark-outline" size={18} color="#0A1A3A" />
-                            <Text style={tw`ml-2 text-[#0A1A3A]`}>Opslaan</Text>
-                        </TouchableOpacity>
+                        <Text style={tw`text-[#0A1A3A] italic text-sm mt-1`}>
+                            {protest.subtitle}
+                        </Text>
 
-                        <View style={tw`flex-row`}>
-                            <TouchableOpacity onPress={goToDetail} style={tw`bg-[#0057FF] px-4 py-2 rounded-lg mr-2`}>
+                        <View style={tw`flex-row mt-5`}>
+                            <TouchableOpacity
+                                onPress={goToDetail}
+                                style={tw`flex-1 bg-[#8B2BD6] rounded-xl py-3 items-center mr-3`}
+                            >
                                 <Text style={tw`text-white font-semibold`}>Details</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity onPress={onClose} style={tw`bg-[#0A1A3A] px-4 py-2 rounded-lg`}>
-                                <Text style={tw`text-white font-semibold`}>Sluiten</Text>
+                            <TouchableOpacity
+                                onPress={removePreview}
+                                style={tw`flex-1 bg-[#0A1A3A] rounded-xl py-3 items-center ml-3`}
+                            >
+                                <Text style={tw`text-white font-semibold`}>Verwijderen</Text>
                             </TouchableOpacity>
+                        </View>
+
+                        <View style={tw`flex-row items-center mt-5`}>
+                            <View style={tw`flex-row items-center mr-5`}>
+                                <Ionicons name="location" size={16} color="#7B2DD2" />
+                                <Text style={tw`text-[#0A1A3A] text-xs ml-1`}>
+                                    {protest.location}
+                                </Text>
+                            </View>
+
+                            <View style={tw`flex-row items-center mr-5`}>
+                                <Ionicons name="person-outline" size={16} color="#7B2DD2" />
+                                <Text style={tw`text-[#0A1A3A] text-xs ml-1`}>
+                                    {protest.participants}
+                                </Text>
+                            </View>
+
+                            <View style={tw`flex-row items-center`}>
+                                <Ionicons name="pricetag-outline" size={16} color="#7B2DD2" />
+                                <Text style={tw`text-[#0A1A3A] text-xs ml-1`}>
+                                    {protest.type}
+                                </Text>
+                            </View>
+                        </View>
+                    </View>
+
+                    <View style={tw`items-center -mb-1`}>
+                        <View
+                            style={tw`bg-[#DCC7EA] border-l-2 border-r-2 border-b-2 border-[#0A1A3A] w-24 h-8 rounded-b-xl items-center justify-center`}
+                        >
+                            <Ionicons name="chevron-up" size={30} color="#0A1A3A" />
                         </View>
                     </View>
                 </Animated.View>
