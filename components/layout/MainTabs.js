@@ -6,6 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import AppHeader from "./AppHeader";
 import HomeScreen from "../../screens/HomeScreen";
 import MapScreen from "../../screens/MapScreen";
+import ActionScreen from "../../screens/ActionScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -45,7 +46,7 @@ export default function MainTabs() {
                 >
                     <Tab.Screen
                         name="search"
-                        component={HomeScreen}
+                        component={ActionScreen}
                         options={{ title: "Home" }}
                     />
                     <Tab.Screen
