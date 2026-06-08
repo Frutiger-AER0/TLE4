@@ -1,34 +1,38 @@
 // App.js
 
+import "react-native-gesture-handler";
 import React from "react";
-import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import "./styles.css";
+import { StatusBar } from "expo-status-bar";
+import { StyleSheet, View } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
-import HomeScreen from "./screens/HomeScreen";
-import DetailScreen from "./screens/DetailScreen";
+import AppNavigator from "./components/layout/AppNavigator";
+import AppHeader from "./components/layout/AppHeader";
 
-const Stack = createNativeStackNavigator();
+import "./global.css";
 
 export default function App() {
     return (
-        <NavigationContainer>
-            <Stack.Navigator
-                initialRouteName="Home"
-                screenOptions={{
-                    headerShown: false,
-                }}
-            >
-                <Stack.Screen
-                    name="Home"
-                    component={HomeScreen}
-                />
+        <SafeAreaProvider>
+            <View style={styles.container}>
+                <StatusBar style="light" backgroundColor="#14213D" />
 
-                <Stack.Screen
-                    name="Detail"
-                    component={DetailScreen}
-                />
-            </Stack.Navigator>
-        </NavigationContainer>
+                <AppHeader />
+
+                <View style={styles.content}>
+                    <AppNavigator />
+                </View>
+            </View>
+        </SafeAreaProvider>
     );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: "#fff",
+    },
+    content: {
+        flex: 1,
+    },
+});
