@@ -1,15 +1,27 @@
 import React from "react";
 import { View } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createStackNavigator } from "@react-navigation/stack";
 import { Ionicons } from "@expo/vector-icons";
 
 import AppHeader from "./AppHeader";
 import HomeScreen from "../../screens/HomeScreen";
 import MapScreen from "../../screens/MapScreen";
 import ActionScreen from "../../screens/ActionScreen";
+import DonationScreen from "../../screens/DonationScreen";
 import AdminScreen from "../../screens/AdminScreen";
 
 const Tab = createBottomTabNavigator();
+const ActionStack = createStackNavigator();
+
+function ActionStackScreen() {
+    return (
+        <ActionStack.Navigator screenOptions={{ headerShown: false }}>
+            <ActionStack.Screen name="ActionScreen" component={ActionScreen} />
+            <ActionStack.Screen name="DonationScreen" component={DonationScreen} />
+        </ActionStack.Navigator>
+    );
+}
 
 export default function MainTabs({ route }) {
     const isAdmin = route?.params?.isAdmin === true;
@@ -51,7 +63,7 @@ export default function MainTabs({ route }) {
                 >
                     <Tab.Screen
                         name="search"
-                        component={ActionScreen}
+                        component={ActionStackScreen}
                         options={{ title: "Home" }}
                     />
                     <Tab.Screen
