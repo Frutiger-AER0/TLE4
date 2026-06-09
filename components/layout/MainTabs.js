@@ -4,8 +4,9 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 
 import AppHeader from "./AppHeader";
-import HomeScreen from "../../screens/HomeScreen";
+import HomeStack from "./HomeStack";
 import MapScreen from "../../screens/MapScreen";
+import HomeScreen from "../../screens/HomeScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -45,7 +46,7 @@ export default function MainTabs() {
                 >
                     <Tab.Screen
                         name="search"
-                        component={HomeScreen}
+                        component={HomeStack}
                         options={{ title: "Home" }}
                     />
                     <Tab.Screen
