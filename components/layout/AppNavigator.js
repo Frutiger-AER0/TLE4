@@ -13,10 +13,11 @@ import AppHeader from "./AppHeader";
 import HomeStack from "./HomeStack";
 import DetailScreen from "../../screens/DetailScreen";
 import DonationScreen from "../../screens/DonationScreen";
+import AgendaScreen from "../../screens/AgendaScreen";
 
 const Tab = createBottomTabNavigator();
-
 const ActionStack = createStackNavigator();
+const AgendaStack = createStackNavigator();
 
 function ActionStackScreen() {
     return (
@@ -24,6 +25,9 @@ function ActionStackScreen() {
             initialRouteName="ActionScreen"
             screenOptions={{
                 headerShown: false,
+                cardStyle: {
+                    backgroundColor: "#F8F9FA",
+                },
             }}
         >
             {/* Hoofdpagina met projecten */}
@@ -53,6 +57,30 @@ function ActionStackScreen() {
     );
 }
 
+function AgendaStackScreen() {
+    return (
+        <AgendaStack.Navigator
+            initialRouteName="AgendaScreen"
+            screenOptions={{
+                headerShown: false,
+                cardStyle: {
+                    backgroundColor: "#F8F9FA",
+                },
+            }}
+        >
+            <AgendaStack.Screen
+                name="AgendaScreen"
+                component={AgendaScreen}
+            />
+
+            <AgendaStack.Screen
+                name="AgendaDetail"
+                component={DetailScreen}
+            />
+        </AgendaStack.Navigator>
+    );
+}
+
 const MyTheme = {
     ...DefaultTheme,
     colors: {
@@ -71,19 +99,39 @@ export default function AppNavigator({route}) {
                 initialRouteName="search"
                 screenOptions={({route}) => ({
                     headerShown: true,
-                    header: () => <AppHeader/>,
+                    header: () => <AppHeader />,
                     headerStyle: {
+                        backgroundColor: "#14213D",
                         elevation: 0,
                         shadowOpacity: 0,
                         borderBottomWidth: 0,
                     },
-                    tabBarActiveTintColor: '#F4C430',
-                    tabBarInactiveTintColor: '#F8F9FA',
+                    sceneContainerStyle: {
+                        backgroundColor: "#F8F9FA",
+                    },
+                    tabBarActiveTintColor: "#F8F9FA",
+                    tabBarInactiveTintColor: "#F8F9FA",
                     tabBarStyle: {
-                        backgroundColor: '#14213D',
-                        height: 90,
-                        paddingTop: 14,
+                        position: "absolute",
+                        left: 16,
+                        right: 16,
+                        bottom: 18,
+                        backgroundColor: "#14213D",
+                        height: 78,
+                        borderRadius: 16,
+                        paddingTop: 10,
                         paddingBottom: 8,
+                        borderTopWidth: 0,
+                        elevation: 0,
+                        shadowOpacity: 0,
+                    },
+                    tabBarLabelStyle: {
+                        fontSize: 10,
+                        marginTop: 2,
+                    },
+                    tabBarItemStyle: {
+                        borderRadius: 16,
+                        marginHorizontal: 6,
                     },
                     tabBarIcon: ({focused, color, size}) => {
                         let iconName;
@@ -117,7 +165,7 @@ export default function AppNavigator({route}) {
                 />
                 <Tab.Screen
                     name="calendar"
-                    component={HomeStack}
+                    component={AgendaStackScreen}
                     options={{title: 'Agenda'}}
                 />
                 <Tab.Screen

@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
-import MapView, {Marker} from 'react-native-maps';
+// import MapView, {Marker} from 'react-native-maps';
 import {StyleSheet, View, Text} from 'react-native';
-import * as Location from 'expo-location';
+// import * as Location from 'expo-location';
 
 export default function MapScreen({route}) {
     const item = route?.params?.item || {latitude: 52.3702, longitude: 4.8952, name: "Standaard", address: "Onbekend"};
