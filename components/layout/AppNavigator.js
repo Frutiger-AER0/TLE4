@@ -5,7 +5,6 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createStackNavigator} from '@react-navigation/stack'; // Import createStackNavigator
 import {Ionicons} from '@expo/vector-icons';
 
-import Ontdek from "../../Home";
 import ActionScreen from "../../screens/ActionScreen";
 import HomeScreen from "../../screens/HomeScreen";
 import MapScreen from "../../screens/MapScreen";
