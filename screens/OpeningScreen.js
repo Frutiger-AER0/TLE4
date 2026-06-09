@@ -31,6 +31,8 @@ import React, {useState, useRef} from 'react';
 import {View, Text, FlatList, Dimensions, TouchableOpacity, Image} from 'react-native';
 import AppHeader from "../components/layout/AppHeader";
 
+import OnboardingRoleCard from "../components/onboarding/OnboardingRoleCard";
+
 const {width} = Dimensions.get('window');
 
 const PAGES = [
@@ -46,7 +48,6 @@ const PAGES = [
         id: '2',
         title: 'Wat is jouw rol?',
         desc: 'Kies je rol om door te gaan',
-        image: null
     },
     {
         id: '3',
@@ -61,6 +62,7 @@ const PAGES = [
 
 export default function OpeningScreen({navigation}) {
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [selectedRole, setSelectedRole] = useState(null); // Moved inside the component
     const flatListRef = useRef(null);
 
     const onViewableItemsChanged = useRef(({viewableItems}) => {
