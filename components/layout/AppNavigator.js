@@ -4,23 +4,52 @@ import {DefaultTheme} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createStackNavigator} from '@react-navigation/stack'; // Import createStackNavigator
 import {Ionicons} from '@expo/vector-icons';
-import ActionScreen from "../../screens/ActionScreen";
-import DonationScreen from "../../screens/DonationScreen"; // Import DonationScreen
 
+import Ontdek from "../../Home";
+import ActionScreen from "../../screens/ActionScreen";
 import HomeScreen from "../../screens/HomeScreen";
 import MapScreen from "../../screens/MapScreen";
 import AdminScreen from "../../screens/AdminScreen";
 import AppHeader from "./AppHeader";
 import HomeStack from "./HomeStack";
+import DetailScreen from "../../screens/DetailScreen";
+import DonationScreen from "../../screens/DonationScreen";
 
 const Tab = createBottomTabNavigator();
-const ActionStack = createStackNavigator(); // Create a Stack Navigator for the Action flow
+
+const ActionStack = createStackNavigator();
 
 function ActionStackScreen() {
     return (
-        <ActionStack.Navigator screenOptions={{headerShown: false}}>
-            <ActionStack.Screen name="ActionScreen" component={ActionScreen}/>
-            <ActionStack.Screen name="DonationScreen" component={DonationScreen}/>
+        <ActionStack.Navigator
+            initialRouteName="ActionScreen"
+            screenOptions={{
+                headerShown: false,
+            }}
+        >
+            {/* Hoofdpagina met projecten */}
+            <ActionStack.Screen
+                name="ActionScreen"
+                component={ActionScreen}
+            />
+
+            {/* Jouw demonstratie-overzichtspagina */}
+            <ActionStack.Screen
+                name="HomeScreen"
+                component={HomeScreen}
+            />
+
+            {/* Detailpagina van een demonstratie */}
+            <ActionStack.Screen
+                name="Detail"
+                component={DetailScreen}
+            />
+
+            {/* Bestaande donatiepagina */}
+            <ActionStack.Screen
+                name="DonationScreen"
+                component={DonationScreen}
+            />
         </ActionStack.Navigator>
     );
 }
