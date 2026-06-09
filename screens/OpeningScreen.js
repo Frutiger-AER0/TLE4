@@ -28,19 +28,42 @@
 
 
 import React, {useState, useRef} from 'react';
-import {View, Text, FlatList, Dimensions, TouchableOpacity} from 'react-native';
+import {View, Text, FlatList, Dimensions, TouchableOpacity, Image} from 'react-native';
 import AppHeader from "../components/layout/AppHeader";
+
+import OnboardingRoleCard from "../components/onboarding/OnboardingRoleCard";
 
 const {width} = Dimensions.get('window');
 
 const PAGES = [
-    {id: '1', title: 'Welkom bij de App', desc: 'Dit is de eerste pagina.'},
-    {id: '2', title: 'Ontdek Functies', desc: 'Dit is de tweede pagina met uitleg.'},
-    {id: '3', title: 'Aan de Slag', desc: 'Je bent klaar om te beginnen!'},
+    {
+        id: '1',
+        title: 'Support de protesten in Rotterdam',
+        coloredtitle: 'Op jouw manier',
+        desc: 'Verbind de straat met de huiskamer',
+        coloreddesc: 'SupporT, thuisfront aan je zijlijn',
+        image: require("../assets/tle4-spandoek.avif")
+    },
+    {
+        id: '2',
+        title: 'Wat is jouw rol?',
+        desc: 'Kies je rol om door te gaan',
+    },
+    {
+        id: '3',
+        title: 'Steun zonder de prikkels',
+        coloredcreativesupport: 'Creatieve Support',
+        creativesupport: 'Maak posters en stickers vanuit je eigen kamer',
+        coloredflexibel: 'Flexibel',
+        flexibel: 'Draag bij wanneer het jou uitkomt',
+        image: require("../assets/tle4-doneren-v2.avif")
+    },
 ];
 
 export default function OpeningScreen({navigation}) {
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [selectedRole, setSelectedRole] = useState(null); // Moved inside the component
+    const flatListRef = useRef(null);
 
     const onViewableItemsChanged = useRef(({viewableItems}) => {
         if (viewableItems.length > 0) {
@@ -52,55 +75,169 @@ export default function OpeningScreen({navigation}) {
         viewAreaCoveragePercentThreshold: 50,
     }).current;
 
-    return (
-        <View className="flex-1 bg-offWhite">
-            <AppHeader/>
+    const handleNext = () => {
+        if (currentIndex < PAGES.length - 1) {
+            flatListRef.current?.scrollToIndex({
+                index: currentIndex + 1,
+                animated: true,
+            });
+        } else {
+            navigation.navigate("Registry");
+        }
+    };
+    const handleBack = () => {
+        if (currentIndex > 0) {
+            flatListRef.current?.scrollToIndex({
+                index: currentIndex - 1,
+                animated: true,
+            });
+        }
+    };
 
+    const isLastPage = currentIndex === PAGES.length - 1;
+
+    return (
+        <View className="flex-1 bg-darkBlue">
+            <AppHeader/>
             <View className="flex-1 justify-center items-center">
                 <FlatList
+                    ref={flatListRef}
                     data={PAGES}
                     horizontal
                     pagingEnabled
-                    showsHorizontalScrollIndicator={false}
-                    snapToAlignment="center"
-                    decelerationRate="fast"
                     onViewableItemsChanged={onViewableItemsChanged}
                     viewabilityConfig={viewabilityConfig}
                     keyExtractor={(item) => item.id}
-                    renderItem={({item}) => (
-                        <View style={{width}} className="justify-center items-center p-6">
-                            <Text className="text-3xl font-bold mb-4 text-darkBlue text-center">
-                                {item.title}
-                            </Text>
-                            <Text className="text-lg text-gray-600 text-center px-4">
-                                {item.desc}
-                            </Text>
-                        </View>
-                    )}
+                    renderItem={({item}) => {
+                        if (item.id === '2') {
+                            return (
+                                <View style={{width}} className="justify-center p-6">
+                                    <Text className="text-3xl font-bold mb-1 text-offWhite text-left">
+                                        {item.title}
+                                    </Text>
+                                    <Text className="text-lg text-offWhite text-left mb-6">
+                                        {item.desc}
+                                    </Text>
+
+                                    {/* Kaart 1: Supporter */}
+                                    <OnboardingRoleCard
+                                        title="Ik ben een supporter"
+                                        description="Ik wil maatschappelijke thema's supporten vanuit huis."
+                                        icon={require("../assets/tle4-house.png")}
+                                        isSelected={selectedRole === 'supporter'}
+                                        onPress={() => setSelectedRole('supporter')}
+                                    />
+
+                                    {/* Kaart 2: Organisator */}
+                                    <OnboardingRoleCard
+                                        title="Ik ben een organisator"
+                                        description="Ik organiseer acties in Rotterdam en zoek een breder, visueel bereik."
+                                        icon={require("../assets/tle4-megaphone.png")} // Vervang door jouw icoon asset
+                                        isSelected={selectedRole === 'organisator'}
+                                        onPress={() => setSelectedRole('organisator')}
+                                    />
+                                </View>
+                            );
+                        }
+
+                        return (
+                            <View style={{width}} className="justify-center p-8">
+                                {item.image && (
+                                    <View className="w-96 h-72 mb-8 rounded-3xl overflow-hidden self-center">
+                                        <Image
+                                            source={item.image}
+                                            className="w-full h-full"
+                                            resizeMode="cover"
+                                        />
+                                    </View>
+                                )}
+                                <Text className="text-3xl font-bold mb-1 text-offWhite text-left">
+                                    {item.title}
+                                </Text>
+                                {item.coloredtitle && (
+                                    <Text className="text-3xl font-bold mb-8 text-yellow text-left">
+                                        {item.coloredtitle}
+                                    </Text>
+                                )}
+                                <Text className="text-lg text-offWhite text-left ">
+                                    {item.desc}
+                                </Text>
+                                {item.coloreddesc && (
+                                    <Text className="text-lg text-yellow text-left">
+                                        {item.coloreddesc}
+                                    </Text>
+                                )}
+                                <Text className="text-lg text-yellow text-left">
+                                    {item.coloredcreativesupport}
+                                </Text>
+                                {item.creativesupport && (
+                                    <Text className="text-lg mb-5 text-offWhite text-left">
+                                        {item.creativesupport}
+                                    </Text>
+                                )}
+                                <Text className="text-lg text-yellow text-left ">
+                                    {item.coloredflexibel}
+                                </Text>
+                                {item.flexibel && (
+                                    <Text className="text-lg text-offWhite text-left">
+                                        {item.flexibel}
+                                    </Text>
+                                )}
+                            </View>
+                        );
+                    }}
                 />
 
-                <View className="flex-row absolute bottom-16 justify-center items-center">
+                {currentIndex < PAGES.length - 1 && (
+                    <TouchableOpacity
+                        className="absolute right-6 z-50 py-5"
+                        style={{top: 20}}
+                        hitSlop={{top: 20, bottom: 20, left: 20, right: 20}}
+                        onPress={() => {
+                            navigation.navigate("Registry");
+                        }}
+                    >
+                        <Text className="text-offWhite text-lg font-bold">
+                            Skip
+                        </Text>
+                    </TouchableOpacity>
+                )}
+
+                <View className="flex-row absolute top-6 justify-center items-center">
                     {PAGES.map((_, index) => {
                         const isActive = index === currentIndex;
                         return (
                             <View
                                 key={index}
                                 className={`h-1.5 mx-1 rounded-full ${
-                                    isActive ? 'w-10 bg-blue' : 'w-7 bg-gray-300'
+                                    isActive ? 'w-32 bg-yellow' : 'w-32 bg-offWhite'
                                 }`}
                             />
                         );
                     })}
                 </View>
 
-                {currentIndex === PAGES.length - 1 && (
+                <View className="absolute bottom-6 flex-row w-full max-w-md px-6 items-center justify-between gap-4">
+                    {currentIndex > 0 ? (
+                        <TouchableOpacity
+                            className="bg-transparent border border-offWhite p-3 rounded-lg items-center justify-center w-14"
+                            onPress={handleBack}
+                        >
+                            <Text className="text-offWhite text-xl font-bold">←</Text>
+                        </TouchableOpacity>
+                    ) : (
+                        <View className="w-14"/>
+                    )}
+
                     <TouchableOpacity
-                        className="absolute bottom-4 w-full max-w-md bg-purple py-3 rounded-lg items-center px-6"
-                        onPress={() => navigation.navigate("Login")}
+                        className={` ${isLastPage ? 'bg-purple flex-1 py-3 rounded-lg items-center' : 'bg-transparent border border-offWhite p-3 rounded-lg items-center justify-center w-14 text-offWhite text-xl font-bold'} `}
+                        onPress={handleNext}
                     >
-                        <Text className="text-offWhite text-lg font-semibold">Aan de slag</Text>
+                        <Text className="text-offWhite text-lg font-semibold">
+                            {isLastPage ? "Registreer" : "→"}
+                        </Text>
                     </TouchableOpacity>
-                )}
+                </View>
             </View>
         </View>
     );
