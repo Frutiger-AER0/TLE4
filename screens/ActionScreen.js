@@ -13,7 +13,7 @@ export default function ActionScreen() {
     return (
         <ScrollView
             contentContainerStyle={{flexGrow: 1, alignItems: 'center', paddingTop: 40, paddingBottom: 20}}
-            className="flex-1">
+            className="flex-1 bg-offWhite">
             <View className="flex-1 bg-offWhite px-4">
                 <Text className="text-xl font-bold text-darkBlue mb-5"
                       style={{marginBottom: 20}}>
