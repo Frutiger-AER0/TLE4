@@ -2,10 +2,11 @@
 
 import React from "react";
 import { View } from "react-native";
-import { DefaultTheme } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
 import { Ionicons } from "@expo/vector-icons";
+
+import AppHeader from "./AppHeader";
 
 import ActionScreen from "../../screens/ActionScreen";
 import HomeScreen from "../../screens/HomeScreen";
@@ -70,17 +71,11 @@ function AgendaStackScreen() {
     );
 }
 
-const MyTheme = {
-    ...DefaultTheme,
-    colors: {
-        ...DefaultTheme.colors,
-        background: "#F8F9FA",
-    },
-};
-
 export default function AppNavigator() {
     return (
-        <View className="flex-1">
+        <View className="flex-1 bg-offWhite">
+            <AppHeader />
+
             <Tab.Navigator
                 initialRouteName="search"
                 screenOptions={({ route }) => ({
@@ -98,6 +93,7 @@ export default function AppNavigator() {
                         paddingTop: 10,
                         paddingBottom: 8,
                         borderTopWidth: 0,
+                        elevation: 0,
                     },
                     tabBarLabelStyle: {
                         fontSize: 10,
@@ -106,6 +102,9 @@ export default function AppNavigator() {
                     tabBarItemStyle: {
                         borderRadius: 16,
                         marginHorizontal: 6,
+                    },
+                    sceneContainerStyle: {
+                        backgroundColor: "#F8F9FA",
                     },
                     tabBarIcon: ({ focused, color, size }) => {
                         let iconName = "ellipse-outline";

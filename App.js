@@ -12,7 +12,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import OpeningScreen from "./screens/OpeningScreen";
 import LoginScreen from "./screens/LoginScreen";
 import RegistryScreen from "./screens/RegistryScreen";
-import MainTabs from "./components/layout/MainTabs";
+import AppNavigator from "./components/layout/AppNavigator";
 
 import "./global.css";
 
@@ -49,7 +49,7 @@ export default function App() {
 
                         <Stack.Screen
                             name="Home"
-                            component={MainTabs}
+                            component={AppNavigator}
                         />
                     </Stack.Navigator>
                 </NavigationContainer>
