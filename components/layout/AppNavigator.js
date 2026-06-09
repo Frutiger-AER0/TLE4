@@ -11,6 +11,7 @@ import HomeScreen from "../../screens/HomeScreen";
 import MapScreen from "../../screens/MapScreen";
 import AdminScreen from "../../screens/AdminScreen";
 import AppHeader from "./AppHeader";
+import HomeStack from "./HomeStack";
 
 const Tab = createBottomTabNavigator();
 const ActionStack = createStackNavigator(); // Create a Stack Navigator for the Action flow
@@ -88,12 +89,12 @@ export default function AppNavigator({route}) {
                 />
                 <Tab.Screen
                     name="calendar"
-                    component={HomeScreen}
+                    component={HomeStack}
                     options={{title: 'Agenda'}}
                 />
                 <Tab.Screen
                     name="person"
-                    component={HomeScreen}
+                    component={HomeStack}
                     options={{title: 'Profiel'}}
                 />
                 {isAdmin && (
