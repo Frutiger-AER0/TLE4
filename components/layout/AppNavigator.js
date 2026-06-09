@@ -6,7 +6,6 @@ import {createStackNavigator} from '@react-navigation/stack'; // Import createSt
 import {Ionicons} from '@expo/vector-icons';
 import ActionScreen from "../../screens/ActionScreen";
 import DonationScreen from "../../screens/DonationScreen"; // Import DonationScreen
-import { DefaultTheme } from "@react-navigation/native";
 
 import HomeScreen from "../../screens/HomeScreen";
 import MapScreen from "../../screens/MapScreen";
