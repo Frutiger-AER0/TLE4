@@ -11,7 +11,7 @@ import LoginScreen from "./screens/LoginScreen";
 import RegistryScreen from "./screens/RegistryScreen";
 import MainTabs from "./components/layout/MainTabs";
 
-import "./global.css"
+import "./global.css";
 
 const Stack = createStackNavigator();
 
@@ -33,3 +33,13 @@ export default function App() {
       </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: "#fff",
+    },
+    content: {
+        flex: 1,
+    },
+});
