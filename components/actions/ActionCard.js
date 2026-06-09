@@ -1,5 +1,7 @@
+// components/actions/ActionCard.js
+
 import React from "react";
-import {View, Text, Image, TouchableOpacity} from "react-native";
+import { View, Text, Image, TouchableOpacity } from "react-native";
 
 export default function ActionCard({
                                        image,
@@ -9,27 +11,69 @@ export default function ActionCard({
                                        onPress,
                                    }) {
     return (
-        <View className="bg-lightPurple rounded-xl overflow-hidden w-full p-5 mb-5">
+        <View
+            className="bg-lightPurple rounded-xl overflow-hidden w-full mb-5"
+            style={{
+                minHeight: 0,
+            }}
+        >
             <Image
                 source={image}
-                className="w-full h-[150px]"
+                style={{
+                    width: "100%",
+                    height: 170,
+                    backgroundColor: "#E6D8F5",
+                }}
                 resizeMode="cover"
             />
 
-            <View className="p-4">
-                <Text className="text-xl font-semibold text-darkBlue">
+            <View
+                style={{
+                    padding: 16,
+                }}
+            >
+                <Text
+                    className="text-darkBlue"
+                    style={{
+                        fontSize: 20,
+                        fontWeight: "700",
+                        marginBottom: 8,
+                    }}
+                >
                     {title}
                 </Text>
 
-                <Text className="mt-1 text-sm text-darkBlue">
+                <Text
+                    className="text-darkBlue"
+                    style={{
+                        fontSize: 14,
+                        lineHeight: 20,
+                    }}
+                >
                     {description}
                 </Text>
 
                 <TouchableOpacity
-                    className="self-end mt-4 bg-purple-600 px-6 py-2 rounded-xl"
                     onPress={onPress}
+                    activeOpacity={0.85}
+                    style={{
+                        alignSelf: "flex-end",
+                        marginTop: 18,
+                        backgroundColor: "#8B2BD6",
+                        paddingHorizontal: 24,
+                        paddingVertical: 12,
+                        borderRadius: 12,
+                    }}
                 >
-                    <Text className="text-white">{buttonText}</Text>
+                    <Text
+                        style={{
+                            color: "white",
+                            fontWeight: "700",
+                            fontSize: 14,
+                        }}
+                    >
+                        {buttonText}
+                    </Text>
                 </TouchableOpacity>
             </View>
         </View>

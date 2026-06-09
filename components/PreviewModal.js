@@ -1,6 +1,6 @@
 // components/PreviewModal.js
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
     View,
     Text,
@@ -10,16 +10,20 @@ import {
     Animated,
     Dimensions,
     Pressable,
+    Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import tw from "twrnc";
 import { useNavigation } from "@react-navigation/native";
+
+import { saveUserProject } from "../components/services/ProtestApi";
 
 const { height } = Dimensions.get("window");
 
 export default function PreviewModal({ visible, onClose, protest }) {
     const navigation = useNavigation();
     const translateY = useRef(new Animated.Value(-height)).current;
+    const [saving, setSaving] = useState(false);
 
     useEffect(() => {
         if (visible) {
@@ -51,40 +55,23 @@ export default function PreviewModal({ visible, onClose, protest }) {
         }
     }
 
-    function removePreview() {
-        /*
-            PSEUDOCODE VOOR LATER:
+    async function saveProtest() {
+        try {
+            if (!protest.protestProjectId) {
+                Alert.alert("Niet mogelijk", "Geen protest_project id gevonden.");
+                return;
+            }
 
-            Als gebruiker demonstratie uit lijst wil verwijderen/verbergen:
-            await fetch(`/api/user-protests/${protest.id}`, {
-                method: "DELETE",
-            });
+            setSaving(true);
+            await saveUserProject(protest.protestProjectId);
 
-            Daarna:
-            - modal sluiten
-            - lijst opnieuw ophalen
-            - of lokaal uit state filteren
-        */
-
-        onClose();
-    }
-
-    function toggleBookmark() {
-        /*
-            PSEUDOCODE VOOR LATER:
-
-            await fetch(`/api/bookmarks`, {
-                method: "POST",
-                body: JSON.stringify({
-                    user_id: currentUser.id,
-                    protest_id: protest.id,
-                }),
-            });
-
-            Daarna bookmark icon actief maken.
-        */
-
-        console.log("Bookmark toggled:", protest.id);
+            Alert.alert("Opgeslagen", "Deze demonstratie is toegevoegd aan je agenda.");
+        } catch (error) {
+            Alert.alert("Fout", "Deze demonstratie kon niet worden opgeslagen.");
+            console.log("saveUserProject error:", error.message);
+        } finally {
+            setSaving(false);
+        }
     }
 
     return (
@@ -106,76 +93,83 @@ export default function PreviewModal({ visible, onClose, protest }) {
                         },
                     ]}
                 >
+                    <View style={tw`items-center pt-3 pb-2`}>
+                        <View style={tw`w-12 h-1 bg-[#0A1A3A]/30 rounded-full`} />
+                    </View>
+
                     <View>
                         <Image
                             source={protest.image}
-                            style={tw`w-full h-48`}
+                            style={tw`w-full h-52`}
                             resizeMode="cover"
                         />
 
                         <TouchableOpacity
-                            onPress={toggleBookmark}
+                            onPress={saveProtest}
+                            disabled={saving}
                             style={tw`absolute top-3 right-3 bg-[#0057B8] rounded-lg p-2`}
                         >
                             <Ionicons name="bookmark-outline" size={24} color="white" />
                         </TouchableOpacity>
                     </View>
 
-                    <View style={tw`p-4`}>
-                        <Text style={tw`text-[#0A1A3A] text-lg font-semibold`}>
+                    <View style={tw`p-5`}>
+                        <Text style={tw`text-[#0A1A3A] text-2xl font-semibold`}>
                             {protest.title}
                         </Text>
 
-                        <Text style={tw`text-[#0A1A3A] italic text-sm mt-1`}>
+                        <Text style={tw`text-[#0A1A3A] italic text-base mt-2`}>
                             {protest.subtitle}
                         </Text>
 
-                        <View style={tw`flex-row mt-5`}>
+                        <View style={tw`flex-row mt-7`}>
                             <TouchableOpacity
                                 onPress={goToDetail}
-                                style={tw`flex-1 bg-[#8B2BD6] rounded-xl py-3 items-center mr-3`}
+                                style={tw`flex-1 bg-[#8B2BD6] rounded-xl py-4 items-center mr-3`}
                             >
-                                <Text style={tw`text-white font-semibold`}>Details</Text>
+                                <Text style={tw`text-white font-bold text-base`}>
+                                    Details
+                                </Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity
-                                onPress={removePreview}
-                                style={tw`flex-1 bg-[#0A1A3A] rounded-xl py-3 items-center ml-3`}
+                                onPress={onClose}
+                                style={tw`flex-1 bg-[#0A1A3A] rounded-xl py-4 items-center ml-3`}
                             >
-                                <Text style={tw`text-white font-semibold`}>Verwijderen</Text>
+                                <Text style={tw`text-white font-bold text-base`}>
+                                    Verwijderen
+                                </Text>
                             </TouchableOpacity>
                         </View>
 
-                        <View style={tw`flex-row items-center mt-5`}>
-                            <View style={tw`flex-row items-center mr-5`}>
-                                <Ionicons name="location" size={16} color="#7B2DD2" />
-                                <Text style={tw`text-[#0A1A3A] text-xs ml-1`}>
+                        <View style={tw`flex-row items-center mt-6 flex-wrap`}>
+                            <View style={tw`flex-row items-center mr-5 mb-2`}>
+                                <Ionicons name="location" size={19} color="#7B2DD2" />
+                                <Text style={tw`text-[#0A1A3A] text-sm ml-2`}>
                                     {protest.location}
                                 </Text>
                             </View>
 
-                            <View style={tw`flex-row items-center mr-5`}>
-                                <Ionicons name="person-outline" size={16} color="#7B2DD2" />
-                                <Text style={tw`text-[#0A1A3A] text-xs ml-1`}>
+                            <View style={tw`flex-row items-center mr-5 mb-2`}>
+                                <Ionicons name="person-outline" size={19} color="#7B2DD2" />
+                                <Text style={tw`text-[#0A1A3A] text-sm ml-2`}>
                                     {protest.participants}
                                 </Text>
                             </View>
 
-                            <View style={tw`flex-row items-center`}>
-                                <Ionicons name="pricetag-outline" size={16} color="#7B2DD2" />
-                                <Text style={tw`text-[#0A1A3A] text-xs ml-1`}>
+                            <View style={tw`flex-row items-center mb-2`}>
+                                <Ionicons name="pricetag-outline" size={19} color="#7B2DD2" />
+                                <Text style={tw`text-[#0A1A3A] text-sm ml-2`}>
                                     {protest.type}
                                 </Text>
                             </View>
                         </View>
-                    </View>
 
-                    <View style={tw`items-center -mb-1`}>
-                        <View
-                            style={tw`bg-[#DCC7EA] border-l-2 border-r-2 border-b-2 border-[#0A1A3A] w-24 h-8 rounded-b-xl items-center justify-center`}
-                        >
-                            <Ionicons name="chevron-up" size={30} color="#0A1A3A" />
-                        </View>
+                        {saving && (
+                            <Text style={tw`text-[#0A1A3A] text-sm mt-3`}>
+                                Opslaan...
+                            </Text>
+                        )}
                     </View>
                 </Animated.View>
             </View>

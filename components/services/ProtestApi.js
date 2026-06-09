@@ -2,27 +2,14 @@
 
 const API_BASE_URL = "http://145.24.237.86:8000";
 
-/*
-    ENDPOINTS
-
-    Insufficient data to verify of jouw server deze routes exact gebruikt.
-    Als jullie backend routes anders heten, pas alleen API_PATHS aan.
-
-    Verwachte routes:
-    GET    /api/protests
-    GET    /api/user-projects
-    POST   /api/user-projects
-    DELETE /api/user-projects/:id
-*/
-
 const API_PATHS = {
-    protests: "/api/protests",
-    userProjects: "/api/user-projects",
-    saveUserProject: "/api/user-projects",
-    deleteUserProject: (id) => `/api/user-projects/${id}`,
+    protests: "/protests",
+    userProjects: "/user-projects",
+    saveUserProject: "/user-projects",
+    deleteUserProject: (id) => `/user-projects/${id}`,
 };
 
-const fallbackImage = require("../assets/demo1.jpeg");
+const fallbackImage = require("../../assets/demo1.jpeg");
 
 async function request(path, options = {}) {
     const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -43,7 +30,9 @@ async function request(path, options = {}) {
 }
 
 function formatDate(dateValue) {
-    if (!dateValue) return "Datum onbekend";
+    if (!dateValue) {
+        return "Datum onbekend";
+    }
 
     const date = new Date(dateValue);
 
@@ -59,7 +48,9 @@ function formatDate(dateValue) {
 }
 
 function formatTime(dateValue) {
-    if (!dateValue) return "Tijd onbekend";
+    if (!dateValue) {
+        return "Tijd onbekend";
+    }
 
     const date = new Date(dateValue);
 
@@ -74,6 +65,10 @@ function formatTime(dateValue) {
 }
 
 function getCalendarDay(dateValue) {
+    if (!dateValue) {
+        return null;
+    }
+
     const date = new Date(dateValue);
 
     if (Number.isNaN(date.getTime())) {
@@ -84,6 +79,10 @@ function getCalendarDay(dateValue) {
 }
 
 function getCalendarMonthIndex(dateValue) {
+    if (!dateValue) {
+        return null;
+    }
+
     const date = new Date(dateValue);
 
     if (Number.isNaN(date.getTime())) {
@@ -94,6 +93,10 @@ function getCalendarMonthIndex(dateValue) {
 }
 
 function getCalendarYear(dateValue) {
+    if (!dateValue) {
+        return null;
+    }
+
     const date = new Date(dateValue);
 
     if (Number.isNaN(date.getTime())) {
@@ -104,7 +107,7 @@ function getCalendarYear(dateValue) {
 }
 
 function getImageSource(cardImg) {
-    if (!cardImg) {
+    if (!cardImg || typeof cardImg !== "string") {
         return fallbackImage;
     }
 
@@ -129,7 +132,7 @@ function getFirstItem(value) {
 
 export function normalizeProtest(record) {
     /*
-        ERD MAPPING
+        ERD mapping:
 
         protests:
         - id
@@ -230,7 +233,6 @@ export function normalizeProtest(record) {
         userProjectId:
             userProject?.id ||
             record?.user_project_id ||
-            record?.id ||
             null,
 
         title:
@@ -250,8 +252,7 @@ export function normalizeProtest(record) {
             protest?.location ||
             "Locatie onbekend",
 
-        city:
-            "Rotterdam",
+        city: "Rotterdam",
 
         participants:
             predictedMembers
@@ -264,11 +265,6 @@ export function normalizeProtest(record) {
 
         date: formatDate(startTime),
         timeStart: formatTime(startTime),
-
-        /*
-            ERD heeft geen end_time.
-            Daarom gebruiken we dit als fallback tekst.
-        */
         timeEnd: "Niet bekend",
 
         startTimeRaw: startTime,
@@ -336,13 +332,31 @@ export async function fetchProtests() {
 }
 
 export async function fetchUserProjects() {
-    const data = await request(API_PATHS.userProjects);
+    try {
+        const data = await request(API_PATHS.userProjects);
 
-    const items = Array.isArray(data)
-        ? data
-        : data.data || data.user_projects || data.userProjects || [];
+        const items = Array.isArray(data)
+            ? data
+            : data.data || data.user_projects || data.userProjects || [];
 
-    return items.map(normalizeProtest);
+        return items.map(normalizeProtest);
+    } catch (error) {
+        console.log("fetchUserProjects fallback:", error.message);
+
+        /*
+            Tijdelijke fallback:
+            Als /user-projects nog niet bestaat of faalt,
+            crasht de agenda niet.
+        */
+
+        const protests = await fetchProtests();
+
+        return protests.map((item) => ({
+            ...item,
+            isPlanned: false,
+            isSaved: false,
+        }));
+    }
 }
 
 export async function saveUserProject(protestProjectId, userId = null) {

@@ -1,16 +1,53 @@
+// screens/LoginScreen.js
+
 import React from "react";
-import { View } from "react-native";
-import AppHeader from "../components/layout/AppHeader";
+import {
+    View,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    Dimensions,
+} from "react-native";
 import LoginForm from "../components/LoginForm";
-import {SafeAreaView} from "react-native-safe-area-context";
+import AppHeader from "../components/layout/AppHeader";
 
 export default function LoginScreen({ navigation }) {
+    const screenHeight = Dimensions.get("window").height;
+
     return (
-        <SafeAreaView className="flex-1 bg-offWhite">
-            <AppHeader/>
-            <View className="flex-1 items-center justify-center pt-6">
-                <LoginForm onSuccess={() => navigation.navigate("Home")} />
-            </View>
-        </SafeAreaView>
+        <View className="flex-1 bg-offWhite">
+            <AppHeader />
+
+            <KeyboardAvoidingView
+                className="flex-1 bg-offWhite"
+                behavior={Platform.OS === "ios" ? "padding" : undefined}
+            >
+                <ScrollView
+                    className="flex-1 bg-offWhite"
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                    contentContainerStyle={{
+                        minHeight: screenHeight - 120,
+                        justifyContent: "center",
+                        alignItems: "center",
+                        paddingHorizontal: 24,
+                        paddingTop: 24,
+                        paddingBottom: 48,
+                    }}
+                >
+                    <View
+                        style={{
+                            width: "100%",
+                            maxWidth: 420,
+                            alignSelf: "center",
+                        }}
+                    >
+                        <LoginForm
+                            onSuccess={() => navigation.replace("Home")}
+                        />
+                    </View>
+                </ScrollView>
+            </KeyboardAvoidingView>
+        </View>
     );
 }

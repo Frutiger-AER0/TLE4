@@ -25,6 +25,9 @@ function ActionStackScreen() {
             initialRouteName="ActionScreen"
             screenOptions={{
                 headerShown: false,
+                cardStyle: {
+                    backgroundColor: "#F8F9FA",
+                },
             }}
         >
             <ActionStack.Screen
@@ -56,6 +59,9 @@ function AgendaStackScreen() {
             initialRouteName="AgendaScreen"
             screenOptions={{
                 headerShown: false,
+                cardStyle: {
+                    backgroundColor: "#F8F9FA",
+                },
             }}
         >
             <AgendaStack.Screen
@@ -74,12 +80,20 @@ function AgendaStackScreen() {
 export default function AppNavigator() {
     return (
         <View className="flex-1 bg-offWhite">
-            <AppHeader />
-
             <Tab.Navigator
                 initialRouteName="search"
                 screenOptions={({ route }) => ({
-                    headerShown: false,
+                    headerShown: true,
+                    header: () => <AppHeader />,
+                    headerStyle: {
+                        backgroundColor: "#14213D",
+                        elevation: 0,
+                        shadowOpacity: 0,
+                        borderBottomWidth: 0,
+                    },
+                    sceneContainerStyle: {
+                        backgroundColor: "#F8F9FA",
+                    },
                     tabBarActiveTintColor: "#F8F9FA",
                     tabBarInactiveTintColor: "#F8F9FA",
                     tabBarStyle: {
@@ -94,6 +108,7 @@ export default function AppNavigator() {
                         paddingBottom: 8,
                         borderTopWidth: 0,
                         elevation: 0,
+                        shadowOpacity: 0,
                     },
                     tabBarLabelStyle: {
                         fontSize: 10,
@@ -102,9 +117,6 @@ export default function AppNavigator() {
                     tabBarItemStyle: {
                         borderRadius: 16,
                         marginHorizontal: 6,
-                    },
-                    sceneContainerStyle: {
-                        backgroundColor: "#F8F9FA",
                     },
                     tabBarIcon: ({ focused, color, size }) => {
                         let iconName = "ellipse-outline";
