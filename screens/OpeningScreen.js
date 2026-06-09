@@ -99,7 +99,6 @@ export default function OpeningScreen({navigation}) {
     return (
         <View className="flex-1 bg-darkBlue">
             <AppHeader/>
-
             <View className="flex-1 justify-center items-center">
                 <FlatList
                     ref={flatListRef}
@@ -109,52 +108,86 @@ export default function OpeningScreen({navigation}) {
                     onViewableItemsChanged={onViewableItemsChanged}
                     viewabilityConfig={viewabilityConfig}
                     keyExtractor={(item) => item.id}
-                    renderItem={({item}) => (
-                        <View style={{width}} className="justify-center p-8">
-                            {item.image && (
-                                <View className="w-96 h-72 mb-8 rounded-3xl overflow-hidden self-center">
-                                    <Image
-                                        source={item.image}
-                                        className="w-full h-full"
-                                        resizeMode="cover"
+                    renderItem={({item}) => {
+                        if (item.id === '2') {
+                            return (
+                                <View style={{width}} className="justify-center p-6">
+                                    <Text className="text-3xl font-bold mb-1 text-offWhite text-left">
+                                        {item.title}
+                                    </Text>
+                                    <Text className="text-lg text-offWhite text-left mb-6">
+                                        {item.desc}
+                                    </Text>
+
+                                    {/* Kaart 1: Supporter */}
+                                    <OnboardingRoleCard
+                                        title="Ik ben een supporter"
+                                        description="Ik wil maatschappelijke thema's supporten vanuit huis."
+                                        icon={require("../assets/tle4-house.png")}
+                                        isSelected={selectedRole === 'supporter'}
+                                        onPress={() => setSelectedRole('supporter')}
+                                    />
+
+                                    {/* Kaart 2: Organisator */}
+                                    <OnboardingRoleCard
+                                        title="Ik ben een organisator"
+                                        description="Ik organiseer acties in Rotterdam en zoek een breder, visueel bereik."
+                                        icon={require("../assets/tle4-megaphone.png")} // Vervang door jouw icoon asset
+                                        isSelected={selectedRole === 'organisator'}
+                                        onPress={() => setSelectedRole('organisator')}
                                     />
                                 </View>
-                            )}
-                            <Text className="text-3xl font-bold mb-1 text-offWhite text-left">
-                                {item.title}
-                            </Text>
-                            {item.coloredtitle && (
-                                <Text className="text-3xl font-bold mb-8 text-yellow text-left">
-                                    {item.coloredtitle}
+                            );
+                        }
+
+                        return (
+                            <View style={{width}} className="justify-center p-8">
+                                {item.image && (
+                                    <View className="w-96 h-72 mb-8 rounded-3xl overflow-hidden self-center">
+                                        <Image
+                                            source={item.image}
+                                            className="w-full h-full"
+                                            resizeMode="cover"
+                                        />
+                                    </View>
+                                )}
+                                <Text className="text-3xl font-bold mb-1 text-offWhite text-left">
+                                    {item.title}
                                 </Text>
-                            )}
-                            <Text className="text-lg text-offWhite text-left ">
-                                {item.desc}
-                            </Text>
-                            {item.coloreddesc && (
+                                {item.coloredtitle && (
+                                    <Text className="text-3xl font-bold mb-8 text-yellow text-left">
+                                        {item.coloredtitle}
+                                    </Text>
+                                )}
+                                <Text className="text-lg text-offWhite text-left ">
+                                    {item.desc}
+                                </Text>
+                                {item.coloreddesc && (
+                                    <Text className="text-lg text-yellow text-left">
+                                        {item.coloreddesc}
+                                    </Text>
+                                )}
                                 <Text className="text-lg text-yellow text-left">
-                                    {item.coloreddesc}
+                                    {item.coloredcreativesupport}
                                 </Text>
-                            )}
-                            <Text className="text-lg text-yellow text-left">
-                                {item.coloredcreativesupport}
-                            </Text>
-                            {item.creativesupport && (
-                                <Text className="text-lg mb-5 text-offWhite text-left">
-                                    {item.creativesupport}
+                                {item.creativesupport && (
+                                    <Text className="text-lg mb-5 text-offWhite text-left">
+                                        {item.creativesupport}
+                                    </Text>
+                                )}
+                                <Text className="text-lg text-yellow text-left ">
+                                    {item.coloredflexibel}
                                 </Text>
-                            )}
-                            <Text className="text-lg text-yellow text-left ">
-                                {item.coloredflexibel}
-                            </Text>
-                            {item.flexibel && (
-                                <Text className="text-lg text-offWhite text-left">
-                                    {item.flexibel}
-                                </Text>
-                            )}
-                        </View>
-                    )}
+                                {item.flexibel && (
+                                    <Text className="text-lg text-offWhite text-left">
+                                        {item.flexibel}
+                                    </Text>
+                                )}
+                            </View>
+                        );
+                    }}
                 />
+
                 {currentIndex < PAGES.length - 1 && (
                     <TouchableOpacity
                         className="absolute right-6 z-50 py-5"
