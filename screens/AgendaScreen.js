@@ -1,6 +1,6 @@
 // screens/AgendaScreen.js
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
     View,
     Text,
@@ -8,14 +8,17 @@ import {
     TouchableOpacity,
     Image,
     Alert,
+    ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import tw from "twrnc";
 
 import PreviewModal from "../components/PreviewModal";
-import { protests, savedActions } from "../data/dummydata";
-
-const API_BASE_URL = "http://145.24.237.86:8000";
+import {
+    fetchUserProjects,
+    fetchProtests,
+    deleteUserProject,
+} from "../components/services/ProtestApi";
 
 const months = [
     "Januari",
@@ -32,90 +35,120 @@ const months = [
     "December",
 ];
 
+const ITEMS_PER_PAGE = 10;
+
 export default function AgendaScreen() {
-    const [currentMonthIndex, setCurrentMonthIndex] = useState(4); // Mei = index 4
-    const [currentYear, setCurrentYear] = useState(2026);
+    const today = new Date();
+
+    const [currentMonthIndex, setCurrentMonthIndex] = useState(today.getMonth());
+    const [currentYear, setCurrentYear] = useState(today.getFullYear());
+
+    const [agendaItems, setAgendaItems] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [errorText, setErrorText] = useState("");
 
     const [selectedProtest, setSelectedProtest] = useState(null);
     const [previewVisible, setPreviewVisible] = useState(false);
 
-    /*
-        BACKEND PSEUDOCODE VOOR LATER:
-
-        const [plannedProtests, setPlannedProtests] = useState([]);
-        const [savedProtests, setSavedProtests] = useState([]);
-        const [savedActions, setSavedActions] = useState([]);
-
-        useEffect(() => {
-            async function loadAgenda() {
-                const response = await fetch(`${API_BASE_URL}/api/agenda`);
-                const data = await response.json();
-
-                setPlannedProtests(data.plannedProtests);
-                setSavedProtests(data.savedProtests);
-                setSavedActions(data.savedActions);
-            }
-
-            loadAgenda();
-        }, []);
-
-        Mogelijke ERD-koppeling:
-
-        protests:
-        - id
-        - name
-        - description
-        - location
-        - predicted_members
-
-        protest_details:
-        - protest_id
-        - start_time
-        - link
-
-        protest_projects:
-        - protest_id
-        - project_id
-
-        user_projects:
-        - user_id
-        - protest_project_id
-        - is_finished
-
-        Op basis hiervan kun je:
-        - geplande demonstraties tonen uit user_projects + protest_projects + protests
-        - datum/tijd halen uit protest_details.start_time
-        - opgeslagen demonstraties tonen waar user_projects bestaat
-    */
+    const [activityPage, setActivityPage] = useState(0);
 
     const currentMonthName = months[currentMonthIndex];
 
-    const protestsInCurrentMonth = useMemo(() => {
-        return protests.filter((item) => {
-            return (
-                item.calendarMonth === currentMonthName &&
-                item.calendarYear === currentYear
-            );
-        });
-    }, [currentMonthName, currentYear]);
-
-    const plannedProtests = useMemo(() => {
-        return protests.filter((item) => {
-            return (
-                item.isPlanned &&
-                item.calendarMonth === currentMonthName &&
-                item.calendarYear === currentYear
-            );
-        });
-    }, [currentMonthName, currentYear]);
-
-    const savedProtests = useMemo(() => {
-        return protests.filter((item) => item.isSaved);
+    useEffect(() => {
+        loadAgenda();
     }, []);
 
+    async function loadAgenda() {
+        try {
+            setLoading(true);
+            setErrorText("");
+
+            /*
+                Database flow volgens ERD:
+                - protests geeft basisinformatie
+                - user_projects bepaalt wat een gebruiker heeft opgeslagen/gepland
+                - protest_details geeft datum/start_time wanneer backend dit meestuurt
+                - protest_projects koppelt protest aan project
+            */
+
+            const userProjects = await fetchUserProjects();
+
+            if (userProjects.length > 0) {
+                setAgendaItems(removeDuplicateItems(userProjects));
+                return;
+            }
+
+            /*
+                Fallback:
+                Als user-projects nog leeg is of niet werkt, tonen we gewone protests.
+                Daardoor crasht de pagina niet.
+            */
+
+            const protests = await fetchProtests();
+            setAgendaItems(removeDuplicateItems(protests));
+        } catch (error) {
+            setErrorText("Agenda kon niet worden geladen.");
+            console.log("Agenda load error:", error.message);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    function removeDuplicateItems(items) {
+        const seen = new Set();
+
+        return items.filter((item) => {
+            const uniqueKey = item.userProjectId || item.protestProjectId || item.id;
+
+            if (!uniqueKey) {
+                return true;
+            }
+
+            if (seen.has(uniqueKey)) {
+                return false;
+            }
+
+            seen.add(uniqueKey);
+            return true;
+        });
+    }
+
+    const itemsInCurrentMonth = useMemo(() => {
+        return agendaItems.filter((item) => {
+            return (
+                item.calendarMonthIndex === currentMonthIndex &&
+                item.calendarYear === currentYear
+            );
+        });
+    }, [agendaItems, currentMonthIndex, currentYear]);
+
     const markedDays = useMemo(() => {
-        return protestsInCurrentMonth.map((item) => item.calendarDay);
-    }, [protestsInCurrentMonth]);
+        return itemsInCurrentMonth
+            .map((item) => item.calendarDay)
+            .filter(Boolean);
+    }, [itemsInCurrentMonth]);
+
+    const sortedActivities = useMemo(() => {
+        return [...agendaItems].sort((a, b) => {
+            if (!a.startTimeRaw && !b.startTimeRaw) return 0;
+            if (!a.startTimeRaw) return 1;
+            if (!b.startTimeRaw) return -1;
+
+            return new Date(a.startTimeRaw) - new Date(b.startTimeRaw);
+        });
+    }, [agendaItems]);
+
+    const totalActivityPages = Math.max(
+        1,
+        Math.ceil(sortedActivities.length / ITEMS_PER_PAGE)
+    );
+
+    const visibleActivities = useMemo(() => {
+        const start = activityPage * ITEMS_PER_PAGE;
+        const end = start + ITEMS_PER_PAGE;
+
+        return sortedActivities.slice(start, end);
+    }, [sortedActivities, activityPage]);
 
     function goToPreviousMonth() {
         if (currentMonthIndex === 0) {
@@ -137,6 +170,18 @@ export default function AgendaScreen() {
         setCurrentMonthIndex(currentMonthIndex + 1);
     }
 
+    function goToNextActivityPage() {
+        if (activityPage < totalActivityPages - 1) {
+            setActivityPage(activityPage + 1);
+        }
+    }
+
+    function goToPreviousActivityPage() {
+        if (activityPage > 0) {
+            setActivityPage(activityPage - 1);
+        }
+    }
+
     function openPreview(protest) {
         setSelectedProtest(protest);
         setPreviewVisible(true);
@@ -147,20 +192,22 @@ export default function AgendaScreen() {
         setPreviewVisible(false);
     }
 
-    function removePlannedProtest(protestId) {
-        /*
-            BACKEND PSEUDOCODE VOOR LATER:
+    async function removeActivity(item) {
+        try {
+            if (!item.userProjectId) {
+                Alert.alert(
+                    "Niet mogelijk",
+                    "Dit item heeft nog geen user_project id."
+                );
+                return;
+            }
 
-            await fetch(`${API_BASE_URL}/api/user-projects/${protestId}`, {
-                method: "DELETE",
-            });
-
-            Daarna:
-            - agenda opnieuw ophalen
-            - of lokaal uit state verwijderen
-        */
-
-        Alert.alert("Demo", `Demonstratie ${protestId} tijdelijk verwijderd.`);
+            await deleteUserProject(item.userProjectId);
+            await loadAgenda();
+        } catch (error) {
+            Alert.alert("Fout", "Item kon niet worden verwijderd.");
+            console.log("deleteUserProject error:", error.message);
+        }
     }
 
     function getDaysInMonth(monthIndex, year) {
@@ -168,17 +215,6 @@ export default function AgendaScreen() {
     }
 
     function getFirstDayOffset(monthIndex, year) {
-        /*
-            JS Date:
-            zondag = 0
-            maandag = 1
-            dinsdag = 2
-            ...
-            zaterdag = 6
-
-            Voor deze agenda gebruiken we maandag als eerste kolom.
-        */
-
         const jsDay = new Date(year, monthIndex, 1).getDay();
 
         if (jsDay === 0) {
@@ -186,6 +222,18 @@ export default function AgendaScreen() {
         }
 
         return jsDay - 1;
+    }
+
+    function getActivityTypeLabel(item) {
+        if (item.isPlanned) {
+            return "Geplande demonstratie";
+        }
+
+        if (item.isSaved) {
+            return "Opgeslagen demonstratie";
+        }
+
+        return "Demonstratie";
     }
 
     function renderCalendarDays() {
@@ -204,19 +252,19 @@ export default function AgendaScreen() {
         }
 
         for (let day = 1; day <= totalDays; day++) {
-            const isMarked = markedDays.includes(day);
-
-            const protestOnDay = protestsInCurrentMonth.find((item) => {
+            const itemOnDay = itemsInCurrentMonth.find((item) => {
                 return item.calendarDay === day;
             });
+
+            const isMarked = markedDays.includes(day);
 
             days.push(
                 <TouchableOpacity
                     key={day}
                     activeOpacity={0.8}
                     onPress={() => {
-                        if (protestOnDay) {
-                            openPreview(protestOnDay);
+                        if (itemOnDay) {
+                            openPreview(itemOnDay);
                         }
                     }}
                     style={tw`w-[14.28%] h-16 border-2 border-[#842BD7] bg-white items-center justify-center`}
@@ -241,7 +289,8 @@ export default function AgendaScreen() {
         }
 
         const totalUsedCells = emptyStartCells + totalDays;
-        const remainingCells = totalUsedCells % 7 === 0 ? 0 : 7 - (totalUsedCells % 7);
+        const remainingCells =
+            totalUsedCells % 7 === 0 ? 0 : 7 - (totalUsedCells % 7);
 
         for (let i = 0; i < remainingCells; i++) {
             days.push(
@@ -255,97 +304,23 @@ export default function AgendaScreen() {
         return days;
     }
 
-    function renderPlannedCard(item) {
-        return (
-            <View
-                key={item.id}
-                style={tw`bg-[#E6D8F5] rounded-xl p-3 mb-4 flex-row items-center`}
-            >
-                <TouchableOpacity
-                    onPress={() => openPreview(item)}
-                    activeOpacity={0.85}
-                >
-                    <Image
-                        source={item.image}
-                        style={tw`w-28 h-28 bg-white rounded-lg`}
-                        resizeMode="cover"
-                    />
-                </TouchableOpacity>
+    function renderActivityItem(item, index) {
+        const number = activityPage * ITEMS_PER_PAGE + index + 1;
 
-                <View style={tw`flex-1 ml-4`}>
-                    <TouchableOpacity
-                        onPress={() => openPreview(item)}
-                        activeOpacity={0.85}
-                    >
-                        <Text style={tw`text-[#0A1A3A] text-xl font-bold`}>
-                            {item.title}
-                        </Text>
-
-                        <Text style={tw`text-[#842BD7] mt-2`}>
-                            {item.date} - {item.timeStart}
-                        </Text>
-
-                        <Text style={tw`text-[#842BD7] mt-2`}>
-                            {item.location}
-                        </Text>
-                    </TouchableOpacity>
-
-                    <View style={tw`flex-row mt-3`}>
-                        <TouchableOpacity
-                            onPress={() => openPreview(item)}
-                            style={tw`flex-1 bg-[#842BD7] rounded-xl py-2 items-center mr-2`}
-                        >
-                            <Text style={tw`text-white`}>
-                                Preview
-                            </Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            onPress={() => removePlannedProtest(item.id)}
-                            style={tw`flex-1 bg-[#0A1A3A] rounded-xl py-2 items-center ml-2`}
-                        >
-                            <Text style={tw`text-white`}>
-                                Verwijderen
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </View>
-        );
-    }
-
-    function renderSavedAction(item) {
-        return (
-            <View
-                key={item.id}
-                style={tw`bg-white border border-gray-300 rounded-xl px-4 py-3 mb-3 flex-row items-center`}
-            >
-                <View style={tw`bg-gray-200 w-11 h-11 rounded-lg items-center justify-center mr-4`}>
-                    <Ionicons name="document-outline" size={24} color="#0A1A3A" />
-                </View>
-
-                <Text style={tw`flex-1 text-[#0A1A3A] font-semibold`}>
-                    {item.title}
-                </Text>
-
-                <TouchableOpacity>
-                    <Ionicons name="bookmark-outline" size={26} color="#0A1A3A" />
-                </TouchableOpacity>
-            </View>
-        );
-    }
-
-    function renderSavedProtest(item) {
         return (
             <TouchableOpacity
-                key={item.id}
+                key={`${item.userProjectId || item.protestProjectId || item.id}-${index}`}
                 onPress={() => openPreview(item)}
                 activeOpacity={0.85}
                 style={tw`bg-[#E6D8F5] rounded-xl p-4 mb-3 flex-row items-center`}
             >
+                <Text style={tw`text-[#0A1A3A] font-bold mr-3`}>
+                    {number}.
+                </Text>
+
                 <Image
                     source={item.image}
-                    style={tw`w-16 h-16 rounded-lg`}
+                    style={tw`w-16 h-16 rounded-lg bg-white`}
                     resizeMode="cover"
                 />
 
@@ -355,15 +330,28 @@ export default function AgendaScreen() {
                     </Text>
 
                     <Text style={tw`text-[#842BD7] text-sm mt-1`}>
-                        {item.date} - {item.location}
+                        {item.date} - {item.timeStart}
+                    </Text>
+
+                    <Text style={tw`text-[#842BD7] text-sm mt-1`}>
+                        {item.location}
                     </Text>
 
                     <Text style={tw`text-[#0A1A3A] text-xs mt-1`}>
-                        Tik om preview te bekijken
+                        {getActivityTypeLabel(item)}
                     </Text>
                 </View>
 
-                <Ionicons name="chevron-forward" size={24} color="#0A1A3A" />
+                <View style={tw`items-center`}>
+                    <Ionicons name="bookmark-outline" size={24} color="#0A1A3A" />
+
+                    <TouchableOpacity
+                        onPress={() => removeActivity(item)}
+                        style={tw`mt-3`}
+                    >
+                        <Ionicons name="trash-outline" size={22} color="#0A1A3A" />
+                    </TouchableOpacity>
+                </View>
             </TouchableOpacity>
         );
     }
@@ -404,37 +392,85 @@ export default function AgendaScreen() {
                     </View>
                 </View>
 
-                <Text style={tw`text-[#0A1A3A] text-xl font-bold mt-4 mb-2`}>
-                    Jouw geplande demonstraties
-                </Text>
-
-                {plannedProtests.length > 0 ? (
-                    plannedProtests.map(renderPlannedCard)
-                ) : (
-                    <View style={tw`bg-[#E6D8F5] rounded-xl p-4 mb-4`}>
-                        <Text style={tw`text-[#0A1A3A] font-semibold`}>
-                            Geen geplande demonstraties in {currentMonthName} {currentYear}.
+                {loading && (
+                    <View style={tw`py-6 items-center`}>
+                        <ActivityIndicator size="large" color="#0A1A3A" />
+                        <Text style={tw`text-[#0A1A3A] mt-2`}>
+                            Agenda laden...
                         </Text>
                     </View>
                 )}
 
-                <Text style={tw`text-[#0A1A3A] text-xl font-bold mt-6 mb-3`}>
-                    Opgeslagen acties
-                </Text>
-
-                {savedActions.map(renderSavedAction)}
-
-                <Text style={tw`text-[#0A1A3A] text-xl font-bold mt-6 mb-3`}>
-                    Opgeslagen demonstraties
-                </Text>
-
-                {savedProtests.length > 0 ? (
-                    savedProtests.map(renderSavedProtest)
-                ) : (
-                    <View style={tw`bg-[#E6D8F5] rounded-xl p-4`}>
-                        <Text style={tw`text-[#0A1A3A] font-semibold`}>
-                            Je hebt nog geen opgeslagen demonstraties.
+                {!!errorText && (
+                    <TouchableOpacity
+                        onPress={loadAgenda}
+                        style={tw`bg-red-100 rounded-xl p-4 mt-4`}
+                    >
+                        <Text style={tw`text-red-700 font-semibold`}>
+                            {errorText}
                         </Text>
+
+                        <Text style={tw`text-red-700 mt-1`}>
+                            Tik om opnieuw te proberen.
+                        </Text>
+                    </TouchableOpacity>
+                )}
+
+                <View style={tw`flex-row items-center justify-between mt-6 mb-3`}>
+                    <Text style={tw`text-[#0A1A3A] text-xl font-bold`}>
+                        Jouw activiteiten
+                    </Text>
+
+                    <Text style={tw`text-[#0A1A3A] text-sm`}>
+                        Pagina {activityPage + 1} / {totalActivityPages}
+                    </Text>
+                </View>
+
+                {!loading && visibleActivities.length > 0 ? (
+                    visibleActivities.map(renderActivityItem)
+                ) : (
+                    !loading && (
+                        <View style={tw`bg-[#E6D8F5] rounded-xl p-4`}>
+                            <Text style={tw`text-[#0A1A3A] font-semibold`}>
+                                Je hebt nog geen activiteiten.
+                            </Text>
+                        </View>
+                    )
+                )}
+
+                {!loading && sortedActivities.length > ITEMS_PER_PAGE && (
+                    <View style={tw`flex-row justify-between items-center mt-3`}>
+                        <TouchableOpacity
+                            onPress={goToPreviousActivityPage}
+                            disabled={activityPage === 0}
+                            style={[
+                                tw`rounded-xl px-5 py-3 flex-row items-center`,
+                                activityPage === 0 ? tw`bg-gray-300` : tw`bg-[#0A1A3A]`,
+                            ]}
+                        >
+                            <Ionicons name="arrow-back" size={22} color="white" />
+
+                            <Text style={tw`text-white font-bold ml-2`}>
+                                Vorige
+                            </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            onPress={goToNextActivityPage}
+                            disabled={activityPage >= totalActivityPages - 1}
+                            style={[
+                                tw`rounded-xl px-5 py-3 flex-row items-center`,
+                                activityPage >= totalActivityPages - 1
+                                    ? tw`bg-gray-300`
+                                    : tw`bg-[#0A1A3A]`,
+                            ]}
+                        >
+                            <Text style={tw`text-white font-bold mr-2`}>
+                                Volgende
+                            </Text>
+
+                            <Ionicons name="arrow-forward" size={22} color="white" />
+                        </TouchableOpacity>
                     </View>
                 )}
             </ScrollView>
