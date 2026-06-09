@@ -9,7 +9,6 @@ import { StatusBar } from "expo-status-bar";
 import OpeningScreen from "./screens/OpeningScreen";
 import LoginScreen from "./screens/LoginScreen";
 import RegistryScreen from "./screens/RegistryScreen";
-import MainTabs from "./components/layout/MainTabs";
 
 import "./global.css";
 import AppNavigator from "./components/layout/AppNavigator";
