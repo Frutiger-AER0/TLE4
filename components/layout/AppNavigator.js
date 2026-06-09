@@ -32,73 +32,78 @@ const MyTheme = {
     },
 };
 
-export default function AppNavigator({ route }) {
+export default function AppNavigator({route}) {
     const isAdmin = route?.params?.isAdmin === true;
 
     return (
         <View className="flex-1">
-            <AppHeader />
-                <Tab.Navigator
-                    theme={MyTheme}
-                    initialRouteName="search"
-                    screenOptions={({route}) => ({
-                        headerShown: false,
-                        tabBarActiveTintColor: '#F4C430',
-                        tabBarInactiveTintColor: '#F8F9FA',
-                        tabBarStyle: {
-                            backgroundColor: '#14213D',
-                            height: 90,
-                            paddingTop: 14,
-                            paddingBottom: 8,
-                        },
-                        tabBarIcon: ({focused, color, size}) => {
-                            let iconName;
+            <Tab.Navigator
+                theme={MyTheme}
+                initialRouteName="search"
+                screenOptions={({route}) => ({
+                    headerShown: true,
+                    header: () => <AppHeader/>,
+                    headerStyle: {
+                        elevation: 0,
+                        shadowOpacity: 0,
+                        borderBottomWidth: 0,
+                    },
+                    tabBarActiveTintColor: '#F4C430',
+                    tabBarInactiveTintColor: '#F8F9FA',
+                    tabBarStyle: {
+                        backgroundColor: '#14213D',
+                        height: 90,
+                        paddingTop: 14,
+                        paddingBottom: 8,
+                    },
+                    tabBarIcon: ({focused, color, size}) => {
+                        let iconName;
 
-                            if (route.name === 'search') {
-                                iconName = focused ? 'search' : 'search-outline';
-                            } else if (route.name === 'map') {
-                                iconName = focused ? 'map' : 'map-outline';
-                            } else if (route.name === 'calendar') {
-                                iconName = focused ? 'calendar' : 'calendar-outline';
-                            } else if (route.name === 'person') {
-                                iconName = focused ? 'person' : 'person-outline';
-                            } else if (route.name === "admin") {
-                                iconName = focused ? "shield-checkmark" : "shield-checkmark-outline";
-                            }
+                        if (route.name === 'search') {
+                            iconName = focused ? 'search' : 'search-outline';
+                        } else if (route.name === 'map') {
+                            iconName = focused ? 'map' : 'map-outline';
+                        } else if (route.name === 'calendar') {
+                            iconName = focused ? 'calendar' : 'calendar-outline';
+                        } else if (route.name === 'person') {
+                            iconName = focused ? 'person' : 'person-outline';
+                        } else if (route.name === "admin") {
+                            iconName = focused ? "shield-checkmark" : "shield-checkmark-outline";
+                        }
 
-                            return <Ionicons name={iconName} size={size} color={color}/>;
-                        },
-                    })}
-                >
-                    {/*Bij component moeten de pagina's worden gezet*/}
+                        return <Ionicons name={iconName} size={size} color={color}/>;
+                    },
+                })}
+            >
+                {/*Bij component moeten de pagina's worden gezet*/}
+                <Tab.Screen
+                    name="search"
+                    component={ActionStackScreen} // Use the Stack Navigator here
+                    options={{title: 'Ontdek'}}
+                />
+                <Tab.Screen
+                    name="map"
+                    component={MapScreen}
+                    options={{title: 'Kaart'}}
+                />
+                <Tab.Screen
+                    name="calendar"
+                    component={HomeScreen}
+                    options={{title: 'Agenda'}}
+                />
+                <Tab.Screen
+                    name="person"
+                    component={HomeScreen}
+                    options={{title: 'Profiel'}}
+                />
+                {isAdmin && (
                     <Tab.Screen
-                        name="search"
-                        component={ActionStackScreen} // Use the Stack Navigator here
-                        options={{title: 'Ontdek'}}
+                        name="admin"
+                        component={AdminScreen}
+                        options={{title: "Admin"}}
                     />
-                    <Tab.Screen
-                        name="map"
-                        component={MapScreen}
-                        options={{title: 'Kaart'}}
-                    />
-                    <Tab.Screen
-                        name="calendar"
-                        component={HomeScreen}
-                        options={{title: 'Agenda'}}
-                    />
-                    <Tab.Screen
-                        name="person"
-                        component={HomeScreen}
-                        options={{title: 'Profiel'}}
-                    />
-                    {isAdmin && (
-                        <Tab.Screen
-                            name="admin"
-                            component={AdminScreen}
-                            options={{ title: "Admin" }}
-                        />
-                    )}
-                </Tab.Navigator>
+                )}
+            </Tab.Navigator>
         </View>
     );
 }
