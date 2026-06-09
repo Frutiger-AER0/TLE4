@@ -50,8 +50,8 @@ const PAGES = [
     },
     {
         id: '3',
-        title: 'Aan de Slag',
-        desc: 'Je bent klaar om te beginnen!',
+        title: 'Steun zonder de prikkels.',
+        desc: 'Creatieve Support',
         image: require("../assets/tle4-doneren-v2.avif")
     },
 ];
