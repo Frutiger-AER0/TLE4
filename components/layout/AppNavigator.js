@@ -10,6 +10,7 @@ import { DefaultTheme } from "@react-navigation/native";
 
 import HomeScreen from "../../screens/HomeScreen";
 import MapScreen from "../../screens/MapScreen";
+import AdminScreen from "../../screens/AdminScreen";
 
 const Tab = createBottomTabNavigator();
 const ActionStack = createStackNavigator(); // Create a Stack Navigator for the Action flow
@@ -31,7 +32,9 @@ const MyTheme = {
     },
 };
 
-export default function AppNavigator() {
+export default function AppNavigator({ route }) {
+    const isAdmin = route?.params?.isAdmin === true;
+
     return (
         <View className="flex-1">
             <NavigationContainer theme={MyTheme}>
@@ -58,6 +61,8 @@ export default function AppNavigator() {
                                 iconName = focused ? 'calendar' : 'calendar-outline';
                             } else if (route.name === 'person') {
                                 iconName = focused ? 'person' : 'person-outline';
+                            } else if (route.name === "admin") {
+                                iconName = focused ? "shield-checkmark" : "shield-checkmark-outline";
                             }
 
                             return <Ionicons name={iconName} size={size} color={color}/>;
@@ -85,6 +90,13 @@ export default function AppNavigator() {
                         component={HomeScreen}
                         options={{title: 'Profiel'}}
                     />
+                    {isAdmin && (
+                        <Tab.Screen
+                            name="admin"
+                            component={AdminScreen}
+                            options={{ title: "Admin" }}
+                        />
+                    )}
                 </Tab.Navigator>
             </NavigationContainer>
         </View>

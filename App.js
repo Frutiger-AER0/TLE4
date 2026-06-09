@@ -12,6 +12,7 @@ import RegistryScreen from "./screens/RegistryScreen";
 import MainTabs from "./components/layout/MainTabs";
 
 import "./global.css";
+import AppNavigator from "./components/layout/AppNavigator";
 
 const Stack = createStackNavigator();
 
@@ -26,7 +27,7 @@ export default function App() {
                         <Stack.Screen name="Opening" component={OpeningScreen} options={{ headerShown: false }} />
                         <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
                         <Stack.Screen name="Registry" component={RegistryScreen} options={{ headerShown: false }} />
-                        <Stack.Screen name="Home" component={MainTabs} options={{ headerShown: false }} />
+                        <Stack.Screen name="Home" component={AppNavigator} options={{ headerShown: false }} />
                     </Stack.Navigator>
                 </NavigationContainer>
             </SafeAreaProvider>
