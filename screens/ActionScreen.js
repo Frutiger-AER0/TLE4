@@ -25,8 +25,8 @@ export default function ActionScreen() {
                         image={require("../assets/tle4-stickers.jpg")}
                         title="Stickers ontwerpen"
                         description="Jouw ontwerp, onze productie. Verspreid de boodschap met stickers."
-                        buttonText="Doneer"
-                        onPress={() => handleCardPress("DonationScreen")}
+                        buttonText="Bekijk"
+                        onPress={() => handleCardPress("HomeScreen")}
                     />
 
                     {/* Banners */}
@@ -34,8 +34,8 @@ export default function ActionScreen() {
                         image={require("../assets/tle4-spandoek.avif")}
                         title="Spandoeken ontwerpen"
                         description="Help mee met een spandoek. Lever een ontwerp aan. Wij regelen de rest."
-                        buttonText="Doneer"
-                        onPress={() => handleCardPress("DonationScreen")}
+                        buttonText="Bekijk"
+                        onPress={() => handleCardPress("HomeScreen")}
                     />
 
                     {/* Donations */}
