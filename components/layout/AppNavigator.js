@@ -1,6 +1,6 @@
 import React from 'react';
 import {View} from 'react-native';
-import {NavigationContainer, DefaultTheme} from '@react-navigation/native';
+import {DefaultTheme} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createStackNavigator} from '@react-navigation/stack'; // Import createStackNavigator
 import {Ionicons} from '@expo/vector-icons';
@@ -36,8 +36,8 @@ export default function AppNavigator({ route }) {
 
     return (
         <View className="flex-1">
-            <NavigationContainer theme={MyTheme}>
                 <Tab.Navigator
+                    theme={MyTheme}
                     initialRouteName="search"
                     screenOptions={({route}) => ({
                         headerShown: false,
@@ -97,7 +97,6 @@ export default function AppNavigator({ route }) {
                         />
                     )}
                 </Tab.Navigator>
-            </NavigationContainer>
         </View>
     );
 }
