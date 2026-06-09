@@ -31,6 +31,8 @@ import React, {useState, useRef} from 'react';
 import {View, Text, FlatList, Dimensions, TouchableOpacity, Image} from 'react-native';
 import AppHeader from "../components/layout/AppHeader";
 
+import OnboardingRoleCard from "../components/onboarding/OnboardingRoleCard";
+
 const {width} = Dimensions.get('window');
 
 const PAGES = [
@@ -46,7 +48,6 @@ const PAGES = [
         id: '2',
         title: 'Wat is jouw rol?',
         desc: 'Kies je rol om door te gaan',
-        image: null
     },
     {
         id: '3',
@@ -58,6 +59,7 @@ const PAGES = [
 
 export default function OpeningScreen({navigation}) {
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [selectedRole, setSelectedRole] = useState(null); // Moved inside the component
     const flatListRef = useRef(null);
 
     const onViewableItemsChanged = useRef(({viewableItems}) => {
@@ -104,33 +106,67 @@ export default function OpeningScreen({navigation}) {
                     onViewableItemsChanged={onViewableItemsChanged}
                     viewabilityConfig={viewabilityConfig}
                     keyExtractor={(item) => item.id}
-                    renderItem={({item}) => (
-                        <View style={{width}} className="justify-center p-8">
-                            {item.image && (
-                                <Image
-                                    source={item.image}
-                                    className="w-96 h-96 -mt-20 self-center"
-                                    resizeMode="contain"
-                                />
-                            )}
-                            <Text className="text-3xl font-bold mb-1 text-offWhite text-left">
-                                {item.title}
-                            </Text>
-                            {item.coloredtitle && (
-                                <Text className="text-3xl font-bold mb-8 text-yellow text-left">
-                                    {item.coloredtitle}
+                    renderItem={({item}) => {
+                        if (item.id === '2') {
+                            return (
+                                <View style={{width}} className="justify-center p-6">
+                                    <Text className="text-3xl font-bold mb-1 text-offWhite text-left">
+                                        {item.title}
+                                    </Text>
+                                    <Text className="text-lg text-offWhite text-left mb-6">
+                                        {item.desc}
+                                    </Text>
+
+                                    {/* Kaart 1: Supporter */}
+                                    <OnboardingRoleCard
+                                        title="Ik ben een supporter"
+                                        description="Ik wil maatschappelijke thema's supporten vanuit huis."
+                                        icon={require("../assets/tle4-house.png")} // Vervang door jouw icoon asset
+                                        isSelected={selectedRole === 'supporter'}
+                                        onPress={() => setSelectedRole('supporter')}
+                                    />
+
+                                    {/* Kaart 2: Organisator */}
+                                    <OnboardingRoleCard
+                                        title="Ik ben een organisator"
+                                        description="Ik organiseer acties in Rotterdam en zoek een breder, visueel bereik."
+                                        icon={require("../assets/tle4-megaphone.png")} // Vervang door jouw icoon asset
+                                        isSelected={selectedRole === 'organisator'}
+                                        onPress={() => setSelectedRole('organisator')}
+                                    />
+                                </View>
+                            );
+                        }
+
+                        return (
+                            <View style={{width}} className="justify-center p-8">
+                                {item.image && (
+                                    <Image
+                                        source={item.image}
+                                        className="w-96 h-96 -mt-20 self-center"
+                                        resizeMode="contain"
+                                        alt="Onboarding"
+                                    />
+                                )}
+                                <Text className="text-3xl font-bold mb-1 text-offWhite text-left">
+                                    {item.title}
                                 </Text>
-                            )}
-                            <Text className="text-lg text-offWhite text-left ">
-                                {item.desc}
-                            </Text>
-                            {item.coloreddesc && (
-                                <Text className="text-lg text-yellow text-left">
-                                    {item.coloreddesc}
+                                {item.coloredtitle && (
+                                    <Text className="text-3xl font-bold mb-8 text-yellow text-left">
+                                        {item.coloredtitle}
+                                    </Text>
+                                )}
+                                <Text className="text-lg text-offWhite text-left">
+                                    {item.desc}
                                 </Text>
-                            )}
-                        </View>
-                    )}
+                                {item.coloreddesc && (
+                                    <Text className="text-lg text-yellow text-left">
+                                        {item.coloreddesc}
+                                    </Text>
+                                )}
+                            </View>
+                        );
+                    }}
                 />
 
                 <View className="flex-row absolute top-6 justify-center items-center">
