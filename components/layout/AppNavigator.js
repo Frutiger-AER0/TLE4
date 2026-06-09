@@ -10,6 +10,7 @@ import DonationScreen from "../../screens/DonationScreen"; // Import DonationScr
 import HomeScreen from "../../screens/HomeScreen";
 import MapScreen from "../../screens/MapScreen";
 import AdminScreen from "../../screens/AdminScreen";
+import AppHeader from "./AppHeader";
 
 const Tab = createBottomTabNavigator();
 const ActionStack = createStackNavigator(); // Create a Stack Navigator for the Action flow
@@ -36,6 +37,7 @@ export default function AppNavigator({ route }) {
 
     return (
         <View className="flex-1">
+            <AppHeader />
                 <Tab.Navigator
                     theme={MyTheme}
                     initialRouteName="search"
