@@ -10,58 +10,132 @@ import {
     Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
 import tw from "twrnc";
 
 import PreviewModal from "../components/PreviewModal";
 import { protests, savedActions } from "../data/dummydata";
 
+const API_BASE_URL = "http://145.24.237.86:8000";
+
+const months = [
+    "Januari",
+    "Februari",
+    "Maart",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Augustus",
+    "September",
+    "Oktober",
+    "November",
+    "December",
+];
+
 export default function AgendaScreen() {
-    const navigation = useNavigation();
+    const [currentMonthIndex, setCurrentMonthIndex] = useState(4); // Mei = index 4
+    const [currentYear, setCurrentYear] = useState(2026);
 
     const [selectedProtest, setSelectedProtest] = useState(null);
     const [previewVisible, setPreviewVisible] = useState(false);
 
-    const monthName = "Mei";
-    const year = 2026;
-
     /*
-        PSEUDOCODE VOOR LATER MET BACKEND:
+        BACKEND PSEUDOCODE VOOR LATER:
 
         const [plannedProtests, setPlannedProtests] = useState([]);
         const [savedProtests, setSavedProtests] = useState([]);
+        const [savedActions, setSavedActions] = useState([]);
 
         useEffect(() => {
             async function loadAgenda() {
-                const response = await fetch(`/api/users/${currentUser.id}/agenda`);
+                const response = await fetch(`${API_BASE_URL}/api/agenda`);
                 const data = await response.json();
 
-                setPlannedProtests(data.planned_protests);
-                setSavedProtests(data.saved_protests);
+                setPlannedProtests(data.plannedProtests);
+                setSavedProtests(data.savedProtests);
+                setSavedActions(data.savedActions);
             }
 
             loadAgenda();
         }, []);
 
-        ERD:
-        - geplande demonstraties kunnen uit user_projects + protest_projects + protests komen.
-        - opgeslagen acties kunnen uit user_projects komen waarbij is_finished false is.
-        - start_time komt uit protest_details.
+        Mogelijke ERD-koppeling:
+
+        protests:
+        - id
+        - name
+        - description
+        - location
+        - predicted_members
+
+        protest_details:
+        - protest_id
+        - start_time
+        - link
+
+        protest_projects:
+        - protest_id
+        - project_id
+
+        user_projects:
+        - user_id
+        - protest_project_id
+        - is_finished
+
+        Op basis hiervan kun je:
+        - geplande demonstraties tonen uit user_projects + protest_projects + protests
+        - datum/tijd halen uit protest_details.start_time
+        - opgeslagen demonstraties tonen waar user_projects bestaat
     */
 
+    const currentMonthName = months[currentMonthIndex];
+
+    const protestsInCurrentMonth = useMemo(() => {
+        return protests.filter((item) => {
+            return (
+                item.calendarMonth === currentMonthName &&
+                item.calendarYear === currentYear
+            );
+        });
+    }, [currentMonthName, currentYear]);
+
     const plannedProtests = useMemo(() => {
-        return protests.filter((item) => item.isPlanned);
-    }, []);
+        return protests.filter((item) => {
+            return (
+                item.isPlanned &&
+                item.calendarMonth === currentMonthName &&
+                item.calendarYear === currentYear
+            );
+        });
+    }, [currentMonthName, currentYear]);
 
     const savedProtests = useMemo(() => {
         return protests.filter((item) => item.isSaved);
     }, []);
 
     const markedDays = useMemo(() => {
-        return protests
-            .filter((item) => item.calendarMonth === monthName && item.calendarYear === year)
-            .map((item) => item.calendarDay);
-    }, []);
+        return protestsInCurrentMonth.map((item) => item.calendarDay);
+    }, [protestsInCurrentMonth]);
+
+    function goToPreviousMonth() {
+        if (currentMonthIndex === 0) {
+            setCurrentMonthIndex(11);
+            setCurrentYear(currentYear - 1);
+            return;
+        }
+
+        setCurrentMonthIndex(currentMonthIndex - 1);
+    }
+
+    function goToNextMonth() {
+        if (currentMonthIndex === 11) {
+            setCurrentMonthIndex(0);
+            setCurrentYear(currentYear + 1);
+            return;
+        }
+
+        setCurrentMonthIndex(currentMonthIndex + 1);
+    }
 
     function openPreview(protest) {
         setSelectedProtest(protest);
@@ -75,34 +149,50 @@ export default function AgendaScreen() {
 
     function removePlannedProtest(protestId) {
         /*
-            PSEUDOCODE VOOR LATER:
+            BACKEND PSEUDOCODE VOOR LATER:
 
-            await fetch(`/api/user-projects/${protestId}`, {
+            await fetch(`${API_BASE_URL}/api/user-projects/${protestId}`, {
                 method: "DELETE",
             });
 
-            Daarna agenda opnieuw ophalen.
+            Daarna:
+            - agenda opnieuw ophalen
+            - of lokaal uit state verwijderen
         */
 
         Alert.alert("Demo", `Demonstratie ${protestId} tijdelijk verwijderd.`);
     }
 
+    function getDaysInMonth(monthIndex, year) {
+        return new Date(year, monthIndex + 1, 0).getDate();
+    }
+
+    function getFirstDayOffset(monthIndex, year) {
+        /*
+            JS Date:
+            zondag = 0
+            maandag = 1
+            dinsdag = 2
+            ...
+            zaterdag = 6
+
+            Voor deze agenda gebruiken we maandag als eerste kolom.
+        */
+
+        const jsDay = new Date(year, monthIndex, 1).getDay();
+
+        if (jsDay === 0) {
+            return 6;
+        }
+
+        return jsDay - 1;
+    }
+
     function renderCalendarDays() {
         const days = [];
 
-        /*
-            Mei 2026 start op vrijdag.
-            Daarom eerst 4 lege vakken.
-            Dit is tijdelijk hardcoded voor het wireframe.
-
-            PSEUDOCODE VOOR LATER:
-            Gebruik een datum library of JS Date:
-            const firstDay = new Date(2026, 4, 1).getDay();
-        */
-
-        const emptyStartCells = 4;
-        const totalDays = 31;
-        const totalCells = 35;
+        const totalDays = getDaysInMonth(currentMonthIndex, currentYear);
+        const emptyStartCells = getFirstDayOffset(currentMonthIndex, currentYear);
 
         for (let i = 0; i < emptyStartCells; i++) {
             days.push(
@@ -116,14 +206,17 @@ export default function AgendaScreen() {
         for (let day = 1; day <= totalDays; day++) {
             const isMarked = markedDays.includes(day);
 
+            const protestOnDay = protestsInCurrentMonth.find((item) => {
+                return item.calendarDay === day;
+            });
+
             days.push(
                 <TouchableOpacity
                     key={day}
                     activeOpacity={0.8}
                     onPress={() => {
-                        const protest = protests.find((item) => item.calendarDay === day);
-                        if (protest) {
-                            openPreview(protest);
+                        if (protestOnDay) {
+                            openPreview(protestOnDay);
                         }
                     }}
                     style={tw`w-[14.28%] h-16 border-2 border-[#842BD7] bg-white items-center justify-center`}
@@ -134,7 +227,12 @@ export default function AgendaScreen() {
                             isMarked ? tw`bg-[#0057B8]` : tw`bg-transparent`,
                         ]}
                     >
-                        <Text style={tw`text-black text-xl font-bold`}>
+                        <Text
+                            style={[
+                                tw`text-xl font-bold`,
+                                isMarked ? tw`text-white` : tw`text-black`,
+                            ]}
+                        >
                             {day}
                         </Text>
                     </View>
@@ -142,7 +240,8 @@ export default function AgendaScreen() {
             );
         }
 
-        const remainingCells = totalCells - emptyStartCells - totalDays;
+        const totalUsedCells = emptyStartCells + totalDays;
+        const remainingCells = totalUsedCells % 7 === 0 ? 0 : 7 - (totalUsedCells % 7);
 
         for (let i = 0; i < remainingCells; i++) {
             days.push(
@@ -162,24 +261,34 @@ export default function AgendaScreen() {
                 key={item.id}
                 style={tw`bg-[#E6D8F5] rounded-xl p-3 mb-4 flex-row items-center`}
             >
-                <Image
-                    source={item.image}
-                    style={tw`w-28 h-28 bg-white`}
-                    resizeMode="cover"
-                />
+                <TouchableOpacity
+                    onPress={() => openPreview(item)}
+                    activeOpacity={0.85}
+                >
+                    <Image
+                        source={item.image}
+                        style={tw`w-28 h-28 bg-white rounded-lg`}
+                        resizeMode="cover"
+                    />
+                </TouchableOpacity>
 
                 <View style={tw`flex-1 ml-4`}>
-                    <Text style={tw`text-[#0A1A3A] text-xl font-bold`}>
-                        {item.title}
-                    </Text>
+                    <TouchableOpacity
+                        onPress={() => openPreview(item)}
+                        activeOpacity={0.85}
+                    >
+                        <Text style={tw`text-[#0A1A3A] text-xl font-bold`}>
+                            {item.title}
+                        </Text>
 
-                    <Text style={tw`text-[#842BD7] mt-2`}>
-                        {item.date} - {item.timeStart}
-                    </Text>
+                        <Text style={tw`text-[#842BD7] mt-2`}>
+                            {item.date} - {item.timeStart}
+                        </Text>
 
-                    <Text style={tw`text-[#842BD7] mt-2`}>
-                        {item.location}
-                    </Text>
+                        <Text style={tw`text-[#842BD7] mt-2`}>
+                            {item.location}
+                        </Text>
+                    </TouchableOpacity>
 
                     <View style={tw`flex-row mt-3`}>
                         <TouchableOpacity
@@ -226,6 +335,39 @@ export default function AgendaScreen() {
         );
     }
 
+    function renderSavedProtest(item) {
+        return (
+            <TouchableOpacity
+                key={item.id}
+                onPress={() => openPreview(item)}
+                activeOpacity={0.85}
+                style={tw`bg-[#E6D8F5] rounded-xl p-4 mb-3 flex-row items-center`}
+            >
+                <Image
+                    source={item.image}
+                    style={tw`w-16 h-16 rounded-lg`}
+                    resizeMode="cover"
+                />
+
+                <View style={tw`flex-1 ml-4`}>
+                    <Text style={tw`text-[#0A1A3A] font-bold`}>
+                        {item.title}
+                    </Text>
+
+                    <Text style={tw`text-[#842BD7] text-sm mt-1`}>
+                        {item.date} - {item.location}
+                    </Text>
+
+                    <Text style={tw`text-[#0A1A3A] text-xs mt-1`}>
+                        Tik om preview te bekijken
+                    </Text>
+                </View>
+
+                <Ionicons name="chevron-forward" size={24} color="#0A1A3A" />
+            </TouchableOpacity>
+        );
+    }
+
     return (
         <View style={tw`flex-1 bg-white`}>
             <ScrollView
@@ -239,16 +381,18 @@ export default function AgendaScreen() {
 
                     <View style={tw`flex-row items-center justify-between mt-2 mb-5`}>
                         <TouchableOpacity
+                            onPress={goToPreviousMonth}
                             style={tw`bg-[#842BD7] w-14 h-14 rounded-xl items-center justify-center`}
                         >
                             <Ionicons name="arrow-back" size={34} color="white" />
                         </TouchableOpacity>
 
                         <Text style={tw`text-[#0A1A3A] text-xl font-bold`}>
-                            {monthName} {year}
+                            {currentMonthName} {currentYear}
                         </Text>
 
                         <TouchableOpacity
+                            onPress={goToNextMonth}
                             style={tw`bg-[#842BD7] w-14 h-14 rounded-xl items-center justify-center`}
                         >
                             <Ionicons name="arrow-forward" size={34} color="white" />
@@ -267,9 +411,9 @@ export default function AgendaScreen() {
                 {plannedProtests.length > 0 ? (
                     plannedProtests.map(renderPlannedCard)
                 ) : (
-                    <View style={tw`bg-[#E6D8F5] rounded-xl p-4`}>
+                    <View style={tw`bg-[#E6D8F5] rounded-xl p-4 mb-4`}>
                         <Text style={tw`text-[#0A1A3A] font-semibold`}>
-                            Je hebt nog geen geplande demonstraties.
+                            Geen geplande demonstraties in {currentMonthName} {currentYear}.
                         </Text>
                     </View>
                 )}
@@ -284,31 +428,15 @@ export default function AgendaScreen() {
                     Opgeslagen demonstraties
                 </Text>
 
-                {savedProtests.map((item) => (
-                    <TouchableOpacity
-                        key={item.id}
-                        onPress={() => navigation.navigate("Detail", { protest: item })}
-                        style={tw`bg-[#E6D8F5] rounded-xl p-4 mb-3 flex-row items-center`}
-                    >
-                        <Image
-                            source={item.image}
-                            style={tw`w-16 h-16 rounded-lg`}
-                            resizeMode="cover"
-                        />
-
-                        <View style={tw`flex-1 ml-4`}>
-                            <Text style={tw`text-[#0A1A3A] font-bold`}>
-                                {item.title}
-                            </Text>
-
-                            <Text style={tw`text-[#842BD7] text-sm mt-1`}>
-                                {item.date} - {item.location}
-                            </Text>
-                        </View>
-
-                        <Ionicons name="chevron-forward" size={24} color="#0A1A3A" />
-                    </TouchableOpacity>
-                ))}
+                {savedProtests.length > 0 ? (
+                    savedProtests.map(renderSavedProtest)
+                ) : (
+                    <View style={tw`bg-[#E6D8F5] rounded-xl p-4`}>
+                        <Text style={tw`text-[#0A1A3A] font-semibold`}>
+                            Je hebt nog geen opgeslagen demonstraties.
+                        </Text>
+                    </View>
+                )}
             </ScrollView>
 
             <PreviewModal
