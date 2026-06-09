@@ -38,8 +38,8 @@ const PAGES = [
         id: '1',
         title: 'Support de protesten in Rotterdam',
         coloredtitle: 'Op jouw manier',
-        desc: 'Verbind de straat met de huiskamer.',
-        coloreddesc: 'SupporT, thuisfront aan je zijlijn.',
+        desc: 'Verbind de straat met de huiskamer',
+        coloreddesc: 'SupporT, thuisfront aan je zijlijn',
         image: require("../assets/tle4-spandoek.avif")
     },
     {
@@ -50,8 +50,11 @@ const PAGES = [
     },
     {
         id: '3',
-        title: 'Steun zonder de prikkels.',
-        desc: 'Creatieve Support',
+        title: 'Steun zonder de prikkels',
+        coloredcreativesupport: 'Creatieve Support',
+        creativesupport: 'Maak posters en stickers vanuit je eigen kamer',
+        coloredflexibel: 'Flexibel',
+        flexibel: 'Draag bij wanneer het jou uitkomt',
         image: require("../assets/tle4-doneren-v2.avif")
     },
 ];
@@ -77,7 +80,7 @@ export default function OpeningScreen({navigation}) {
                 animated: true,
             });
         } else {
-            navigation.navigate("Login");
+            navigation.navigate("Registry");
         }
     };
     const handleBack = () => {
@@ -107,11 +110,13 @@ export default function OpeningScreen({navigation}) {
                     renderItem={({item}) => (
                         <View style={{width}} className="justify-center p-8">
                             {item.image && (
-                                <Image
-                                    source={item.image}
-                                    className="w-96 h-96 -mt-20 self-center"
-                                    resizeMode="contain"
-                                />
+                                <View className="w-96 h-72 mb-8 rounded-3xl overflow-hidden self-center">
+                                    <Image
+                                        source={item.image}
+                                        className="w-full h-full"
+                                        resizeMode="cover"
+                                    />
+                                </View>
                             )}
                             <Text className="text-3xl font-bold mb-1 text-offWhite text-left">
                                 {item.title}
@@ -129,9 +134,39 @@ export default function OpeningScreen({navigation}) {
                                     {item.coloreddesc}
                                 </Text>
                             )}
+                            <Text className="text-lg text-yellow text-left">
+                                {item.coloredcreativesupport}
+                            </Text>
+                            {item.creativesupport && (
+                                <Text className="text-lg mb-5 text-offWhite text-left">
+                                    {item.creativesupport}
+                                </Text>
+                            )}
+                            <Text className="text-lg text-yellow text-left ">
+                                {item.coloredflexibel}
+                            </Text>
+                            {item.flexibel && (
+                                <Text className="text-lg text-offWhite text-left">
+                                    {item.flexibel}
+                                </Text>
+                            )}
                         </View>
                     )}
                 />
+                {currentIndex < PAGES.length - 1 && (
+                    <TouchableOpacity
+                        className="absolute right-6 z-50 py-5"
+                        style={{top: 20}}
+                        hitSlop={{top: 20, bottom: 20, left: 20, right: 20}}
+                        onPress={() => {
+                            navigation.navigate("Registry");
+                        }}
+                    >
+                        <Text className="text-offWhite text-lg font-bold">
+                            Skip
+                        </Text>
+                    </TouchableOpacity>
+                )}
 
                 <View className="flex-row absolute top-6 justify-center items-center">
                     {PAGES.map((_, index) => {
@@ -164,7 +199,7 @@ export default function OpeningScreen({navigation}) {
                         onPress={handleNext}
                     >
                         <Text className="text-offWhite text-lg font-semibold">
-                            {isLastPage ? "Aan de slag" : "→"}
+                            {isLastPage ? "Registreer" : "→"}
                         </Text>
                     </TouchableOpacity>
                 </View>
