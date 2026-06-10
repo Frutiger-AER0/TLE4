@@ -4,9 +4,9 @@ const API_BASE_URL = "http://145.24.237.86:8000";
 
 const API_PATHS = {
     protests: "/protests",
-    userProjects: "/user-projects",
-    saveUserProject: "/user-projects",
-    deleteUserProject: (id) => `/user-projects/${id}`,
+    userProjects: "/user_projects",
+    saveUserProject: "/user_projects",
+    deleteUserProject: (id) => `/user_projects/${id}`,
 };
 
 const fallbackImage = require("../../assets/demo1.jpeg");
