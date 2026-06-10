@@ -1,19 +1,20 @@
-import React from 'react';
-import {View} from 'react-native';
+import React, { useContext } from 'react'; // Import useContext
+import {View, ActivityIndicator} from 'react-native'; // Import ActivityIndicator
 import {DefaultTheme} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import {createStackNavigator} from '@react-navigation/stack'; // Import createStackNavigator
+import {createStackNavigator} from '@react-navigation/stack';
 import {Ionicons} from '@expo/vector-icons';
 
 import ActionScreen from "../../screens/ActionScreen";
-import DonationScreen from "../../screens/DonationScreen"; // Import DonationScreen
+import DonationScreen from "../../screens/DonationScreen";
 import HomeScreen from "../../screens/HomeScreen";
 import MapScreen from "../../screens/MapScreen";
 import AdminScreen from "../../screens/AdminScreen";
 import AppHeader from "./AppHeader";
-import HomeStack from "./HomeStack";
 import DetailScreen from "../../screens/DetailScreen";
 import AgendaScreen from "../../screens/AgendaScreen";
+import ProfileScreen from "../../screens/ProfileScreen";
+import { AuthContext } from '../../context/AuthContext'; // Import AuthContext
 
 const Tab = createBottomTabNavigator();
 const ActionStack = createStackNavigator();
@@ -30,25 +31,18 @@ function ActionStackScreen() {
                 },
             }}
         >
-            {/* Hoofdpagina met projecten */}
             <ActionStack.Screen
                 name="ActionScreen"
                 component={ActionScreen}
             />
-
-            {/* Jouw demonstratie-overzichtspagina */}
             <ActionStack.Screen
                 name="HomeScreen"
                 component={HomeScreen}
             />
-
-            {/* Detailpagina van een demonstratie */}
             <ActionStack.Screen
                 name="Detail"
                 component={DetailScreen}
             />
-
-            {/* Bestaande donatiepagina */}
             <ActionStack.Screen
                 name="DonationScreen"
                 component={DonationScreen}
@@ -72,7 +66,6 @@ function AgendaStackScreen() {
                 name="AgendaScreen"
                 component={AgendaScreen}
             />
-
             <AgendaStack.Screen
                 name="AgendaDetail"
                 component={DetailScreen}
@@ -90,7 +83,16 @@ const MyTheme = {
 };
 
 export default function AppNavigator({route}) {
-    const isAdmin = route?.params?.isAdmin === true;
+    const { user, isLoading } = useContext(AuthContext); // Get user and isLoading from AuthContext
+    const isAdmin = route?.params?.isAdmin === true; // Keep isAdmin from route params if needed
+
+    if (isLoading) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color="#0000ff" />
+            </View>
+        );
+    }
 
     return (
         <View className="flex-1">
@@ -132,10 +134,9 @@ export default function AppNavigator({route}) {
                     },
                 })}
             >
-                {/*Bij component moeten de pagina's worden gezet*/}
                 <Tab.Screen
                     name="search"
-                    component={ActionStackScreen} // Use the Stack Navigator here
+                    component={ActionStackScreen}
                     options={{title: 'Ontdek'}}
                 />
                 <Tab.Screen
@@ -150,9 +151,15 @@ export default function AppNavigator({route}) {
                 />
                 <Tab.Screen
                     name="person"
-                    component={HomeStack}
                     options={{title: 'Profiel'}}
-                />
+                >
+                    {(props) => (
+                        <ProfileScreen
+                            {...props}
+                            userId={user?.id} // Pass the logged-in user's ID from AuthContext
+                        />
+                    )}
+                </Tab.Screen>
                 {isAdmin && (
                     <Tab.Screen
                         name="admin"
