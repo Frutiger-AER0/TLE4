@@ -38,7 +38,7 @@ export default function DetailScreen() {
                     {/* Knoppenbalk: absoluut gepositioneerd ONDER de header, maar OP de afbeelding */}
                     <View
                         className="absolute left-4 right-4 flex-row justify-between items-center"
-                        style={{top: headerHeight - 100}}
+                        style={{top: headerHeight - 85}}
                     >
                         {/* Links: Terug knop */}
                         <TouchableOpacity
