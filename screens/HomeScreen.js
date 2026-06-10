@@ -112,28 +112,6 @@ export default function HomeScreen() {
         setFilterVisible(false);
     }
 
-    function renderHelpOption({item}) {
-        return (
-            <View style={tw`flex-1 bg-[#E6D8F5] rounded-xl p-3 mr-2 min-h-24`}>
-                <Text style={tw`text-[#0A1A3A] font-semibold mb-2`}>{item.title}</Text>
-
-                {item.points.map((point, index) => (
-                    <View key={index} style={tw`flex-row mb-2`}>
-                        <Ionicons
-                            name="caret-forward"
-                            size={11}
-                            color="#7B2DD2"
-                            style={tw`mt-1 mr-1`}
-                        />
-                        <Text style={tw`text-[#0A1A3A] text-[10px] flex-1`}>
-                            {point}
-                        </Text>
-                    </View>
-                ))}
-            </View>
-        );
-    }
-
     function renderProtestCard({item}) {
         return (
             <TouchableOpacity
@@ -232,19 +210,7 @@ export default function HomeScreen() {
                             </TouchableOpacity>
                         </View>
 
-                        <Text style={tw`text-[#0A1A3A] text-lg font-bold mt-5 mb-3`}>
-                            Wat kan je doen om te helpen?
-                        </Text>
-
-                        <View style={tw`flex-row mb-6`}>
-                            {helpOptions.map((item) => (
-                                <View key={item.id} style={tw`flex-1`}>
-                                    {renderHelpOption({item})}
-                                </View>
-                            ))}
-                        </View>
-
-                        <Text style={tw`text-[#0A1A3A] text-xl font-bold mb-3`}>
+                        <Text style={tw`text-[#0A1A3A] text-xl font-bold mb-3 mt-5`}>
                             Demonstraties
                         </Text>
                     </View>
