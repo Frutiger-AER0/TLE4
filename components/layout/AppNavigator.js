@@ -13,7 +13,6 @@ import AdminScreen from "../../screens/AdminScreen";
 import AppHeader from "./AppHeader";
 import HomeStack from "./HomeStack";
 import DetailScreen from "../../screens/DetailScreen";
-import DonationScreen from "../../screens/DonationScreen";
 import AgendaScreen from "../../screens/AgendaScreen";
 
 const Tab = createBottomTabNavigator();
@@ -149,30 +148,6 @@ export default function AppNavigator({route}) {
                             iconName = focused ? "shield-checkmark" : "shield-checkmark-outline";
                         }
 
-                            return <Ionicons name={iconName} size={size} color={color}/>;
-                        },
-                    })}
-                >
-                    {/*Bij component moeten de pagina's worden gezet*/}
-                    <Tab.Screen
-                        name="search"
-                        component={ActionStackScreen} // Use the Stack Navigator here
-                        options={{title: 'Ontdek'}}
-                    />
-                    <Tab.Screen
-                        name="map"
-                        component={Ontdek}
-                        options={{title: 'Kaart'}}
-                    />
-                    <Tab.Screen
-                        name="calendar"
-                        component={Ontdek}
-                        options={{title: 'Agenda'}}
-                    />
-                    <Tab.Screen
-                        name="person"
-                        component={Ontdek}
-                        options={{title: 'Profiel'}}
                         return <Ionicons name={iconName} size={size} color={color}/>;
                     },
                 })}

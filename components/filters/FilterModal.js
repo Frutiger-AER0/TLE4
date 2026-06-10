@@ -1,116 +1,107 @@
-import React, {useState} from "react";
+import React from "react";
 import {
     Modal,
     View,
     Text,
     TouchableOpacity,
+    Pressable,
 } from "react-native";
 import FilterChip from "./FilterChip";
 
 export default function FilterModal({
                                         visible,
                                         onClose,
+                                        selectedTopic,
+                                        setSelectedTopic,
+                                        selectedAssignment,
+                                        setSelectedAssignment,
+                                        selectedMoment,
+                                        setSelectedMoment,
+                                        topics,
+                                        assignments,
+                                        moments,
+                                        onApplyFilters,
+                                        onClearFilters,
                                     }) {
-    const [selectedTopic, setSelectedTopic] = useState("Palestina");
-    const [selectedTime, setSelectedTime] = useState("Alle");
-
-    const topics = [
-        "Klimaat",
-        "Mensenrechten",
-        "Wonen",
-        "Onderwijs",
-        "Vrede",
-        "LHBTQI+",
-        "Arbeid",
-        "Dieren",
-        "Palestina",
-    ];
-
-    const times = [
-        "Alle",
-        "Vandaag",
-        "Deze week",
-        "Dit weekend",
-    ];
 
     return (
         <Modal
             visible={visible}
             transparent
-            animationType="slide"
+            animationType="fade" // Changed to fade for consistency with HomeScreen's original modal
+            statusBarTranslucent
+            onRequestClose={onClose}
         >
-            <View className="flex-1 bg-black/40 justify-end">
-
-                <View className="bg-white rounded-t-3xl p-6 h-[80%]">
-
+            <Pressable
+                style={{flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end'}}
+                onPress={onClose}
+            >
+                <Pressable style={{backgroundColor: 'white', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: '80%'}}>
                     {/* Top Handle */}
-
                     <View className="self-center w-12 h-1.5 rounded-full bg-gray-300 mb-6"/>
 
                     {/* Header */}
-
                     <View className="flex-row justify-between items-center mb-8">
-
                         <Text className="text-2xl font-bold text-darkBlue">
                             Filters
                         </Text>
-
                         <TouchableOpacity onPress={onClose}>
                             <Text className="text-3xl text-darkBlue">
                                 ✕
                             </Text>
                         </TouchableOpacity>
-
                     </View>
 
                     <Text className="font-bold text-darkBlue mb-4">
                         ONDERWERP
                     </Text>
-
                     <View className="flex-row flex-wrap">
-
                         {topics.map((topic) => (
                             <FilterChip
                                 key={topic}
                                 label={topic}
                                 selected={selectedTopic === topic}
                                 onPress={() =>
-                                    setSelectedTopic(topic)
+                                    setSelectedTopic(selectedTopic === topic ? null : topic)
                                 }
                             />
                         ))}
+                    </View>
 
+                    <Text className="font-bold text-darkBlue mt-6 mb-4">
+                        OPDRACHTEN
+                    </Text>
+                    <View className="flex-row flex-wrap">
+                        {assignments.map((assignment) => (
+                            <FilterChip
+                                key={assignment}
+                                label={assignment}
+                                selected={selectedAssignment === assignment}
+                                onPress={() => setSelectedAssignment(assignment)}
+                            />
+                        ))}
                     </View>
 
                     <Text className="font-bold text-darkBlue mt-6 mb-4">
                         WANNEER
                     </Text>
-
                     <View className="flex-row flex-wrap">
-
-                        {times.map((time) => (
+                        {moments.map((moment) => (
                             <FilterChip
-                                key={time}
-                                label={time}
-                                selected={selectedTime === time}
-                                onPress={() =>
-                                    setSelectedTime(time)
-                                }
+                                key={moment}
+                                label={moment}
+                                selected={selectedMoment === moment}
+                                onPress={() => setSelectedMoment(moment)}
                             />
                         ))}
-
                     </View>
 
-                    <View className="flex-1"/>
+                    <View style={{flex: 1}}/>
 
-                    <View className="flex-row justify-between">
-
+                    <View className="flex-row justify-between mt-6">
                         <TouchableOpacity
                             className="bg-purple rounded-xl py-4 flex-1 mr-2"
-                            onPress={() => {
-                                setSelectedTopic(null);
-                                setSelectedTime(null);
-                            }}
+                            onPress={onClearFilters}
                         >
                             <Text className="text-white text-center font-bold">
                                 Wissen
@@ -119,19 +110,15 @@ export default function FilterModal({
 
                         <TouchableOpacity
                             className="bg-darkBlue rounded-xl py-4 flex-1 ml-2"
-                            onPress={onClose}
+                            onPress={onApplyFilters}
                         >
                             <Text className="text-white text-center font-bold">
                                 Toon resultaten
                             </Text>
                         </TouchableOpacity>
-
                     </View>
-
-                </View>
-
-            </View>
-
+                </Pressable>
+            </Pressable>
         </Modal>
     );
 }
