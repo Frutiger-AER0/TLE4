@@ -6,13 +6,13 @@ import {createStackNavigator} from '@react-navigation/stack'; // Import createSt
 import {Ionicons} from '@expo/vector-icons';
 
 import ActionScreen from "../../screens/ActionScreen";
+import DonationScreen from "../../screens/DonationScreen"; // Import DonationScreen
 import HomeScreen from "../../screens/HomeScreen";
 import MapScreen from "../../screens/MapScreen";
 import AdminScreen from "../../screens/AdminScreen";
 import AppHeader from "./AppHeader";
 import HomeStack from "./HomeStack";
 import DetailScreen from "../../screens/DetailScreen";
-import DonationScreen from "../../screens/DonationScreen";
 import AgendaScreen from "../../screens/AgendaScreen";
 
 const Tab = createBottomTabNavigator();
@@ -85,7 +85,7 @@ const MyTheme = {
     ...DefaultTheme,
     colors: {
         ...DefaultTheme.colors,
-        background: "#F8F9FA",
+        background: '#F8F9FA',
     },
 };
 

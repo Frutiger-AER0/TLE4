@@ -1,5 +1,3 @@
-// screens/ActionScreen.js
-
 import React from "react";
 import { ScrollView, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
@@ -16,7 +14,7 @@ export default function ActionScreen() {
     }
 
     function goToDonation() {
-        navigation.navigate("DonationScreen");
+        navigation.navigate("DonationScreen", {}); // Pass an empty object for parameters
     }
 
     return (
@@ -44,30 +42,34 @@ export default function ActionScreen() {
                 >
                     Maak impact op jouw manier
                 </Text>
+                <View className="flex flex-col">
+                    {/* Stickers */}
+                    <ActionCard
+                        image={require("../assets/tle4-stickers.jpg")}
+                        title="Stickers ontwerpen"
+                        description="Jouw ontwerp, onze productie. Verspreid de boodschap met stickers."
+                        buttonText="Bekijk projecten"
+                        onPress={() => goToProject("stickers")}
+                    />
 
-                <ActionCard
-                    image={require("../assets/tle4-stickers.jpg")}
-                    title="Stickers ontwerpen"
-                    description="Jouw ontwerp, onze productie. Verspreid de boodschap met stickers."
-                    buttonText="Bekijk projecten"
-                    onPress={() => goToProject("stickers")}
-                />
+                    {/* Spandoeken */}
+                    <ActionCard
+                        image={require("../assets/tle4-spandoek.avif")}
+                        title="Spandoeken ontwerpen"
+                        description="Help mee met een spandoek. Lever een ontwerp aan. Wij regelen de rest."
+                        buttonText="Bekijk projecten"
+                        onPress={() => goToProject("spandoeken")}
+                    />
 
-                <ActionCard
-                    image={require("../assets/tle4-spandoek.avif")}
-                    title="Spandoeken ontwerpen"
-                    description="Help mee met een spandoek. Lever een ontwerp aan. Wij regelen de rest."
-                    buttonText="Bekijk projecten"
-                    onPress={() => goToProject("spandoeken")}
-                />
-
-                <ActionCard
-                    image={require("../assets/tle4-doneren.jpg")}
-                    title="Donaties"
-                    description="Draag bij aan de beweging. Jouw donatie komt 100% terecht waar die het meeste impact maakt, bij jouw doel."
-                    buttonText="Doneer"
-                    onPress={goToDonation}
-                />
+                    {/* Donaties */}
+                    <ActionCard
+                        image={require("../assets/tle4-doneren.jpg")}
+                        title="Donaties"
+                        description="Draag bij aan de beweging. Jouw donatie komt 100% terecht waar die het meeste impact maakt, bij jouw doel."
+                        buttonText="Doneer"
+                        onPress={goToDonation}
+                    />
+                </View>
             </View>
         </ScrollView>
     );

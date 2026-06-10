@@ -1,4 +1,8 @@
 import React from "react";
+import {View} from "react-native";
+import {createBottomTabNavigator} from "@react-navigation/bottom-tabs";
+import {createStackNavigator} from "@react-navigation/stack";
+import {Ionicons} from "@expo/vector-icons";
 import { View } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,15 +13,28 @@ import MapScreen from "../../screens/MapScreen";
 import HomeScreen from "../../screens/HomeScreen";
 
 const Tab = createBottomTabNavigator();
+const ActionStack = createStackNavigator();
 
-export default function MainTabs() {
+function ActionStackScreen() {
+    return (
+        <ActionStack.Navigator screenOptions={{headerShown: false}}>
+            <ActionStack.Screen name="ActionScreen" component={ActionScreen}/>
+            <ActionStack.Screen name="DonationScreen" component={DonationScreen}/>
+            <ActionStack.Screen name="HomeScreen" component={HomeScreen}/>
+        </ActionStack.Navigator>
+    );
+}
+
+export default function MainTabs({route}) {
+    const isAdmin = route?.params?.isAdmin === true;
+
     return (
         <View className="flex-1 bg-offWhite">
-            <AppHeader />
+            <AppHeader/>
             <View className="flex-1">
                 <Tab.Navigator
                     initialRouteName="search"
-                    screenOptions={({ route }) => ({
+                    screenOptions={({route}) => ({
                         headerShown: false,
                         tabBarActiveTintColor: "#F4C430",
                         tabBarInactiveTintColor: "#F8F9FA",
@@ -27,7 +44,7 @@ export default function MainTabs() {
                             paddingTop: 14,
                             paddingBottom: 8,
                         },
-                        tabBarIcon: ({ focused, color, size }) => {
+                        tabBarIcon: ({focused, color, size}) => {
                             let iconName;
 
                             if (route.name === "search") {
@@ -40,30 +57,37 @@ export default function MainTabs() {
                                 iconName = focused ? "person" : "person-outline";
                             }
 
-                            return <Ionicons name={iconName} size={size} color={color} />;
+                            return <Ionicons name={iconName} size={size} color={color}/>;
                         },
                     })}
                 >
                     <Tab.Screen
                         name="search"
-                        component={HomeStack}
-                        options={{ title: "Home" }}
+                        component={ActionStackScreen}
+                        options={{title: "Home"}}
                     />
                     <Tab.Screen
                         name="map"
                         component={MapScreen}
-                        options={{ title: "Kaart" }}
+                        options={{title: "Kaart"}}
                     />
                     <Tab.Screen
                         name="calendar"
                         component={HomeScreen}
-                        options={{ title: "Agenda" }}
+                        options={{title: "Agenda"}}
                     />
                     <Tab.Screen
                         name="person"
                         component={HomeScreen}
-                        options={{ title: "Profiel" }}
+                        options={{title: "Profiel"}}
                     />
+                    {isAdmin && (
+                        <Tab.Screen
+                            name="admin"
+                            component={AdminScreen}
+                            options={{title: "Admin"}}
+                        />
+                    )}
                 </Tab.Navigator>
             </View>
         </View>
