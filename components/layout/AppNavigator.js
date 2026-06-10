@@ -99,39 +99,19 @@ export default function AppNavigator({route}) {
                 initialRouteName="search"
                 screenOptions={({route}) => ({
                     headerShown: true,
-                    header: () => <AppHeader />,
+                    header: () => <AppHeader/>,
                     headerStyle: {
-                        backgroundColor: "#14213D",
                         elevation: 0,
                         shadowOpacity: 0,
                         borderBottomWidth: 0,
                     },
-                    sceneContainerStyle: {
-                        backgroundColor: "#F8F9FA",
-                    },
-                    tabBarActiveTintColor: "#F8F9FA",
-                    tabBarInactiveTintColor: "#F8F9FA",
+                    tabBarActiveTintColor: '#F4C430',
+                    tabBarInactiveTintColor: '#F8F9FA',
                     tabBarStyle: {
-                        position: "absolute",
-                        left: 16,
-                        right: 16,
-                        bottom: 18,
-                        backgroundColor: "#14213D",
-                        height: 78,
-                        borderRadius: 16,
-                        paddingTop: 10,
+                        backgroundColor: '#14213D',
+                        height: 90,
+                        paddingTop: 14,
                         paddingBottom: 8,
-                        borderTopWidth: 0,
-                        elevation: 0,
-                        shadowOpacity: 0,
-                    },
-                    tabBarLabelStyle: {
-                        fontSize: 10,
-                        marginTop: 2,
-                    },
-                    tabBarItemStyle: {
-                        borderRadius: 16,
-                        marginHorizontal: 6,
                     },
                     tabBarIcon: ({focused, color, size}) => {
                         let iconName;
