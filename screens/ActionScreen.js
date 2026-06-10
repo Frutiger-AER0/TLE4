@@ -1,6 +1,6 @@
 import React from "react";
-import { ScrollView, Text, View } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import {ScrollView, Text, View} from "react-native";
+import {useNavigation} from "@react-navigation/native";
 
 import ActionCard from "../components/actions/ActionCard";
 
@@ -9,7 +9,7 @@ export default function ActionScreen() {
 
     function goToProject(projectType) {
         navigation.navigate("HomeScreen", {
-            projectType: projectType,
+            type: projectType,
         });
     }
 
@@ -49,7 +49,7 @@ export default function ActionScreen() {
                         title="Stickers ontwerpen"
                         description="Jouw ontwerp, onze productie. Verspreid de boodschap met stickers."
                         buttonText="Bekijk projecten"
-                        onPress={() => goToProject("stickers")}
+                        onPress={() => goToProject("Stickers")}
                     />
 
                     {/* Spandoeken */}
@@ -58,7 +58,7 @@ export default function ActionScreen() {
                         title="Spandoeken ontwerpen"
                         description="Help mee met een spandoek. Lever een ontwerp aan. Wij regelen de rest."
                         buttonText="Bekijk projecten"
-                        onPress={() => goToProject("spandoeken")}
+                        onPress={() => goToProject("Spandoek")}
                     />
 
                     {/* Donaties */}

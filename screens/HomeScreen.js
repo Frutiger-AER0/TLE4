@@ -1,6 +1,6 @@
 // screens/HomeScreen.js
 
-import React, {useMemo, useState} from "react";
+import React, {useMemo, useState, useEffect} from "react";
 import {
     View,
     Text,
@@ -10,7 +10,7 @@ import {
     Image,
 } from "react-native";
 import {Ionicons} from "@expo/vector-icons";
-import {useNavigation} from "@react-navigation/native";
+import {useNavigation, useRoute} from "@react-navigation/native";
 import tw from "twrnc";
 
 import PreviewModal from "../components/PreviewModal";
@@ -19,6 +19,7 @@ import {protests, helpOptions, filterOptions} from "../data/dummydata";
 
 export default function HomeScreen() {
     const navigation = useNavigation();
+    const route = useRoute();
 
     const [search, setSearch] = useState("");
     const [previewVisible, setPreviewVisible] = useState(false);
@@ -28,6 +29,13 @@ export default function HomeScreen() {
     const [selectedTopic, setSelectedTopic] = useState(null);
     const [selectedAssignment, setSelectedAssignment] = useState("Alle");
     const [selectedMoment, setSelectedMoment] = useState("Alle");
+
+    // Effect to set initial filter based on navigation params
+    useEffect(() => {
+        if (route.params?.type) {
+            setSelectedAssignment(route.params.type);
+        }
+    }, [route.params?.type]);
 
     /*
         PSEUDOCODE VOOR LATER MET BACKEND:
