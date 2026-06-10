@@ -11,6 +11,7 @@ import {
     Modal,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import MapView, { Marker } from "react-native-maps";
 import * as FileSystem from "expo-file-system";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
@@ -27,6 +28,10 @@ export default function ProtestForm() {
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [pickerMode, setPickerMode] = useState("date");
     const [selectedImage, setSelectedImage] = useState(null);
+    const [coordinates, setCoordinates] = useState({
+        latitude: 51.9225, // Default to Rotterdam
+        longitude: 4.4791,
+    });
     const [loading, setLoading] = useState(false);
 
     // --- helper to get a file:// uri that can be uploaded (handles content:// on Android) ---
@@ -142,6 +147,13 @@ export default function ProtestForm() {
         }
     };
 
+    const handleMapPress = (e) => {
+        const { latitude, longitude } = e.nativeEvent.coordinate;
+        setCoordinates({ latitude, longitude });
+        // Optional: reverse geocode here if you want to automatically fill the Location text field
+        console.log("[DEBUG] Map pressed:", latitude, longitude);
+    };
+
     function formatDateForAPI(date) {
         return date.toISOString();
     }
@@ -175,6 +187,8 @@ export default function ProtestForm() {
             formData.append("predicted_members", String(parseInt(predictedMembers, 10) || 0));
             formData.append("link", link.trim());
             formData.append("start_time", formatDateForAPI(startTime));
+            formData.append("latitude", String(coordinates.latitude));
+            formData.append("longitude", String(coordinates.longitude));
 
             if (uploadUri) {
                 const filename = uploadUri.split("/").pop();
@@ -185,6 +199,11 @@ export default function ProtestForm() {
                     name: filename,
                     type: mimeType,
                 });
+            }
+
+            console.log("[DEBUG] FormData contents before sending:");
+            for (let pair of formData.entries()) {
+                console.log(pair[0] + ': ' + pair[1]);
             }
 
             // debug: try httpbin first if you want to confirm device multipart works
@@ -333,6 +352,29 @@ export default function ProtestForm() {
                         </View>
                     )}
                 </TouchableOpacity>
+            </View>
+
+            <View className="mb-6">
+                <Text className="text-sm font-semibold text-darkBlue mb-2">Locatie op de kaart selecteren *</Text>
+                <View className="h-64 w-full rounded-md overflow-hidden border border-gray-300">
+                    <MapView
+                        style={{ flex: 1 }}
+                        initialRegion={{
+                            latitude: coordinates.latitude,
+                            longitude: coordinates.longitude,
+                            latitudeDelta: 0.05,
+                            longitudeDelta: 0.05,
+                        }}
+                        onPress={handleMapPress}
+                    >
+                        <Marker
+                            coordinate={coordinates}
+                            draggable
+                            onDragEnd={handleMapPress}
+                        />
+                    </MapView>
+                </View>
+                <Text className="text-[10px] text-gray-500 mt-1">Tik op de kaart of sleep de marker om de exacte locatie te bepalen.</Text>
             </View>
 
             <TouchableOpacity style={{ backgroundColor: "#14213D", padding: 12, borderRadius: 8, marginBottom: 12 }} onPress={handleSubmit} disabled={loading}>

@@ -63,8 +63,6 @@ export default function LoginForm({ onSuccess }) {
                 onSuccess?.(null, data);
                 return;
             }
-
-            Alert.alert("Succes", "JWT-token ontvangen.");
             onSuccess?.(token, data);
         } catch (error) {
             Alert.alert("Network error", error.message || String(error));

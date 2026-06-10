@@ -58,16 +58,16 @@ export default function MapScreen({route}) {
                 showsUserLocation={true}
                 userInterfaceStyle='light'
                 initialRegion={{
-                    latitude: item.latitude,
-                    longitude: item.longitude,
+                    latitude: Number(item.latitude),
+                    longitude: Number(item.longitude),
                     latitudeDelta: 0.01,
                     longitudeDelta: 0.01,
                 }}
             >
                 <Marker
                     coordinate={{
-                        latitude: item.latitude,
-                        longitude: item.longitude,
+                        latitude: Number(item.latitude),
+                        longitude: Number(item.longitude),
                     }}
                     title={item.name}
                     description={item.address}

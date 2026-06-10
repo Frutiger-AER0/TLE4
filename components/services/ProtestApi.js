@@ -252,6 +252,9 @@ export function normalizeProtest(record) {
             protest?.location ||
             "Locatie onbekend",
 
+        latitude: parseFloat(protest?.latitude || record?.latitude || 51.9225),
+        longitude: parseFloat(protest?.longitude || record?.longitude || 4.4791),
+
         city: "Rotterdam",
 
         participants:
