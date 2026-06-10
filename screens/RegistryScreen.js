@@ -1,79 +1,26 @@
-import {
-    View,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    Dimensions,
-    TouchableOpacity,
-    Text,
-} from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-
-import RegistryForm from "../components/RegistryForm";
+import React from "react";
+import {View, Text, TouchableOpacity} from "react-native";
+import RegistryForm from "../components/forms/RegistryForm";
 import AppHeader from "../components/layout/AppHeader";
 
-export default function RegistryScreen({ navigation }) {
-    const screenHeight = Dimensions.get("window").height;
-
+export default function RegistryScreen({navigation}) {
     return (
         <View className="flex-1 bg-offWhite">
-            <AppHeader />
+            <AppHeader/>
+            <View className="flex-1 items-center justify-center pt-6 px-6">
 
-            <TouchableOpacity
-                onPress={() => navigation.goBack()}
-                activeOpacity={0.8}
-                style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    paddingHorizontal: 20,
-                    paddingTop: 16,
-                    paddingBottom: 8,
-                }}
-            >
-                <Ionicons name="arrow-back" size={28} color="#14213D" />
+                <RegistryForm onSuccess={() => navigation.navigate("Login")}/>
 
-                <Text
-                    style={{
-                        color: "#14213D",
-                        fontSize: 22,
-                        fontWeight: "700",
-                        marginLeft: 10,
-                    }}
+                <TouchableOpacity
+                    className="mt-6 py-2"
+                    onPress={() => navigation.navigate("Login")}
                 >
-                    Back
-                </Text>
-            </TouchableOpacity>
+                    <Text className="text-darkBlue text-base font-medium text-center">
+                        Heb je al een account? <Text className="text-purple font-bold underline">Login</Text>
+                    </Text>
+                </TouchableOpacity>
 
-            <KeyboardAvoidingView
-                className="flex-1 bg-offWhite"
-                behavior={Platform.OS === "ios" ? "padding" : undefined}
-            >
-                <ScrollView
-                    className="flex-1 bg-offWhite"
-                    showsVerticalScrollIndicator={false}
-                    keyboardShouldPersistTaps="handled"
-                    contentContainerStyle={{
-                        minHeight: screenHeight - 180,
-                        justifyContent: "center",
-                        alignItems: "center",
-                        paddingHorizontal: 24,
-                        paddingTop: 24,
-                        paddingBottom: 48,
-                    }}
-                >
-                    <View
-                        style={{
-                            width: "100%",
-                            maxWidth: 420,
-                            alignSelf: "center",
-                        }}
-                    >
-                        <RegistryForm
-                            onSuccess={() => navigation.replace("Home")}
-                        />
-                    </View>
-                </ScrollView>
-            </KeyboardAvoidingView>
+            </View>
         </View>
     );
 }
