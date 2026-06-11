@@ -37,25 +37,20 @@ export default function ProtestForm() {
     // --- helper to get a file:// uri that can be uploaded (handles content:// on Android) ---
     async function resolveUploadUri(uri) {
         try {
-            console.log("[DEBUG] resolveUploadUri input:", uri);
             if (!uri) return null;
 
             // Android content URIs need copying to cache
             if (Platform.OS === "android" && uri.startsWith("content://")) {
                 const filename = uri.split("/").pop() || `upload_${Date.now()}.jpg`;
                 const dest = FileSystem.cacheDirectory + filename;
-                console.log("[DEBUG] copying content:// to cache:", dest);
                 try {
                     const { uri: copiedUri } = await FileSystem.downloadAsync(uri, dest);
-                    console.log("[DEBUG] copied to:", copiedUri);
                     return copiedUri;
                 } catch (e) {
-                    console.warn("[WARN] downloadAsync failed:", e);
                     try {
                         await FileSystem.copyAsync({ from: uri, to: dest });
                         return dest;
                     } catch (e2) {
-                        console.warn("[WARN] copyAsync also failed:", e2);
                         return uri; // last resort
                     }
                 }
@@ -63,9 +58,8 @@ export default function ProtestForm() {
 
             // file:// or http(s) URIs just return
             return uri;
-        } catch (err) {
-            console.error("[ERROR] resolveUploadUri error:", err);
-            return uri;
+        } catch (err) { // Fallback to original URI on error
+            return uri; 
         }
     }
 
@@ -100,9 +94,7 @@ export default function ProtestForm() {
     // --- image picker with logging ---
     const pickImage = async () => {
         try {
-            console.log("[DEBUG] pickImage pressed");
             const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            console.log("[DEBUG] permission result:", perm);
             const granted = perm?.granted ?? perm?.status === "granted";
             if (!granted) {
                 Alert.alert("Permission denied", "Allow photo library access to pick an image.");
@@ -115,16 +107,12 @@ export default function ProtestForm() {
                 quality: 0.8,
             });
 
-            console.log("[DEBUG] picker result:", result);
             if (result.canceled) {
-                console.log("[DEBUG] user canceled picker");
                 return;
             }
             const asset = result.assets && result.assets[0] ? result.assets[0] : result;
-            console.log("[DEBUG] selected asset:", asset);
             setSelectedImage(asset);
         } catch (err) {
-            console.error("[ERROR] pickImage failed:", err);
             Alert.alert("Error", "Failed to pick image: " + (err?.message || String(err)));
         }
     };
@@ -151,7 +139,6 @@ export default function ProtestForm() {
         const { latitude, longitude } = e.nativeEvent.coordinate;
         setCoordinates({ latitude, longitude });
         // Optional: reverse geocode here if you want to automatically fill the Location text field
-        console.log("[DEBUG] Map pressed:", latitude, longitude);
     };
 
     function formatDateForAPI(date) {
@@ -173,12 +160,8 @@ export default function ProtestForm() {
 
         setLoading(true);
         try {
-            console.log("[DEBUG] submit start", { name, description, location, predictedMembers, link, startTime });
-            console.log("[DEBUG] selectedImage before upload:", selectedImage);
-
             let uploadUri = selectedImage?.uri;
             uploadUri = await resolveUploadUri(uploadUri);
-            console.log("[DEBUG] resolved uploadUri:", uploadUri);
 
             const formData = new FormData();
             formData.append("name", name.trim());
@@ -193,33 +176,18 @@ export default function ProtestForm() {
             if (uploadUri) {
                 const filename = uploadUri.split("/").pop();
                 const mimeType = deriveMimeType(selectedImage);
-                console.log("[DEBUG] appending file:", { uploadUri, filename, mimeType });
                 formData.append("card_img", {
                     uri: uploadUri,
                     name: filename,
                     type: mimeType,
                 });
             }
-
-            console.log("[DEBUG] FormData contents before sending:");
-            for (let pair of formData.entries()) {
-                console.log(pair[0] + ': ' + pair[1]);
-            }
-
-            // debug: try httpbin first if you want to confirm device multipart works
-            // const testResp = await fetch("https://httpbin.org/post", { method: "POST", body: formData });
-            // console.log("[DEBUG] httpbin test status", testResp.status);
-
-            console.log("[DEBUG] posting to API_URL:", API_URL);
             const response = await fetch(API_URL, {
                 method: "POST",
                 body: formData,
             });
 
-            console.log("[DEBUG] response object:", response);
-            console.log("[DEBUG] response.ok:", response.ok, "status:", response.status);
             const text = await response.text();
-            console.log("[DEBUG] response text (truncated):", text?.slice(0, 2000));
 
             if (!response.ok) {
                 Alert.alert("Upload failed", `Status ${response.status}\n${text?.slice(0, 500)}`);
@@ -228,54 +196,11 @@ export default function ProtestForm() {
 
             Alert.alert("Succes", "Protest aangemaakt!");
         } catch (err) {
-            console.error("[ERROR] submit failed:", err);
             Alert.alert("Network error", err?.message || String(err));
         } finally {
             setLoading(false);
         }
     };
-
-    // --- debug helpers (buttons call these) ---
-    async function testConnectivity() {
-        try {
-            console.log("[TEST] public fetch");
-            const pr = await fetch("https://jsonplaceholder.typicode.com/todos/1");
-            console.log("[TEST] public status:", pr.status);
-            console.log("[TEST] public body:", await pr.json());
-        } catch (e) {
-            console.error("[TEST] public fetch error:", e);
-        }
-
-        try {
-            console.log("[TEST] server GET:", API_URL);
-            const sr = await fetch(API_URL);
-            console.log("[TEST] server GET status:", sr.status);
-            console.log("[TEST] server GET body (truncated):", (await sr.text()).slice(0, 2000));
-        } catch (e) {
-            console.error("[TEST] server GET error:", e);
-        }
-    }
-
-    async function testHttpBinUpload() {
-        try {
-            const tf = new FormData();
-            tf.append("name", "test-upload");
-            tf.append("description", "test");
-            if (selectedImage?.uri) {
-                const uri = selectedImage.uri;
-                const name = uri.split("/").pop();
-                const type = deriveMimeType(selectedImage);
-                console.log("[TEST] httpbin will attach:", { uri, name, type });
-                tf.append("card_img", { uri, name, type });
-            }
-            const resp = await fetch("https://httpbin.org/post", { method: "POST", body: tf });
-            console.log("[TEST] httpbin status:", resp.status);
-            const txt = await resp.text();
-            console.log("[TEST] httpbin resp (truncated):", txt.slice(0, 2000));
-        } catch (e) {
-            console.error("[TEST] httpbin failed:", e);
-        }
-    }
 
     // ---- JSX ----
     return (
@@ -379,14 +304,6 @@ export default function ProtestForm() {
 
             <TouchableOpacity style={{ backgroundColor: "#14213D", padding: 12, borderRadius: 8, marginBottom: 12 }} onPress={handleSubmit} disabled={loading}>
                 {loading ? <ActivityIndicator color="#fff" /> : <Text style={{ textAlign: "center", color: "#fff", fontWeight: "600" }}>Protest aanmaken</Text>}
-            </TouchableOpacity>
-
-            {/* DEBUG buttons */}
-            <TouchableOpacity style={{ backgroundColor: "#888", padding: 12, borderRadius: 8, marginBottom: 8 }} onPress={testConnectivity}>
-                <Text style={{ textAlign: "center", color: "#fff" }}>Test Connectivity</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={{ backgroundColor: "#555", padding: 12, borderRadius: 8 }} onPress={testHttpBinUpload}>
-                <Text style={{ textAlign: "center", color: "#fff" }}>Test httpbin Upload</Text>
             </TouchableOpacity>
         </ScrollView>
     );
