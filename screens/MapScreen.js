@@ -81,7 +81,11 @@ export default function MapScreen({route}) {
         <View style={styles.container}>
             <MapView
                 style={styles.map}
+                provider="google"
+                showsCompass={true}
                 showsUserLocation={true}
+                showsMyLocationButton={true}
+                followsUserLocation={true}
                 userInterfaceStyle='light'
                 initialRegion={initialRegion}
             >
@@ -96,7 +100,7 @@ export default function MapScreen({route}) {
                             }}
                             title={protest.title}
                             description={protest.location}
-                            pinColor='#849782'
+                            pinColor='red'
                         />
                     )
                 })}
