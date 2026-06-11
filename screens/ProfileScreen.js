@@ -10,60 +10,110 @@ import {
     TouchableOpacity,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthContext } from "../context/AuthContext";
 
 const API_BASE_URL = "http://145.24.237.86:8000";
 
-export default function ProfileScreen() {
-    const { user: loggedInUser } = useContext(AuthContext);
+function getPossibleUserId(userObject) {
+    if (!userObject) {
+        return null;
+    }
 
-    const contextUserId =
-        loggedInUser?.id ||
-        loggedInUser?.userId ||
-        loggedInUser?.user?.id ||
-        null;
+    return (
+        userObject?.id ||
+        userObject?.userId ||
+        userObject?.user_id ||
+        userObject?.user?.id ||
+        userObject?.user?.user_id ||
+        userObject?.data?.id ||
+        userObject?.data?.user_id ||
+        userObject?.data?.user?.id ||
+        userObject?.data?.user?.user_id ||
+        userObject?.userData?.id ||
+        userObject?.userData?.user_id ||
+        null
+    );
+}
 
+function getPossibleEmail(userObject) {
+    if (!userObject) {
+        return null;
+    }
+
+    return (
+        userObject?.email ||
+        userObject?.user?.email ||
+        userObject?.data?.email ||
+        userObject?.data?.user?.email ||
+        userObject?.userData?.email ||
+        null
+    );
+}
+
+function getPossibleUsername(userObject) {
+    if (!userObject) {
+        return null;
+    }
+
+    return (
+        userObject?.username ||
+        userObject?.name ||
+        userObject?.user?.username ||
+        userObject?.user?.name ||
+        userObject?.data?.username ||
+        userObject?.data?.name ||
+        userObject?.data?.user?.username ||
+        userObject?.data?.user?.name ||
+        userObject?.userData?.username ||
+        userObject?.userData?.name ||
+        null
+    );
+}
+
+export default function ProfileScreen({ navigation }) {
+    const { user: loggedInUser, logout } = useContext(AuthContext);
+
+    const [storedUser, setStoredUser] = useState(null);
     const [profileUser, setProfileUser] = useState(null);
     const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [errorText, setErrorText] = useState("");
 
+    const activeUser = loggedInUser || storedUser;
+    const contextUserId = getPossibleUserId(activeUser);
+
     useEffect(() => {
         loadProfile();
-    }, [contextUserId]);
+    }, [loggedInUser]);
 
     async function loadProfile() {
-        if (!contextUserId) {
-            setErrorText("Geen gebruikers-ID gevonden. Log opnieuw in.");
-            setLoading(false);
-            return;
-        }
-
         try {
             setLoading(true);
             setErrorText("");
 
-            /*
-                ERD:
-                users:
-                - id
-                - email
-                - password
-                - created_at
-                - updated_at
+            let userFromStorage = null;
 
-                user_data:
-                - id
-                - user_id
-                - username
-                - profile_img
+            if (!loggedInUser) {
+                const rawUser = await AsyncStorage.getItem("user");
 
-                Backend afhankelijk:
-                - /users/:id geeft mogelijk alleen users terug
-                - /user-data kan eventueel later gebruikt worden voor username/profile_img
-            */
+                if (rawUser) {
+                    userFromStorage = JSON.parse(rawUser);
+                    setStoredUser(userFromStorage);
+                }
+            }
 
-            const userResponse = await fetch(`${API_BASE_URL}/users/${contextUserId}`, {
+            const userSource = loggedInUser || userFromStorage;
+            const foundUserId = getPossibleUserId(userSource);
+
+            if (!foundUserId) {
+                setErrorText(
+                    "Geen gebruikers-ID gevonden. Log opnieuw in of controleer de login-response."
+                );
+                return;
+            }
+
+            const userResponse = await fetch(`${API_BASE_URL}/users/${foundUserId}`, {
                 headers: {
                     Accept: "application/json",
                     "Content-Type": "application/json",
@@ -76,11 +126,6 @@ export default function ProfileScreen() {
 
             const userJson = await userResponse.json();
             setProfileUser(userJson);
-
-            /*
-                Deze tweede request is optioneel.
-                Als /user-data niet bestaat, crasht de pagina niet.
-            */
 
             try {
                 const userDataResponse = await fetch(`${API_BASE_URL}/user-data`, {
@@ -98,7 +143,10 @@ export default function ProfileScreen() {
                         : userDataJson.data || userDataJson.user_data || [];
 
                     const foundUserData = userDataList.find((item) => {
-                        return item.user_id === contextUserId || item.user_id === Number(contextUserId);
+                        return (
+                            item.user_id === foundUserId ||
+                            item.user_id === Number(foundUserId)
+                        );
                     });
 
                     setUserData(foundUserData || null);
@@ -114,13 +162,23 @@ export default function ProfileScreen() {
         }
     }
 
+    async function handleLogout() {
+        await logout();
+
+        if (navigation) {
+            navigation.reset({
+                index: 0,
+                routes: [{ name: "Opening" }],
+            });
+        }
+    }
+
     function getUsername() {
         return (
             userData?.username ||
             profileUser?.username ||
             profileUser?.name ||
-            loggedInUser?.username ||
-            loggedInUser?.name ||
+            getPossibleUsername(activeUser) ||
             "Gebruiker"
         );
     }
@@ -128,8 +186,7 @@ export default function ProfileScreen() {
     function getEmail() {
         return (
             profileUser?.email ||
-            loggedInUser?.email ||
-            loggedInUser?.user?.email ||
+            getPossibleEmail(activeUser) ||
             "Geen email gevonden"
         );
     }
@@ -138,7 +195,9 @@ export default function ProfileScreen() {
         const profileImg =
             userData?.profile_img ||
             profileUser?.profile_img ||
-            loggedInUser?.profile_img ||
+            activeUser?.profile_img ||
+            activeUser?.user?.profile_img ||
+            activeUser?.data?.user?.profile_img ||
             null;
 
         if (!profileImg || typeof profileImg !== "string") {
@@ -188,6 +247,16 @@ export default function ProfileScreen() {
                 >
                     <Text className="text-white font-bold">
                         Opnieuw proberen
+                    </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    onPress={handleLogout}
+                    activeOpacity={0.85}
+                    className="bg-lightPurple rounded-xl px-6 py-3 mt-3"
+                >
+                    <Text className="text-darkBlue font-bold">
+                        Uitloggen
                     </Text>
                 </TouchableOpacity>
             </View>
@@ -309,6 +378,16 @@ export default function ProfileScreen() {
                     Dit profiel is gekoppeld aan de ingelogde gebruiker. Later kunnen hier ook interesses, pronouns, opgeslagen protesten en afgeronde creatieve projecten worden getoond.
                 </Text>
             </View>
+
+            <TouchableOpacity
+                onPress={handleLogout}
+                activeOpacity={0.85}
+                className="bg-darkBlue rounded-xl py-4 mt-6 items-center"
+            >
+                <Text className="text-white font-bold">
+                    Uitloggen
+                </Text>
+            </TouchableOpacity>
         </ScrollView>
     );
 }
