@@ -16,9 +16,7 @@ import { AuthContext } from "../context/AuthContext";
 const API_BASE_URL = "http://145.24.237.86:8000";
 
 function getPossibleUserId(userObject) {
-    if (!userObject) {
-        return null;
-    }
+    if (!userObject) return null;
 
     return (
         userObject?.id ||
@@ -37,9 +35,7 @@ function getPossibleUserId(userObject) {
 }
 
 function getPossibleEmail(userObject) {
-    if (!userObject) {
-        return null;
-    }
+    if (!userObject) return null;
 
     return (
         userObject?.email ||
@@ -52,9 +48,7 @@ function getPossibleEmail(userObject) {
 }
 
 function getPossibleUsername(userObject) {
-    if (!userObject) {
-        return null;
-    }
+    if (!userObject) return null;
 
     return (
         userObject?.username ||
@@ -81,79 +75,125 @@ export default function ProfileScreen({ navigation }) {
     const [errorText, setErrorText] = useState("");
 
     const activeUser = loggedInUser || storedUser;
-    const contextUserId = getPossibleUserId(activeUser);
 
     useEffect(() => {
         loadProfile();
     }, [loggedInUser]);
 
-    async function loadProfile() {
+    async function getUserFromStorage() {
+        const rawUser = await AsyncStorage.getItem("user");
+
+        if (!rawUser) {
+            return null;
+        }
+
+        const parsedUser = JSON.parse(rawUser);
+        setStoredUser(parsedUser);
+
+        return parsedUser;
+    }
+
+    async function findUserByEmail(email) {
+        if (!email) {
+            return null;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/users`, {
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (!response.ok) {
+            return null;
+        }
+
+        const data = await response.json();
+
+        const users = Array.isArray(data)
+            ? data
+            : data.data || data.users || [];
+
+        return users.find((item) => {
+            return item.email?.toLowerCase() === email.toLowerCase();
+        }) || null;
+    }
+
+    async function fetchUserData(foundUserId) {
         try {
-            setLoading(true);
-            setErrorText("");
-
-            let userFromStorage = null;
-
-            if (!loggedInUser) {
-                const rawUser = await AsyncStorage.getItem("user");
-
-                if (rawUser) {
-                    userFromStorage = JSON.parse(rawUser);
-                    setStoredUser(userFromStorage);
-                }
-            }
-
-            const userSource = loggedInUser || userFromStorage;
-            const foundUserId = getPossibleUserId(userSource);
-
-            if (!foundUserId) {
-                setErrorText(
-                    "Geen gebruikers-ID gevonden. Log opnieuw in of controleer de login-response."
-                );
-                return;
-            }
-
-            const userResponse = await fetch(`${API_BASE_URL}/users/${foundUserId}`, {
+            const userDataResponse = await fetch(`${API_BASE_URL}/user-data`, {
                 headers: {
                     Accept: "application/json",
                     "Content-Type": "application/json",
                 },
             });
 
-            if (!userResponse.ok) {
-                throw new Error(`Gebruiker ophalen mislukt. Status: ${userResponse.status}`);
+            if (!userDataResponse.ok) {
+                return;
             }
 
-            const userJson = await userResponse.json();
-            setProfileUser(userJson);
+            const userDataJson = await userDataResponse.json();
 
-            try {
-                const userDataResponse = await fetch(`${API_BASE_URL}/user-data`, {
+            const userDataList = Array.isArray(userDataJson)
+                ? userDataJson
+                : userDataJson.data || userDataJson.user_data || [];
+
+            const foundUserData = userDataList.find((item) => {
+                return (
+                    item.user_id === foundUserId ||
+                    item.user_id === Number(foundUserId)
+                );
+            });
+
+            setUserData(foundUserData || null);
+        } catch (error) {
+            console.log("user-data endpoint niet beschikbaar:", error.message);
+        }
+    }
+
+    async function loadProfile() {
+        try {
+            setLoading(true);
+            setErrorText("");
+
+            const userFromStorage = await getUserFromStorage();
+            const userSource = loggedInUser || userFromStorage;
+
+            let foundUserId = getPossibleUserId(userSource);
+            const foundEmail = getPossibleEmail(userSource);
+
+            let foundUser = null;
+
+            if (!foundUserId && foundEmail) {
+                foundUser = await findUserByEmail(foundEmail);
+                foundUserId = getPossibleUserId(foundUser);
+            }
+
+            if (!foundUserId) {
+                setErrorText(
+                    "Geen gebruikers-ID gevonden. De login-response bevat waarschijnlijk alleen email/wachtwoord of geen user object."
+                );
+                return;
+            }
+
+            if (!foundUser) {
+                const userResponse = await fetch(`${API_BASE_URL}/users/${foundUserId}`, {
                     headers: {
                         Accept: "application/json",
                         "Content-Type": "application/json",
                     },
                 });
 
-                if (userDataResponse.ok) {
-                    const userDataJson = await userDataResponse.json();
-
-                    const userDataList = Array.isArray(userDataJson)
-                        ? userDataJson
-                        : userDataJson.data || userDataJson.user_data || [];
-
-                    const foundUserData = userDataList.find((item) => {
-                        return (
-                            item.user_id === foundUserId ||
-                            item.user_id === Number(foundUserId)
-                        );
-                    });
-
-                    setUserData(foundUserData || null);
+                if (!userResponse.ok) {
+                    throw new Error(`Gebruiker ophalen mislukt. Status: ${userResponse.status}`);
                 }
-            } catch (userDataError) {
-                console.log("user-data endpoint niet beschikbaar:", userDataError.message);
+
+                foundUser = await userResponse.json();
             }
+
+            setProfileUser(foundUser);
+            await fetchUserData(foundUserId);
         } catch (error) {
             console.log("Profile load error:", error.message);
             setErrorText(error.message);
@@ -165,12 +205,18 @@ export default function ProfileScreen({ navigation }) {
     async function handleLogout() {
         await logout();
 
-        if (navigation) {
-            navigation.reset({
-                index: 0,
-                routes: [{ name: "Opening" }],
-            });
-        }
+        navigation.reset({
+            index: 0,
+            routes: [{ name: "Opening" }],
+        });
+    }
+
+    function getActiveUserId() {
+        return (
+            getPossibleUserId(profileUser) ||
+            getPossibleUserId(activeUser) ||
+            "Niet gevonden"
+        );
     }
 
     function getUsername() {
@@ -363,7 +409,7 @@ export default function ProfileScreen({ navigation }) {
                         </Text>
 
                         <Text className="text-darkBlue font-bold">
-                            {contextUserId}
+                            {getActiveUserId()}
                         </Text>
                     </View>
                 </View>
