@@ -110,7 +110,7 @@ export const protests = [
         calendarDay: 15,
         calendarMonth: "Mei",
         calendarYear: 2026,
-        image: require("../assets/demo1.jpeg"),
+        image: require("../assets/Palestinedemostration.webp"),
         topic: "Palestina",
         tags: ["Palestina", "Mensenrechten", "Spandoek"],
         why: "Waarom demonstreren we? Informatie over de demonstratie.",
