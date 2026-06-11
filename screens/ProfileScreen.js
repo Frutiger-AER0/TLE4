@@ -1,87 +1,314 @@
-import React, {useEffect, useState, useContext} from 'react';
-import {View, Text, ActivityIndicator} from 'react-native';
-import tw from 'twrnc';
-import {AuthContext} from '../context/AuthContext';
+// screens/ProfileScreen.js
+
+import React, { useContext, useEffect, useState } from "react";
+import {
+    View,
+    Text,
+    ActivityIndicator,
+    ScrollView,
+    Image,
+    TouchableOpacity,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { AuthContext } from "../context/AuthContext";
+
+const API_BASE_URL = "http://145.24.237.86:8000";
 
 export default function ProfileScreen() {
-    // 1. Extract the 'user' object from the AuthContext
-    const {user: loggedInUser} = useContext(AuthContext);
+    const { user: loggedInUser } = useContext(AuthContext);
 
-    // 2. Safely grab the ID from your stored user object (adjust 'id' to matching backend key if needed)
-    const contextUserId = loggedInUser?.id || loggedInUser?.userId;
+    const contextUserId =
+        loggedInUser?.id ||
+        loggedInUser?.userId ||
+        loggedInUser?.user?.id ||
+        null;
 
-    const [user, setUser] = useState(null);
+    const [profileUser, setProfileUser] = useState(null);
+    const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [errorText, setErrorText] = useState("");
 
     useEffect(() => {
-        // Check if contextUserId is available
+        loadProfile();
+    }, [contextUserId]);
+
+    async function loadProfile() {
         if (!contextUserId) {
-            setError("Geen gebruikers-ID opgegeven. Kan profiel niet laden. Zorg ervoor dat u bent ingelogd.");
+            setErrorText("Geen gebruikers-ID gevonden. Log opnieuw in.");
             setLoading(false);
             return;
         }
 
-        const fetchUser = async () => {
-            try {
-                const response = await fetch(`http://145.24.237.86:8000/users/${contextUserId}`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
-                setUser(data);
-            } catch (e) {
-                console.error(`Failed to fetch user ${contextUserId}:`, e);
-                setError(e.message);
-            } finally {
-                setLoading(false);
-            }
-        };
+        try {
+            setLoading(true);
+            setErrorText("");
 
-        fetchUser();
-    }, [contextUserId]); // Reload whenever the user ID changes
+            /*
+                ERD:
+                users:
+                - id
+                - email
+                - password
+                - created_at
+                - updated_at
+
+                user_data:
+                - id
+                - user_id
+                - username
+                - profile_img
+
+                Backend afhankelijk:
+                - /users/:id geeft mogelijk alleen users terug
+                - /user-data kan eventueel later gebruikt worden voor username/profile_img
+            */
+
+            const userResponse = await fetch(`${API_BASE_URL}/users/${contextUserId}`, {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!userResponse.ok) {
+                throw new Error(`Gebruiker ophalen mislukt. Status: ${userResponse.status}`);
+            }
+
+            const userJson = await userResponse.json();
+            setProfileUser(userJson);
+
+            /*
+                Deze tweede request is optioneel.
+                Als /user-data niet bestaat, crasht de pagina niet.
+            */
+
+            try {
+                const userDataResponse = await fetch(`${API_BASE_URL}/user-data`, {
+                    headers: {
+                        Accept: "application/json",
+                        "Content-Type": "application/json",
+                    },
+                });
+
+                if (userDataResponse.ok) {
+                    const userDataJson = await userDataResponse.json();
+
+                    const userDataList = Array.isArray(userDataJson)
+                        ? userDataJson
+                        : userDataJson.data || userDataJson.user_data || [];
+
+                    const foundUserData = userDataList.find((item) => {
+                        return item.user_id === contextUserId || item.user_id === Number(contextUserId);
+                    });
+
+                    setUserData(foundUserData || null);
+                }
+            } catch (userDataError) {
+                console.log("user-data endpoint niet beschikbaar:", userDataError.message);
+            }
+        } catch (error) {
+            console.log("Profile load error:", error.message);
+            setErrorText(error.message);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    function getUsername() {
+        return (
+            userData?.username ||
+            profileUser?.username ||
+            profileUser?.name ||
+            loggedInUser?.username ||
+            loggedInUser?.name ||
+            "Gebruiker"
+        );
+    }
+
+    function getEmail() {
+        return (
+            profileUser?.email ||
+            loggedInUser?.email ||
+            loggedInUser?.user?.email ||
+            "Geen email gevonden"
+        );
+    }
+
+    function getProfileImage() {
+        const profileImg =
+            userData?.profile_img ||
+            profileUser?.profile_img ||
+            loggedInUser?.profile_img ||
+            null;
+
+        if (!profileImg || typeof profileImg !== "string") {
+            return null;
+        }
+
+        if (profileImg.startsWith("http")) {
+            return { uri: profileImg };
+        }
+
+        if (profileImg.startsWith("/")) {
+            return { uri: `${API_BASE_URL}${profileImg}` };
+        }
+
+        return { uri: `${API_BASE_URL}/${profileImg}` };
+    }
 
     if (loading) {
         return (
-            <View style={tw`flex-1 justify-center items-center bg-white`}>
-                <ActivityIndicator size="large" color="#0000ff"/>
-                <Text style={tw`mt-2 text-lg text-gray-700`}>Profiel laden...</Text>
+            <View className="flex-1 bg-offWhite items-center justify-center px-5">
+                <ActivityIndicator size="large" color="#14213D" />
+
+                <Text className="text-darkBlue text-base mt-3">
+                    Profiel laden...
+                </Text>
             </View>
         );
     }
 
-    if (error) {
+    if (errorText) {
         return (
-            <View style={tw`flex-1 justify-center items-center bg-white p-5`}>
-                <Text style={tw`text-lg text-red-600 text-center`}>Fout bij het laden van profiel: {error}</Text>
-                {contextUserId &&
-                    <Text style={tw`text-base text-gray-600 text-center mt-2`}>Controleer of de server draait en de URL
-                        voor gebruiker {contextUserId} correct is.</Text>}
-                {!contextUserId &&
-                    <Text style={tw`text-base text-gray-600 text-center mt-2`}>U bent mogelijk niet ingelogd of de
-                        gebruikers-ID is niet beschikbaar.</Text>}
+            <View className="flex-1 bg-offWhite items-center justify-center px-5">
+                <Ionicons name="warning-outline" size={46} color="#842BD7" />
+
+                <Text className="text-darkBlue text-xl font-bold mt-4 text-center">
+                    Profiel kon niet worden geladen
+                </Text>
+
+                <Text className="text-darkBlue text-sm mt-2 text-center">
+                    {errorText}
+                </Text>
+
+                <TouchableOpacity
+                    onPress={loadProfile}
+                    activeOpacity={0.85}
+                    className="bg-darkBlue rounded-xl px-6 py-3 mt-5"
+                >
+                    <Text className="text-white font-bold">
+                        Opnieuw proberen
+                    </Text>
+                </TouchableOpacity>
             </View>
         );
     }
 
-    if (!user) {
-        return (
-            <View style={tw`flex-1 justify-center items-center bg-white`}>
-                <Text style={tw`text-lg text-gray-700`}>Geen gebruikersgegevens gevonden voor
-                    ID: {contextUserId}.</Text>
-            </View>
-        );
-    }
+    const profileImage = getProfileImage();
 
     return (
-        <View style={tw`flex-1 bg-gray-100 p-4`}>
-            <Text style={tw`text-2xl font-bold text-darkBlue mb-4`}>Mijn Profiel</Text>
-            <View style={tw`bg-white p-5 rounded-lg shadow-md`}>
-                <Text style={tw`text-lg font-semibold text-gray-800 mb-2`}>Gebruikersnaam: {user.username}</Text>
-                {user.email && <Text style={tw`text-gray-600 mb-1`}>Email: {user.email}</Text>}
-                {user.id && <Text style={tw`text-gray-600 mb-1`}>Gebruikers-ID: {user.id}</Text>}
-                <Text style={tw`text-gray-600 mt-4 italic`}>Dit zijn de details van de ingelogde gebruiker.</Text>
+        <ScrollView
+            className="flex-1 bg-offWhite"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{
+                paddingHorizontal: 20,
+                paddingTop: 20,
+                paddingBottom: 120,
+            }}
+        >
+            <Text className="text-darkBlue text-2xl font-bold mb-5">
+                Mijn Profiel
+            </Text>
+
+            <View className="bg-lightPurple rounded-2xl p-5 items-center">
+                {profileImage ? (
+                    <Image
+                        source={profileImage}
+                        style={{
+                            width: 96,
+                            height: 96,
+                            borderRadius: 48,
+                            backgroundColor: "#ffffff",
+                        }}
+                        resizeMode="cover"
+                    />
+                ) : (
+                    <View
+                        style={{
+                            width: 96,
+                            height: 96,
+                            borderRadius: 48,
+                            backgroundColor: "#14213D",
+                            alignItems: "center",
+                            justifyContent: "center",
+                        }}
+                    >
+                        <Ionicons name="person-outline" size={48} color="white" />
+                    </View>
+                )}
+
+                <Text className="text-darkBlue text-2xl font-bold mt-4">
+                    {getUsername()}
+                </Text>
+
+                <Text className="text-darkBlue text-sm mt-1">
+                    {getEmail()}
+                </Text>
             </View>
-        </View>
+
+            <View className="bg-white rounded-2xl p-5 mt-5">
+                <Text className="text-darkBlue text-lg font-bold mb-4">
+                    Accountgegevens
+                </Text>
+
+                <View className="flex-row items-center mb-4">
+                    <View className="w-10 h-10 rounded-xl bg-lightPurple items-center justify-center mr-3">
+                        <Ionicons name="person-outline" size={22} color="#14213D" />
+                    </View>
+
+                    <View className="flex-1">
+                        <Text className="text-darkBlue text-xs">
+                            Gebruikersnaam
+                        </Text>
+
+                        <Text className="text-darkBlue font-bold">
+                            {getUsername()}
+                        </Text>
+                    </View>
+                </View>
+
+                <View className="flex-row items-center mb-4">
+                    <View className="w-10 h-10 rounded-xl bg-lightPurple items-center justify-center mr-3">
+                        <Ionicons name="mail-outline" size={22} color="#14213D" />
+                    </View>
+
+                    <View className="flex-1">
+                        <Text className="text-darkBlue text-xs">
+                            Email
+                        </Text>
+
+                        <Text className="text-darkBlue font-bold">
+                            {getEmail()}
+                        </Text>
+                    </View>
+                </View>
+
+                <View className="flex-row items-center">
+                    <View className="w-10 h-10 rounded-xl bg-lightPurple items-center justify-center mr-3">
+                        <Ionicons name="key-outline" size={22} color="#14213D" />
+                    </View>
+
+                    <View className="flex-1">
+                        <Text className="text-darkBlue text-xs">
+                            Gebruikers-ID
+                        </Text>
+
+                        <Text className="text-darkBlue font-bold">
+                            {contextUserId}
+                        </Text>
+                    </View>
+                </View>
+            </View>
+
+            <View className="bg-white rounded-2xl p-5 mt-5">
+                <Text className="text-darkBlue text-lg font-bold mb-3">
+                    Profielstatus
+                </Text>
+
+                <Text className="text-darkBlue text-sm leading-5">
+                    Dit profiel is gekoppeld aan de ingelogde gebruiker. Later kunnen hier ook interesses, pronouns, opgeslagen protesten en afgeronde creatieve projecten worden getoond.
+                </Text>
+            </View>
+        </ScrollView>
     );
 }
