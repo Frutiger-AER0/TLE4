@@ -9,7 +9,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { AuthContext } from "../context/AuthContext";
+import { AuthContext } from "../../context/AuthContext.js";
 
 const API_BASE_URL = "http://145.24.237.86:8000";
 const LOGIN_URL = `${API_BASE_URL}/login`;
