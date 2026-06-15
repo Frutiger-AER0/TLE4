@@ -1,32 +1,31 @@
-import React, { useState } from "react";
-import { View, Text, Dimensions, TouchableOpacity, Image, ScrollView } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
+import React, {useState} from "react";
+import {View, Text, Dimensions, TouchableOpacity, Image, ScrollView} from "react-native";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
+import {useNavigation} from "@react-navigation/native";
+import {Ionicons} from "@expo/vector-icons";
 import AppHeader from "../components/layout/AppHeader";
 import EventDetailsCard from "../components/layout/EventDetailsCard";
 import ActionCard from "../components/layout/ActionCard";
 import SubmitForum from "../components/layout/SubmitForum";
 
-const { height } = Dimensions.get("window");
+const {height} = Dimensions.get("window");
 
 export default function DetailScreen() {
     const navigation = useNavigation();
     const insets = useSafeAreaInsets();
-    
+
     // State voor het opslaan-icoontje
     const [isSaved, setIsSaved] = useState(false);
-    
+
     // De hoogte van de AppHeader is 56 + de veilige marge bovenaan
     const headerHeight = 56 + insets.top;
 
     return (
         <View className="flex-1 bg-offWhite">
-            <AppHeader />
 
             <ScrollView bounces={false}>
                 {/* De Afbeelding Container (40% van het scherm) */}
-                <View style={{ height: height * 0.40 }} className="w-full relative">
+                <View style={{height: height * 0.30}} className="w-full relative">
                     <Image
                         source={require('../assets/Palestinedemostration.webp')}
                         className="h-full w-full"
@@ -34,19 +33,19 @@ export default function DetailScreen() {
                     />
 
                     {/* De donkere overlay voor de tekst */}
-                    <View className="absolute inset-0 bg-black/30" />
+                    <View className="absolute inset-0 bg-black/30"/>
 
                     {/* Knoppenbalk: absoluut gepositioneerd ONDER de header, maar OP de afbeelding */}
-                    <View 
+                    <View
                         className="absolute left-4 right-4 flex-row justify-between items-center"
-                        style={{ top: headerHeight + 16 }}
+                        style={{top: headerHeight - 85}}
                     >
                         {/* Links: Terug knop */}
                         <TouchableOpacity
                             onPress={() => navigation.goBack()}
                             className="bg-blue px-4 py-2.5 rounded-full"
                         >
-                            <Ionicons name="arrow-back" size={24} color="#F8F9FA" />
+                            <Ionicons name="arrow-back" size={24} color="#F8F9FA"/>
                         </TouchableOpacity>
 
                         {/* Rechts: Bookmark en Share knoppen */}
@@ -55,14 +54,14 @@ export default function DetailScreen() {
                                 onPress={() => setIsSaved(!isSaved)}
                                 className="bg-blue px-4 py-2.5 rounded-full"
                             >
-                                <Ionicons name={isSaved ? "bookmark" : "bookmark-outline"} size={24} color="#F8F9FA" />
+                                <Ionicons name={isSaved ? "bookmark" : "bookmark-outline"} size={24} color="#F8F9FA"/>
                             </TouchableOpacity>
 
                             <TouchableOpacity
                                 onPress={() => console.log('Share')}
                                 className="bg-blue px-4 py-2.5 rounded-full ml-3"
                             >
-                                <Ionicons name="share-social-outline" size={24} color="#F8F9FA" />
+                                <Ionicons name="share-social-outline" size={24} color="#F8F9FA"/>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -85,15 +84,15 @@ export default function DetailScreen() {
                 {/* Paarse container */}
                 <View className="bg-lightPurple pb-5">
                     <View className="mt-5">
-                        <EventDetailsCard />
+                        <EventDetailsCard/>
                     </View>
                 </View>
 
                 {/* "Kom in actie" kaart */}
-                <ActionCard />
+                <ActionCard/>
 
                 {/* Nieuw "Submit Forum" component */}
-                <SubmitForum />
+                <SubmitForum/>
 
             </ScrollView>
         </View>

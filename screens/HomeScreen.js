@@ -1,6 +1,6 @@
 // screens/HomeScreen.js
 
-import React, { useMemo, useState } from "react";
+import React, {useMemo, useState, useEffect} from "react";
 import {
     View,
     Text,
@@ -8,19 +8,18 @@ import {
     TouchableOpacity,
     FlatList,
     Image,
-    Modal,
-    Pressable,
-    StyleSheet,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import {Ionicons} from "@expo/vector-icons";
+import {useNavigation, useRoute} from "@react-navigation/native";
 import tw from "twrnc";
 
 import PreviewModal from "../components/PreviewModal";
-import { protests, helpOptions, filterOptions } from "../data/dummydata";
+import FilterModal from "../components/filters/FilterModal";
+import {protests, helpOptions, filterOptions} from "../data/dummydata";
 
 export default function HomeScreen() {
     const navigation = useNavigation();
+    const route = useRoute();
 
     const [search, setSearch] = useState("");
     const [previewVisible, setPreviewVisible] = useState(false);
@@ -30,6 +29,13 @@ export default function HomeScreen() {
     const [selectedTopic, setSelectedTopic] = useState(null);
     const [selectedAssignment, setSelectedAssignment] = useState("Alle");
     const [selectedMoment, setSelectedMoment] = useState("Alle");
+
+    // Effect to set initial filter based on navigation params
+    useEffect(() => {
+        if (route.params?.type) {
+            setSelectedAssignment(route.params.type);
+        }
+    }, [route.params?.type]);
 
     /*
         PSEUDOCODE VOOR LATER MET BACKEND:
@@ -106,29 +112,7 @@ export default function HomeScreen() {
         setFilterVisible(false);
     }
 
-    function renderHelpOption({ item }) {
-        return (
-            <View style={tw`flex-1 bg-[#E6D8F5] rounded-xl p-3 mr-2 min-h-24`}>
-                <Text style={tw`text-[#0A1A3A] font-semibold mb-2`}>{item.title}</Text>
-
-                {item.points.map((point, index) => (
-                    <View key={index} style={tw`flex-row mb-2`}>
-                        <Ionicons
-                            name="caret-forward"
-                            size={11}
-                            color="#7B2DD2"
-                            style={tw`mt-1 mr-1`}
-                        />
-                        <Text style={tw`text-[#0A1A3A] text-[10px] flex-1`}>
-                            {point}
-                        </Text>
-                    </View>
-                ))}
-            </View>
-        );
-    }
-
-    function renderProtestCard({ item }) {
+    function renderProtestCard({item}) {
         return (
             <TouchableOpacity
                 activeOpacity={0.9}
@@ -146,7 +130,7 @@ export default function HomeScreen() {
                         onPress={() => openPreview(item)}
                         style={tw`absolute top-2 right-2 bg-[#0057B8] rounded-lg p-2`}
                     >
-                        <Ionicons name="bookmark-outline" size={20} color="white" />
+                        <Ionicons name="bookmark-outline" size={20} color="white"/>
                     </TouchableOpacity>
                 </View>
 
@@ -161,47 +145,27 @@ export default function HomeScreen() {
 
                     <View style={tw`flex-row items-center mt-4`}>
                         <View style={tw`flex-row items-center mr-4`}>
-                            <Ionicons name="location" size={13} color="#7B2DD2" />
+                            <Ionicons name="location" size={13} color="#7B2DD2"/>
                             <Text style={tw`text-[#0A1A3A] text-[10px] ml-1`}>
                                 {item.location}
                             </Text>
                         </View>
 
                         <View style={tw`flex-row items-center mr-4`}>
-                            <Ionicons name="person-outline" size={13} color="#7B2DD2" />
+                            <Ionicons name="person-outline" size={13} color="#7B2DD2"/>
                             <Text style={tw`text-[#0A1A3A] text-[10px] ml-1`}>
                                 {item.participants}
                             </Text>
                         </View>
 
                         <View style={tw`flex-row items-center`}>
-                            <Ionicons name="pricetag-outline" size={13} color="#7B2DD2" />
+                            <Ionicons name="pricetag-outline" size={13} color="#7B2DD2"/>
                             <Text style={tw`text-[#0A1A3A] text-[10px] ml-1`}>
                                 {item.type}
                             </Text>
                         </View>
                     </View>
                 </View>
-            </TouchableOpacity>
-        );
-    }
-
-    function renderFilterButton(label, currentValue, onPress, isTopic = false) {
-        const isActive = isTopic ? selectedTopic === label : currentValue === label;
-
-        return (
-            <TouchableOpacity
-                key={label}
-                onPress={onPress}
-                style={[
-                    tw`px-4 py-2 rounded-lg border mr-2 mb-3`,
-                    {
-                        borderColor: "#F6C400",
-                        backgroundColor: isActive ? "#FFD21E" : "white",
-                    },
-                ]}
-            >
-                <Text style={tw`text-[#0A1A3A] text-xs`}>{label}</Text>
             </TouchableOpacity>
         );
     }
@@ -223,7 +187,7 @@ export default function HomeScreen() {
                             style={tw`flex-row items-center mt-5 mb-4`}
                             activeOpacity={0.8}
                         >
-                            <Ionicons name="arrow-back" size={30} color="#0A1A3A" />
+                            <Ionicons name="arrow-back" size={30} color="#0A1A3A"/>
                             <Text style={tw`text-[#0A1A3A] text-2xl font-bold ml-3`}>
                                 Terug
                             </Text>
@@ -242,23 +206,11 @@ export default function HomeScreen() {
                                 onPress={() => setFilterVisible(true)}
                                 style={tw`ml-2 bg-[#0057B8] p-3 rounded-xl`}
                             >
-                                <Ionicons name="filter" size={22} color="white" />
+                                <Ionicons name="filter" size={22} color="white"/>
                             </TouchableOpacity>
                         </View>
 
-                        <Text style={tw`text-[#0A1A3A] text-lg font-bold mt-5 mb-3`}>
-                            Wat kan je doen om te helpen?
-                        </Text>
-
-                        <View style={tw`flex-row mb-6`}>
-                            {helpOptions.map((item) => (
-                                <View key={item.id} style={tw`flex-1`}>
-                                    {renderHelpOption({ item })}
-                                </View>
-                            ))}
-                        </View>
-
-                        <Text style={tw`text-[#0A1A3A] text-xl font-bold mb-3`}>
+                        <Text style={tw`text-[#0A1A3A] text-xl font-bold mb-3 mt-5`}>
                             Demonstraties
                         </Text>
                     </View>
@@ -281,107 +233,21 @@ export default function HomeScreen() {
                 protest={selectedProtest}
             />
 
-            <Modal
+            <FilterModal
                 visible={filterVisible}
-                transparent
-                animationType="fade"
-                statusBarTranslucent
-                onRequestClose={() => setFilterVisible(false)}
-            >
-                <View style={tw`flex-1 bg-black/55 justify-end px-4 pb-6`}>
-                    <Pressable
-                        style={tw`absolute inset-0`}
-                        onPress={() => setFilterVisible(false)}
-                    />
-
-                    <View style={tw`bg-white rounded-2xl overflow-hidden`}>
-                        <View style={tw`items-center pt-3`}>
-                            <View style={tw`w-11 h-1 bg-gray-300 rounded-full`} />
-                        </View>
-
-                        <View style={tw`flex-row justify-between items-center px-5 py-4`}>
-                            <Text style={tw`text-[#0A1A3A] text-lg font-semibold`}>
-                                Filters
-                            </Text>
-
-                            <TouchableOpacity
-                                onPress={() => setFilterVisible(false)}
-                                style={tw`bg-[#0A1A3A] w-9 h-9 rounded-full items-center justify-center`}
-                            >
-                                <Ionicons name="close" size={24} color="white" />
-                            </TouchableOpacity>
-                        </View>
-
-                        <View style={tw`h-[1px] bg-[#E6D8F5]`} />
-
-                        <View style={tw`px-5 pt-5`}>
-                            <Text style={tw`text-[#0A1A3A] text-sm mb-3`}>
-                                ONDERWERP
-                            </Text>
-
-                            <View style={tw`flex-row flex-wrap`}>
-                                {filterOptions.topics.map((topic) =>
-                                    renderFilterButton(
-                                        topic,
-                                        selectedTopic,
-                                        () =>
-                                            setSelectedTopic(
-                                                selectedTopic === topic ? null : topic
-                                            ),
-                                        true
-                                    )
-                                )}
-                            </View>
-
-                            <Text style={tw`text-[#0A1A3A] text-sm mt-3 mb-3`}>
-                                OPDRACHTEN
-                            </Text>
-
-                            <View style={tw`flex-row flex-wrap`}>
-                                {filterOptions.assignments.map((assignment) =>
-                                    renderFilterButton(
-                                        assignment,
-                                        selectedAssignment,
-                                        () => setSelectedAssignment(assignment)
-                                    )
-                                )}
-                            </View>
-
-                            <Text style={tw`text-[#0A1A3A] text-sm mt-3 mb-3`}>
-                                WANNEER
-                            </Text>
-
-                            <View style={tw`flex-row flex-wrap`}>
-                                {filterOptions.moments.map((moment) =>
-                                    renderFilterButton(
-                                        moment,
-                                        selectedMoment,
-                                        () => setSelectedMoment(moment)
-                                    )
-                                )}
-                            </View>
-                        </View>
-
-                        <View style={tw`flex-row px-5 py-5`}>
-                            <TouchableOpacity
-                                onPress={clearFilters}
-                                style={tw`flex-1 bg-[#8B2BD6] rounded-xl py-4 items-center mr-2`}
-                            >
-                                <Text style={tw`text-white font-bold`}>Wissen</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                onPress={applyFilters}
-                                style={tw`flex-1 bg-[#0A1A3A] rounded-xl py-4 items-center ml-2`}
-                            >
-                                <Text style={tw`text-white font-bold`}>
-                                    Toon resultaten
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
+                onClose={() => setFilterVisible(false)}
+                selectedTopic={selectedTopic}
+                setSelectedTopic={setSelectedTopic}
+                selectedAssignment={selectedAssignment}
+                setSelectedAssignment={setSelectedAssignment}
+                selectedMoment={selectedMoment}
+                setSelectedMoment={setSelectedMoment}
+                topics={filterOptions.topics}
+                assignments={filterOptions.assignments}
+                moments={filterOptions.moments}
+                onApplyFilters={applyFilters}
+                onClearFilters={clearFilters}
+            />
         </View>
     );
 }
