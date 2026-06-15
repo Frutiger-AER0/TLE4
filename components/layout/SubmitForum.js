@@ -18,9 +18,6 @@ export default function SubmitForum({ protest }) {
         return;
       }
 
-      // FIX: Gebruik een array met de string 'Images' of 'Videos' etc, afhankelijk van de expo-image-picker versie
-      // Oudere versies gebruikten MediaTypeOptions.All, nieuwere gebruiken soms een array.
-      // Door dit weg te laten, pakt hij standaard images in de meeste versies, wat veiliger is.
       let result = await ImagePicker.launchImageLibraryAsync({
         allowsEditing: false,
         quality: 1,
@@ -62,7 +59,8 @@ export default function SubmitForum({ protest }) {
     formData.append('protest_project_id', protest.protestProjectId.toString());
 
     try {
-      const response = await fetch(`${API_BASE_URL}/user_projects`, {
+      // FIX: Endpoint aangepast naar de bestaande /protest_projects route
+      const response = await fetch(`${API_BASE_URL}/protest_projects`, {
         method: 'POST',
         body: formData,
         headers: {
@@ -75,10 +73,10 @@ export default function SubmitForum({ protest }) {
         throw new Error(`Serverfout: ${errorText}`);
       }
 
-      await response.json(); // Lees de response uit om de promise af te handelen
+      await response.json(); 
       Alert.alert('Success', 'Bestand succesvol geüpload!');
       setSelectedFile(null);
-      setIsChecked(false); // Reset ook de checkbox
+      setIsChecked(false);
 
     } catch (error) {
       console.error('Upload error:', error);
