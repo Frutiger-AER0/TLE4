@@ -268,22 +268,28 @@ export default function AgendaScreen() {
                         }
                     }}
                     style={[
-                        tw`w-[14.28%] h-16 border-2 border-[#842BD7] bg-white items-center justify-center`,
-                        isToday ? tw`bg-[#FFF7D6]` : null,
+                        tw`w-[14.28%] h-16 border-2 border-[#842BD7] items-center justify-center`,
+                        isToday ? tw`bg-[#F4C430]` : tw`bg-white`,
                     ]}
                 >
                     <View
                         style={[
                             tw`w-11 h-11 rounded-xl items-center justify-center`,
-                            isMarked ? tw`bg-[#0057B8]` : tw`bg-transparent`,
-                            isToday ? tw`border-2 border-[#F4C430]` : null,
+                            isToday
+                                ? tw`bg-transparent`
+                                : isMarked
+                                    ? tw`bg-[#0057B8]`
+                                    : tw`bg-transparent`,
                         ]}
                     >
                         <Text
                             style={[
                                 tw`text-xl font-bold`,
-                                isMarked ? tw`text-white` : tw`text-black`,
-                                isToday && !isMarked ? tw`text-[#0A1A3A]` : null,
+                                isToday
+                                    ? tw`text-[#0A1A3A]`
+                                    : isMarked
+                                        ? tw`text-white`
+                                        : tw`text-black`,
                             ]}
                         >
                             {day}
@@ -291,10 +297,7 @@ export default function AgendaScreen() {
 
                         {isToday && (
                             <View
-                                style={[
-                                    tw`absolute bottom-1 w-6 h-1 rounded-full`,
-                                    isMarked ? tw`bg-[#F4C430]` : tw`bg-[#842BD7]`,
-                                ]}
+                                style={tw`absolute bottom-1 w-6 h-1 rounded-full bg-[#0A1A3A]`}
                             />
                         )}
                     </View>
