@@ -1,99 +1,81 @@
-import React, {useState} from "react";
-import {View, Text, Dimensions, TouchableOpacity, Image, ScrollView} from "react-native";
-import {useSafeAreaInsets} from "react-native-safe-area-context";
-import {useNavigation} from "@react-navigation/native";
-import {Ionicons} from "@expo/vector-icons";
-import AppHeader from "../components/layout/AppHeader";
+import React, { useState } from "react";
+import { View, Text, Dimensions, TouchableOpacity, Image, ScrollView } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
 import EventDetailsCard from "../components/layout/EventDetailsCard";
 import ActionCard from "../components/layout/ActionCard";
 import SubmitForum from "../components/layout/SubmitForum";
+import HelpFromHomeCard from "../components/layout/HelpFromHomeCard";
 
-const {height} = Dimensions.get("window");
+const { height } = Dimensions.get("window");
+
+// Hardcoded data object for demonstration purposes
+const protest = {
+    id: 1,
+    name: "Nakba 1948 - 2026",
+    subtitle: "Mars & herdenking",
+    description: "Samen herdenken en opkomen voor gerechtigheid.",
+    location: "Schouwburgplein",
+    city: "Rotterdam",
+    predicted_members: "1.000+",
+    card_img: require('../assets/Palestinedemostration.webp'),
+    topic: "Palestina",
+    start_time: "2026-05-15T18:30:00Z",
+    link: "https://example.com/info",
+    actionTitle: "Waarom demonstreren we?",
+    actionDescription: "Demonstraties in Rotterdam rondom de Nakba (Arabisch voor 'de catastrofe') worden georganiseerd om de massale verdrijving en het verlies van het thuisland van honderdduizenden Palestijnen in 1948 te herdenken. Demonstranten komen in de stad bijeen om aandacht te vragen voor het aanhoudende historische leed, mensenrechten en het recht op terugkeer voor vluchtelingen. Daarnaast dient de protestbijeenkomst in Rotterdam als een platform om solidariteit te tonen met de huidige situatie van Palestijnen en om op te roepen tot vrede en rechtvaardigheid.",
+};
 
 export default function DetailScreen() {
     const navigation = useNavigation();
-    const insets = useSafeAreaInsets();
-
-    // State voor het opslaan-icoontje
     const [isSaved, setIsSaved] = useState(false);
-
-    // De hoogte van de AppHeader is 56 + de veilige marge bovenaan
-    const headerHeight = 56 + insets.top;
 
     return (
         <View className="flex-1 bg-offWhite">
-
             <ScrollView bounces={false}>
-                {/* De Afbeelding Container (40% van het scherm) */}
-                <View style={{height: height * 0.30}} className="w-full relative">
+                {/* Afbeelding is iets kleiner gemaakt (gecropt) */}
+                <View style={{ height: height * 0.35 }} className="w-full relative">
                     <Image
-                        source={require('../assets/Palestinedemostration.webp')}
+                        source={protest.card_img}
                         className="h-full w-full"
                         resizeMode="cover"
                     />
-
-                    {/* De donkere overlay voor de tekst */}
-                    <View className="absolute inset-0 bg-black/30"/>
-
-                    {/* Knoppenbalk: absoluut gepositioneerd ONDER de header, maar OP de afbeelding */}
-                    <View
-                        className="absolute left-4 right-4 flex-row justify-between items-center"
-                        style={{top: headerHeight - 85}}
-                    >
-                        {/* Links: Terug knop */}
-                        <TouchableOpacity
-                            onPress={() => navigation.goBack()}
-                            className="bg-blue px-4 py-2.5 rounded-full"
-                        >
-                            <Ionicons name="arrow-back" size={24} color="#F8F9FA"/>
+                    <View className="absolute inset-0 bg-black/30" />
+                    
+                    {/* Knoppenbalk is nu correct gepositioneerd */}
+                    <View className="absolute top-4 left-4 right-4 flex-row justify-between items-center">
+                        <TouchableOpacity onPress={() => navigation.goBack()} className="bg-blue px-4 py-2.5 rounded-full">
+                            <Ionicons name="arrow-back" size={24} color="#F8F9FA" />
                         </TouchableOpacity>
-
-                        {/* Rechts: Bookmark en Share knoppen */}
                         <View className="flex-row">
-                            <TouchableOpacity
-                                onPress={() => setIsSaved(!isSaved)}
-                                className="bg-blue px-4 py-2.5 rounded-full"
-                            >
-                                <Ionicons name={isSaved ? "bookmark" : "bookmark-outline"} size={24} color="#F8F9FA"/>
+                            <TouchableOpacity onPress={() => setIsSaved(!isSaved)} className="bg-blue px-4 py-2.5 rounded-full">
+                                <Ionicons name={isSaved ? "bookmark" : "bookmark-outline"} size={24} color="#F8F9FA" />
                             </TouchableOpacity>
-
-                            <TouchableOpacity
-                                onPress={() => console.log('Share')}
-                                className="bg-blue px-4 py-2.5 rounded-full ml-3"
-                            >
-                                <Ionicons name="share-social-outline" size={24} color="#F8F9FA"/>
+                            <TouchableOpacity onPress={() => console.log('Share')} className="bg-blue px-4 py-2.5 rounded-full ml-3">
+                                <Ionicons name="share-social-outline" size={24} color="#F8F9FA" />
                             </TouchableOpacity>
                         </View>
                     </View>
 
-                    {/* Elementen onderaan op de afbeelding (Tekst links, Label rechts) */}
                     <View className="absolute bottom-4 left-4 right-4 flex-row justify-between items-end">
-                        {/* Tekst links */}
                         <View>
-                            <Text className="text-offWhite text-2xl font-bold">Nakba 1948 - 2026</Text>
-                            <Text className="text-offWhite text-lg italic mt-1">Mars & herdenking</Text>
+                            <Text className="text-offWhite text-2xl font-bold">{protest.name}</Text>
+                            <Text className="text-offWhite text-lg italic mt-1">{protest.subtitle}</Text>
                         </View>
-
-                        {/* Geel ovaal label rechts */}
                         <View className="bg-yellow px-6 py-2 rounded-full">
-                            <Text className="text-darkBlue font-bold">Palestina</Text>
+                            <Text className="text-darkBlue font-bold">{protest.topic}</Text>
                         </View>
                     </View>
                 </View>
 
-                {/* Paarse container */}
-                <View className="bg-lightPurple pb-5">
-                    <View className="mt-5">
-                        <EventDetailsCard/>
-                    </View>
+                {/* Container voor de volgende secties */}
+                <View className="bg-offWhite">
+                    <HelpFromHomeCard protest={protest} />
+                    <EventDetailsCard protest={protest} />
                 </View>
 
-                {/* "Kom in actie" kaart */}
-                <ActionCard/>
-
-                {/* Nieuw "Submit Forum" component */}
-                <SubmitForum/>
-
+                <ActionCard protest={protest} />
+                <SubmitForum protest={protest} />
             </ScrollView>
         </View>
     );
