@@ -4,8 +4,8 @@ import {StyleSheet, View, Text, ActivityIndicator} from 'react-native';
 import * as Location from 'expo-location';
 import {fetchUserProjects} from "../components/services/ProtestApi";
 
-
 export default function MapScreen({route}) {
+    const targetId = route?.params?.id || null;
     const item = route?.params?.item || null;
     const [location, setLocation] = useState(null);
     const [protests, setProtests] = useState([]);
@@ -43,7 +43,18 @@ export default function MapScreen({route}) {
                 );
 
                 const savedProtests = await fetchUserProjects();
-                setProtests(savedProtests);
+
+                if (targetId) {
+                    const singleProtest = savedProtests.filter(p => p.id === targetId);
+                    console.log("Gevonden protest voor ID:", targetId, singleProtest);
+                    if (singleProtest.length > 0) {
+                        setProtests(singleProtest);
+                    } else {
+                        setProtests(savedProtests);
+                    }
+                } else {
+                    setProtests(savedProtests);
+                }
 
             } catch (error) {
                 console.error("Fout bij laden van kaartgegevens:", error);
@@ -59,7 +70,7 @@ export default function MapScreen({route}) {
                 subscription.remove();
             }
         };
-    }, []);
+    }, [targetId]);
 
     if (loading || !location) {
         return (
@@ -70,11 +81,13 @@ export default function MapScreen({route}) {
         );
     }
 
+    const singleProtest = protests.length === 1 ? protests[0] : null;
+
     const initialRegion = {
-        latitude: item ? Number(item.latitude) : location.latitude,
-        longitude: item ? Number(item.longitude) : location.longitude,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05,
+        latitude: singleProtest ? Number(singleProtest.latitude) : (item ? Number(item.latitude) : location.latitude),
+        longitude: singleProtest ? Number(singleProtest.longitude) : (item ? Number(item.longitude) : location.longitude),
+        latitudeDelta: 0.02,
+        longitudeDelta: 0.02,
     };
 
     return (
