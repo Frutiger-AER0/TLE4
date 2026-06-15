@@ -40,8 +40,12 @@ const ITEMS_PER_PAGE = 10;
 export default function AgendaScreen() {
     const today = new Date();
 
-    const [currentMonthIndex, setCurrentMonthIndex] = useState(today.getMonth());
-    const [currentYear, setCurrentYear] = useState(today.getFullYear());
+    const todayDay = today.getDate();
+    const todayMonthIndex = today.getMonth();
+    const todayYear = today.getFullYear();
+
+    const [currentMonthIndex, setCurrentMonthIndex] = useState(todayMonthIndex);
+    const [currentYear, setCurrentYear] = useState(todayYear);
 
     const [agendaItems, setAgendaItems] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -63,26 +67,12 @@ export default function AgendaScreen() {
             setLoading(true);
             setErrorText("");
 
-            /*
-                Database flow volgens ERD:
-                - protests geeft basisinformatie
-                - user_projects bepaalt wat een gebruiker heeft opgeslagen/gepland
-                - protest_details geeft datum/start_time wanneer backend dit meestuurt
-                - protest_projects koppelt protest aan project
-            */
-
             const userProjects = await fetchUserProjects();
 
             if (userProjects.length > 0) {
                 setAgendaItems(removeDuplicateItems(userProjects));
                 return;
             }
-
-            /*
-                Fallback:
-                Als user-projects nog leeg is of niet werkt, tonen we gewone protests.
-                Daardoor crasht de pagina niet.
-            */
 
             const protests = await fetchProtests();
             setAgendaItems(removeDuplicateItems(protests));
@@ -168,6 +158,11 @@ export default function AgendaScreen() {
         }
 
         setCurrentMonthIndex(currentMonthIndex + 1);
+    }
+
+    function goToToday() {
+        setCurrentMonthIndex(todayMonthIndex);
+        setCurrentYear(todayYear);
     }
 
     function goToNextActivityPage() {
@@ -258,6 +253,11 @@ export default function AgendaScreen() {
 
             const isMarked = markedDays.includes(day);
 
+            const isToday =
+                day === todayDay &&
+                currentMonthIndex === todayMonthIndex &&
+                currentYear === todayYear;
+
             days.push(
                 <TouchableOpacity
                     key={day}
@@ -267,22 +267,36 @@ export default function AgendaScreen() {
                             openPreview(itemOnDay);
                         }
                     }}
-                    style={tw`w-[14.28%] h-16 border-2 border-[#842BD7] bg-white items-center justify-center`}
+                    style={[
+                        tw`w-[14.28%] h-16 border-2 border-[#842BD7] bg-white items-center justify-center`,
+                        isToday ? tw`bg-[#FFF7D6]` : null,
+                    ]}
                 >
                     <View
                         style={[
                             tw`w-11 h-11 rounded-xl items-center justify-center`,
                             isMarked ? tw`bg-[#0057B8]` : tw`bg-transparent`,
+                            isToday ? tw`border-2 border-[#F4C430]` : null,
                         ]}
                     >
                         <Text
                             style={[
                                 tw`text-xl font-bold`,
                                 isMarked ? tw`text-white` : tw`text-black`,
+                                isToday && !isMarked ? tw`text-[#0A1A3A]` : null,
                             ]}
                         >
                             {day}
                         </Text>
+
+                        {isToday && (
+                            <View
+                                style={[
+                                    tw`absolute bottom-1 w-6 h-1 rounded-full`,
+                                    isMarked ? tw`bg-[#F4C430]` : tw`bg-[#842BD7]`,
+                                ]}
+                            />
+                        )}
                     </View>
                 </TouchableOpacity>
             );
@@ -364,10 +378,10 @@ export default function AgendaScreen() {
             >
                 <View style={tw`bg-[#E6D8F5] rounded-xl px-5 pt-5 pb-4`}>
                     <Text style={tw`text-[#0A1A3A] text-4xl font-bold text-center`}>
-                        Calendar
+                        Kalender
                     </Text>
 
-                    <View style={tw`flex-row items-center justify-between mt-2 mb-5`}>
+                    <View style={tw`flex-row items-center justify-between mt-2 mb-3`}>
                         <TouchableOpacity
                             onPress={goToPreviousMonth}
                             style={tw`bg-[#842BD7] w-14 h-14 rounded-xl items-center justify-center`}
@@ -375,9 +389,21 @@ export default function AgendaScreen() {
                             <Ionicons name="arrow-back" size={34} color="white" />
                         </TouchableOpacity>
 
-                        <Text style={tw`text-[#0A1A3A] text-xl font-bold`}>
-                            {currentMonthName} {currentYear}
-                        </Text>
+                        <View style={tw`items-center`}>
+                            <Text style={tw`text-[#0A1A3A] text-xl font-bold`}>
+                                {currentMonthName} {currentYear}
+                            </Text>
+
+                            <TouchableOpacity
+                                onPress={goToToday}
+                                activeOpacity={0.85}
+                                style={tw`mt-2 bg-[#F4C430] rounded-full px-4 py-1`}
+                            >
+                                <Text style={tw`text-[#0A1A3A] text-xs font-bold`}>
+                                    Vandaag: {todayDay} {months[todayMonthIndex]}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
 
                         <TouchableOpacity
                             onPress={goToNextMonth}
@@ -385,6 +411,17 @@ export default function AgendaScreen() {
                         >
                             <Ionicons name="arrow-forward" size={34} color="white" />
                         </TouchableOpacity>
+                    </View>
+
+                    <View style={tw`flex-row justify-around mb-2 mt-2`}>
+                        {["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"].map((dayName) => (
+                            <Text
+                                key={dayName}
+                                style={tw`w-[14.28%] text-center text-[#0A1A3A] font-bold`}
+                            >
+                                {dayName}
+                            </Text>
+                        ))}
                     </View>
 
                     <View style={tw`flex-row flex-wrap`}>
@@ -395,6 +432,7 @@ export default function AgendaScreen() {
                 {loading && (
                     <View style={tw`py-6 items-center`}>
                         <ActivityIndicator size="large" color="#0A1A3A" />
+
                         <Text style={tw`text-[#0A1A3A] mt-2`}>
                             Agenda laden...
                         </Text>
