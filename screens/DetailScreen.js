@@ -9,9 +9,10 @@ import HelpFromHomeCard from "../components/layout/HelpFromHomeCard";
 
 const { height } = Dimensions.get("window");
 
-// Hardcoded data object for demonstration purposes
+// Tijdelijke data om de pagina te tonen zonder database.
 const protest = {
     id: 1,
+    protestProjectId: 1, // ID voor het koppelen van uploads.
     name: "Nakba 1948 - 2026",
     subtitle: "Mars & herdenking",
     description: "Samen herdenken en opkomen voor gerechtigheid.",
@@ -33,7 +34,7 @@ export default function DetailScreen() {
     return (
         <View className="flex-1 bg-offWhite">
             <ScrollView bounces={false}>
-                {/* Afbeelding is iets kleiner gemaakt (gecropt) */}
+                {/* Bovenste afbeelding van het protest. */}
                 <View style={{ height: height * 0.35 }} className="w-full relative">
                     <Image
                         source={protest.card_img}
@@ -42,7 +43,7 @@ export default function DetailScreen() {
                     />
                     <View className="absolute inset-0 bg-black/30" />
                     
-                    {/* Knoppenbalk is nu correct gepositioneerd */}
+                    {/* Knoppen voor terug, opslaan en delen. */}
                     <View className="absolute top-4 left-4 right-4 flex-row justify-between items-center">
                         <TouchableOpacity onPress={() => navigation.goBack()} className="bg-blue px-4 py-2.5 rounded-full">
                             <Ionicons name="arrow-back" size={24} color="#F8F9FA" />
@@ -57,6 +58,7 @@ export default function DetailScreen() {
                         </View>
                     </View>
 
+                    {/* Titel en onderwerp van het protest. */}
                     <View className="absolute bottom-4 left-4 right-4 flex-row justify-between items-end">
                         <View>
                             <Text className="text-offWhite text-2xl font-bold">{protest.name}</Text>
@@ -68,7 +70,7 @@ export default function DetailScreen() {
                     </View>
                 </View>
 
-                {/* Container voor de volgende secties */}
+                {/* Container voor de onderstaande content cards. */}
                 <View className="bg-offWhite">
                     <HelpFromHomeCard protest={protest} />
                     <EventDetailsCard protest={protest} />

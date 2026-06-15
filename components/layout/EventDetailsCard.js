@@ -35,7 +35,8 @@ export default function EventDetailsCard({ protest }) {
                     <View>
                         <Ionicons name="calendar-outline" size={24} color="white" />
                         <Text className="text-white font-bold text-base mt-2">{formattedDate}</Text>
-                        <Text className="text-white text-sm mt-1 italic">Aanvang: {formattedTime}</Text>
+                        <Text className="text-white text-sm mt-1 i
+                        talic">Aanvang: {formattedTime}</Text>
                     </View>
                     <TouchableOpacity className="mt-2 flex-row items-center">
                         <Text className="text-white text-sm underline font-semibold mr-1">

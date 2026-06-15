@@ -1,15 +1,95 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { View, Text, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from 'expo-image-picker';
 
-export default function SubmitForum() {
+const API_BASE_URL = "http://145.24.237.86:8000";
+
+export default function SubmitForum({ protest }) {
   const [isChecked, setIsChecked] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+
+  const pickFile = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Toestemming nodig', 'Sorry, we hebben toestemming nodig om toegang te krijgen tot je bestanden.');
+        return;
+      }
+
+      // FIX: Gebruik een array met de string 'Images' of 'Videos' etc, afhankelijk van de expo-image-picker versie
+      // Oudere versies gebruikten MediaTypeOptions.All, nieuwere gebruiken soms een array.
+      // Door dit weg te laten, pakt hij standaard images in de meeste versies, wat veiliger is.
+      let result = await ImagePicker.launchImageLibraryAsync({
+        allowsEditing: false,
+        quality: 1,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setSelectedFile(result.assets[0]);
+      }
+    } catch (error) {
+      console.error("Error picking file:", error);
+      Alert.alert("Fout", "Er ging iets mis bij het openen van de mediabibliotheek.");
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      Alert.alert('Geen bestand', 'Selecteer eerst een bestand om te uploaden.');
+      return;
+    }
+    if (!protest?.protestProjectId) {
+      Alert.alert('Fout', 'Kan dit project niet koppelen aan het protest. Protest Project ID ontbreekt.');
+      return;
+    }
+
+    setUploading(true);
+
+    const formData = new FormData();
+    const uriParts = selectedFile.uri.split('.');
+    const fileType = uriParts[uriParts.length - 1];
+
+    formData.append('file', {
+      uri: selectedFile.uri,
+      name: `upload.${fileType}`,
+      type: selectedFile.mimeType || `image/${fileType}`,
+    });
+
+    const MOCK_USER_ID = 1; 
+    formData.append('user_id', MOCK_USER_ID.toString());
+    formData.append('protest_project_id', protest.protestProjectId.toString());
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/user_projects`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Serverfout: ${errorText}`);
+      }
+
+      await response.json(); // Lees de response uit om de promise af te handelen
+      Alert.alert('Success', 'Bestand succesvol geüpload!');
+      setSelectedFile(null);
+      setIsChecked(false); // Reset ook de checkbox
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      Alert.alert('Upload Mislukt', error.message || 'Er is iets misgegaan bij het uploaden.');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
-    // Main container met offWhite background
     <View className="relative w-full mt-4 overflow-hidden bg-offWhite">
-      
-      {/* Background Image (200% width, 150% height, 25% opacity) */}
       <View className="absolute inset-0 items-center justify-center">
         <Image
           source={require('../../assets/palestineflag.webp')}
@@ -17,35 +97,32 @@ export default function SubmitForum() {
           resizeMode="cover"
         />
       </View>
-
-      {/* Top-right text overlay */}
       <View className="absolute top-4 right-4 z-20 items-end">
         <Text className="text-darkBlue italic font-semibold text-lg">Support</Text>
         <Text className="text-darkBlue font-semibold text-md">Thuisfront aan je zijlijn</Text>
       </View>
-
-      {/* Content container met padding */}
       <View className="p-5 pt-20 z-10 pb-10">
-        
-        {/* White form card */}
         <View className="bg-white/95 p-4 rounded-xl shadow-md">
           <Text className="text-xl font-bold text-darkBlue mb-4">
             High impact - low effort
           </Text>
 
-          {/* File upload area */}
-          <TouchableOpacity className="border-2 border-dashed border-lightPurple rounded-lg h-24 items-center justify-center mb-4">
+          <TouchableOpacity 
+            onPress={pickFile}
+            className="border-2 border-dashed border-lightPurple rounded-lg h-24 items-center justify-center mb-4"
+          >
             <Ionicons name="attach" size={24} color="#7B2CBF" />
-            <Text className="text-purple mt-1">Voeg bestand toe</Text>
+            <Text className="text-purple mt-1 text-center px-2" numberOfLines={1} ellipsizeMode="middle">
+              {selectedFile ? selectedFile.uri.split('/').pop() : 'Voeg bestand toe'}
+            </Text>
           </TouchableOpacity>
 
-          {/* Checkbox and Terms */}
           <View className="flex-row items-start mt-2 mb-6">
             <TouchableOpacity onPress={() => setIsChecked(!isChecked)} className="mt-1">
               <Ionicons 
                 name={isChecked ? "checkbox" : "square-outline"} 
                 size={24} 
-                color="#14213D" // darkBlue
+                color="#14213D" 
               />
             </TouchableOpacity>
             <Text className="text-darkBlue ml-3 flex-1 text-sm">
@@ -54,16 +131,18 @@ export default function SubmitForum() {
             </Text>
           </View>
 
-          {/* Verzend Button */}
           <TouchableOpacity 
-            className={`py-3 rounded-full items-center shadow-sm ${isChecked ? 'bg-blue' : 'bg-gray-400'}`}
-            disabled={!isChecked}
+            className={`py-3 rounded-full items-center shadow-sm ${isChecked && selectedFile && !uploading ? 'bg-blue' : 'bg-gray-400'}`}
+            disabled={!isChecked || !selectedFile || uploading}
+            onPress={handleUpload}
           >
-            <Text className="text-offWhite font-bold text-lg">Verzend</Text>
+            {uploading ? (
+              <ActivityIndicator color="#F8F9FA" />
+            ) : (
+              <Text className="text-offWhite font-bold text-lg">Verzend</Text>
+            )}
           </TouchableOpacity>
-          
         </View>
-
       </View>
     </View>
   );
