@@ -176,9 +176,15 @@ export default function AppNavigator({ route }) {
 
                 <Tab.Screen
                     name="person"
-                    component={ProfileScreen}
                     options={{ title: "Profiel" }}
-                />
+                >
+                    {(props) => (
+                        <ProfileScreen
+                            {...props}
+                            userId={user?.id} // Pass the logged-in user's ID from AuthContext
+                        />
+                    )}
+                </Tab.Screen>
 
                 {isAdmin && (
                     <Tab.Screen

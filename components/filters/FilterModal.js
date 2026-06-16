@@ -36,7 +36,13 @@ export default function FilterModal({
                 style={{flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end'}}
                 onPress={onClose}
             >
-                <Pressable style={{backgroundColor: 'white', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: '80%'}}>
+                <Pressable style={{
+                    backgroundColor: 'white',
+                    borderTopLeftRadius: 24,
+                    borderTopRightRadius: 24,
+                    padding: 24,
+                    maxHeight: '80%'
+                }}>
                     {/* Top Handle */}
                     <View className="self-center w-12 h-1.5 rounded-full bg-gray-300 mb-6"/>
 
@@ -64,20 +70,6 @@ export default function FilterModal({
                                 onPress={() =>
                                     setSelectedTopic(selectedTopic === topic ? null : topic)
                                 }
-                            />
-                        ))}
-                    </View>
-
-                    <Text className="font-bold text-darkBlue mt-6 mb-4">
-                        OPDRACHTEN
-                    </Text>
-                    <View className="flex-row flex-wrap">
-                        {assignments.map((assignment) => (
-                            <FilterChip
-                                key={assignment}
-                                label={assignment}
-                                selected={selectedAssignment === assignment}
-                                onPress={() => setSelectedAssignment(assignment)}
                             />
                         ))}
                     </View>
