@@ -1,11 +1,48 @@
-import React from "react";
+import React, {useState} from "react";
 import {ScrollView, Text, View} from "react-native";
 import {useNavigation} from "@react-navigation/native";
 
 import ActionCard from "../components/actions/ActionCard";
+import ActionModal from "../components/actions/ActionModal";
 
+const ACTION_DETAILS = {
+    stickers: {
+        title: "Stickers ontwerpen",
+        details: [
+            {header: "Wat is het?", text: "Ontwerp stickers die de boodschap van de demonstratie versterken."},
+            {
+                header: "Digitaal",
+                text: "Lever een ontwerp aan. Wij drukken de stickers en nemen ze mee naar de demonstratie."
+            },
+            {
+                header: "Zelf maken",
+                text: "Heb je zelf stickers gemaakt? Stuur ze naar ons op. Wij zorgen dat ze tijdens de demonstratie worden verspreid."
+            }
+        ]
+    },
+    spandoeken: {
+        title: "Spandoeken ontwerpen",
+        details: [
+            {
+                header: "Wat is het?",
+                text: "Ontwerp of maak een spandoek en help de demonstratie zichtbaar te maken."
+            },
+            {
+                header: "Productie",
+                text: "Lever je ontwerp aan. Wij drukken het en nemen het mee naar de demonstratie."
+            },
+            {
+                header: "Zelf meenemen",
+                text: "Maak zelf een spandoek en stuur het op. Wij zorgen dat het op de juiste plek terechtkomt."
+            }
+        ]
+    }
+};
 export default function ActionScreen() {
     const navigation = useNavigation();
+
+    const [modalVisible, setModalVisible] = useState(false);
+    const [selectedAction, setSelectedAction] = useState(null);
 
     function goToProject(projectType) {
         navigation.navigate("HomeScreen", {
@@ -17,60 +54,76 @@ export default function ActionScreen() {
         navigation.navigate("DonationScreen", {}); // Pass an empty object for parameters
     }
 
+    function openInfoModal(actionKey) {
+        setSelectedAction(ACTION_DETAILS[actionKey]);
+        setModalVisible(true);
+    }
+
     return (
-        <ScrollView
-            className="flex-1 bg-offWhite"
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{
-                paddingTop: 20,
-                paddingBottom: 120,
-            }}
-        >
-            <View
-                className="bg-offWhite"
-                style={{
-                    paddingHorizontal: 16,
+        <View className="flex-1 bg-offWhite">
+            <ScrollView
+                className="flex-1 bg-offWhite"
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{
+                    paddingTop: 20,
+                    paddingBottom: 120,
                 }}
             >
-                <Text
-                    className="text-darkBlue"
+                <View
+                    className="bg-offWhite"
                     style={{
-                        fontSize: 22,
-                        fontWeight: "700",
-                        marginBottom: 20,
+                        paddingHorizontal: 16,
                     }}
                 >
-                    Maak impact op jouw manier
-                </Text>
-                <View className="flex flex-col">
-                    {/* Stickers */}
-                    <ActionCard
-                        image={require("../assets/tle4-stickers.jpg")}
-                        title="Stickers ontwerpen"
-                        description="Jouw ontwerp, onze productie. Verspreid de boodschap met stickers."
-                        buttonText="Bekijk projecten"
-                        onPress={() => goToProject("Stickers")}
-                    />
+                    <Text
+                        className="text-darkBlue"
+                        style={{
+                            fontSize: 22,
+                            fontWeight: "700",
+                            marginBottom: 20,
+                        }}
+                    >
+                        Maak impact op jouw manier
+                    </Text>
+                    <View className="flex flex-col">
+                        {/* Stickers */}
+                        <ActionCard
+                            image={require("../assets/tle4-stickers.jpg")}
+                            title="Stickers ontwerpen"
+                            description="Jouw ontwerp, onze productie. Verspreid de boodschap met stickers."
+                            buttonText="Bekijk projecten"
+                            onPress={() => goToProject("Stickers")}
+                            onPressInfo={() => openInfoModal("stickers")}
+                        />
 
-                    {/* Spandoeken */}
-                    <ActionCard
-                        image={require("../assets/tle4-spandoek.avif")}
-                        title="Spandoeken ontwerpen"
-                        description="Help mee met een spandoek. Lever een ontwerp aan. Wij regelen de rest."
-                        buttonText="Bekijk projecten"
-                        onPress={() => goToProject("Spandoek")}
-                    />
+                        {/* Spandoeken */}
+                        <ActionCard
+                            image={require("../assets/tle4-spandoek.avif")}
+                            title="Spandoeken ontwerpen"
+                            description="Help mee met een spandoek. Lever een ontwerp aan. Wij regelen de rest."
+                            buttonText="Bekijk projecten"
+                            onPress={() => goToProject("Spandoek")}
+                            onPressInfo={() => openInfoModal("spandoeken")}
+                        />
 
-                    {/* Donaties */}
-                    <ActionCard
-                        image={require("../assets/tle4-doneren.jpg")}
-                        title="Donaties"
-                        description="Draag bij aan de beweging. Jouw donatie komt 100% terecht waar die het meeste impact maakt, bij jouw doel."
-                        buttonText="Doneer"
-                        onPress={goToDonation}
-                    />
+                        {/* Donaties */}
+                        <ActionCard
+                            image={require("../assets/tle4-doneren.jpg")}
+                            title="Donaties"
+                            description="Draag bij aan de beweging. Jouw donatie komt 100% terecht waar die het meeste impact maakt, bij jouw doel."
+                            buttonText="Doneer"
+                            onPress={goToDonation}
+                        />
+                    </View>
                 </View>
-            </View>
-        </ScrollView>
+            </ScrollView>
+
+            <ActionModal
+                visible={modalVisible}
+                onClose={() => setModalVisible(false)}
+                actionData={selectedAction}
+            />
+
+        </View>
     );
 }
