@@ -1,78 +1,122 @@
 import React, {useEffect, useState} from 'react';
 import MapView, {Marker} from 'react-native-maps';
-import {StyleSheet, View, Text} from 'react-native';
+import {StyleSheet, View, Text, ActivityIndicator} from 'react-native';
 import * as Location from 'expo-location';
+import {fetchUserProjects} from "../components/services/ProtestApi";
 
 export default function MapScreen({route}) {
-    const item = route?.params?.item || {latitude: 52.3702, longitude: 4.8952, name: "Standaard", address: "Onbekend"};
-
+    const targetId = route?.params?.id || null;
+    const item = route?.params?.item || null;
     const [location, setLocation] = useState(null);
-    const [routeCoordinates, setRouteCoordinates] = useState([]);
+    const [protests, setProtests] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         let subscription;
 
-        async function startWatching() {
-            let {status} = await Location.requestForegroundPermissionsAsync();
-            if (status !== 'granted') {
-                alert('Locatietoegang is geweigerd!');
-                return;
-            }
-
-            subscription = await Location.watchPositionAsync(
-                {
-                    accuracy: Location.Accuracy.High,
-                    timeInterval: 2000,
-                    distanceInterval: 50,
-                },
-                (newLocation) => {
-                    const {latitude, longitude} = newLocation.coords;
-                    const newCoord = {latitude, longitude};
-                    setLocation(newCoord);
-                    setRouteCoordinates((prevCoords) => [...prevCoords, newCoord]);
+        async function initializeMap() {
+            try {
+                let {status} = await Location.requestForegroundPermissionsAsync();
+                if (status !== 'granted') {
+                    alert('Locatietoegang is geweigerd!');
+                    return;
                 }
-            );
+
+                const initialLocation = await Location.getCurrentPositionAsync({});
+                setLocation({
+                    latitude: initialLocation.coords.latitude,
+                    longitude: initialLocation.coords.longitude,
+                });
+
+                subscription = await Location.watchPositionAsync(
+                    {
+                        accuracy: Location.Accuracy.High,
+                        timeInterval: 5000,
+                        distanceInterval: 10,
+                    },
+                    (newLocation) => {
+                        setLocation({
+                            latitude: newLocation.coords.latitude,
+                            longitude: newLocation.coords.longitude,
+                        });
+                    }
+                );
+
+                const savedProtests = await fetchUserProjects();
+
+                if (targetId) {
+                    const singleProtest = savedProtests.filter(p => p.id === targetId);
+                    console.log("Gevonden protest voor ID:", targetId, singleProtest);
+                    if (singleProtest.length > 0) {
+                        setProtests(singleProtest);
+                    } else {
+                        setProtests(savedProtests);
+                    }
+                } else {
+                    setProtests(savedProtests);
+                }
+
+            } catch (error) {
+                console.error("Fout bij laden van kaartgegevens:", error);
+            } finally {
+                setLoading(false);
+            }
         }
 
-        startWatching();
+        initializeMap();
 
         return () => {
             if (subscription) {
                 subscription.remove();
             }
         };
-    }, []);
+    }, [targetId]);
 
-    if (!location) {
+    if (loading || !location) {
         return (
-            <View style={[styles.container, {backgroundColor: '#ffffff'}]}>
-                <Text style={{color: '#000000'}}>Locatie ophalen...</Text>
+            <View style={styles.center}>
+                <ActivityIndicator size="large" color="#849782"/>
+                <Text style={styles.loadingText}>Kaart en protesten laden...</Text>
             </View>
         );
     }
 
+    const singleProtest = protests.length === 1 ? protests[0] : null;
+
+    const initialRegion = {
+        latitude: singleProtest ? Number(singleProtest.latitude) : (item ? Number(item.latitude) : location.latitude),
+        longitude: singleProtest ? Number(singleProtest.longitude) : (item ? Number(item.longitude) : location.longitude),
+        latitudeDelta: 0.02,
+        longitudeDelta: 0.02,
+    };
+
     return (
-        <View style={[styles.container, {backgroundColor: '#ffffff'}]}>
+        <View style={styles.container}>
             <MapView
                 style={styles.map}
+                provider="google"
+                showsCompass={true}
                 showsUserLocation={true}
+                showsMyLocationButton={true}
+                followsUserLocation={true}
                 userInterfaceStyle='light'
-                initialRegion={{
-                    latitude: Number(item.latitude),
-                    longitude: Number(item.longitude),
-                    latitudeDelta: 0.01,
-                    longitudeDelta: 0.01,
-                }}
+                initialRegion={initialRegion}
             >
-                <Marker
-                    coordinate={{
-                        latitude: Number(item.latitude),
-                        longitude: Number(item.longitude),
-                    }}
-                    title={item.name}
-                    description={item.address}
-                    pinColor='#849782'
-                />
+                {protests.map((protest) => {
+                    if (!protest.latitude || !protest.longitude) return null;
+                    return (
+                        <Marker
+                            key={protest.id || `${protest.latitude}-${protest.longitude}`}
+                            coordinate={{
+                                latitude: protest.latitude,
+                                longitude: protest.longitude,
+                            }}
+                            title={protest.title}
+                            description={protest.location}
+                            pinColor='red'
+                        />
+                    )
+                })}
             </MapView>
         </View>
     );
@@ -81,11 +125,20 @@ export default function MapScreen({route}) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
+        backgroundColor: '#ffffff',
     },
     map: {
         width: '100%',
         height: '100%',
     },
+    center: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#ffffff',
+    },
+    loadingText: {
+        marginTop: 10,
+        color: '#000000',
+    }
 });

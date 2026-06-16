@@ -1,9 +1,10 @@
-import React, { useContext } from 'react'; // Import useContext
-import {View, ActivityIndicator} from 'react-native'; // Import ActivityIndicator
-import {DefaultTheme} from '@react-navigation/native';
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import {createStackNavigator} from '@react-navigation/stack';
-import {Ionicons} from '@expo/vector-icons';
+// components/layout/AppNavigator.js
+
+import React, { useContext } from "react";
+import { View, ActivityIndicator } from "react-native";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createStackNavigator } from "@react-navigation/stack";
+import { Ionicons } from "@expo/vector-icons";
 
 import ActionScreen from "../../screens/ActionScreen";
 import DonationScreen from "../../screens/DonationScreen";
@@ -14,11 +15,59 @@ import AppHeader from "./AppHeader";
 import DetailScreen from "../../screens/DetailScreen";
 import AgendaScreen from "../../screens/AgendaScreen";
 import ProfileScreen from "../../screens/ProfileScreen";
-import { AuthContext } from '../../context/AuthContext'; // Import AuthContext
+import { AuthContext } from "../../context/AuthContext";
 
 const Tab = createBottomTabNavigator();
 const ActionStack = createStackNavigator();
 const AgendaStack = createStackNavigator();
+
+function getTabIconName(routeName, focused) {
+    if (routeName === "search") {
+        return focused ? "search" : "search-outline";
+    }
+
+    if (routeName === "map") {
+        return focused ? "map" : "map-outline";
+    }
+
+    if (routeName === "calendar") {
+        return focused ? "calendar" : "calendar-outline";
+    }
+
+    if (routeName === "person") {
+        return focused ? "person" : "person-outline";
+    }
+
+    if (routeName === "admin") {
+        return focused ? "shield-checkmark" : "shield-checkmark-outline";
+    }
+
+    return "ellipse-outline";
+}
+
+function getTabAccessibilityLabel(routeName) {
+    if (routeName === "search") {
+        return "Ontdek acties en protesten";
+    }
+
+    if (routeName === "map") {
+        return "Kaart met protestlocaties in Rotterdam";
+    }
+
+    if (routeName === "calendar") {
+        return "Agenda met geplande evenementen";
+    }
+
+    if (routeName === "person") {
+        return "Jouw persoonlijke profiel";
+    }
+
+    if (routeName === "admin") {
+        return "Admin dashboard voor organisatoren";
+    }
+
+    return undefined;
+}
 
 function ActionStackScreen() {
     return (
@@ -35,14 +84,17 @@ function ActionStackScreen() {
                 name="ActionScreen"
                 component={ActionScreen}
             />
+
             <ActionStack.Screen
                 name="HomeScreen"
                 component={HomeScreen}
             />
+
             <ActionStack.Screen
                 name="Detail"
                 component={DetailScreen}
             />
+
             <ActionStack.Screen
                 name="DonationScreen"
                 component={DonationScreen}
@@ -66,6 +118,7 @@ function AgendaStackScreen() {
                 name="AgendaScreen"
                 component={AgendaScreen}
             />
+
             <AgendaStack.Screen
                 name="AgendaDetail"
                 component={DetailScreen}
@@ -74,97 +127,114 @@ function AgendaStackScreen() {
     );
 }
 
-const MyTheme = {
-    ...DefaultTheme,
-    colors: {
-        ...DefaultTheme.colors,
-        background: '#F8F9FA',
-    },
-};
+export default function AppNavigator({ route }) {
+    const { user, isLoading } = useContext(AuthContext);
 
-export default function AppNavigator({route}) {
-    const { user, isLoading } = useContext(AuthContext); // Get user and isLoading from AuthContext
-    const isAdmin = route?.params?.isAdmin === true; // Keep isAdmin from route params if needed
+    const isAdmin =
+        route?.params?.isAdmin === true ||
+        user?.isAdmin === true ||
+        user?.is_admin === true ||
+        user?.is_admin === 1 ||
+        user?.role === "admin";
 
     if (isLoading) {
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size="large" color="#0000ff" />
+            <View className="flex-1 bg-offWhite items-center justify-center">
+                <ActivityIndicator size="large" color="#14213D" />
             </View>
         );
     }
 
     return (
-        <View className="flex-1">
+        <View className="flex-1 bg-offWhite">
             <Tab.Navigator
-                theme={MyTheme}
                 initialRouteName="search"
-                screenOptions={({route}) => ({
+                screenOptions={({ route }) => ({
                     headerShown: true,
-                    header: () => <AppHeader/>,
+                    header: () => <AppHeader />,
                     headerStyle: {
+                        backgroundColor: "#14213D",
                         elevation: 0,
                         shadowOpacity: 0,
                         borderBottomWidth: 0,
                     },
-                    tabBarActiveTintColor: '#F4C430',
-                    tabBarInactiveTintColor: '#F8F9FA',
+                    sceneContainerStyle: {
+                        backgroundColor: "#F8F9FA",
+                    },
+                    tabBarActiveTintColor: "#F4C430",
+                    tabBarInactiveTintColor: "#F8F9FA",
+                    tabBarAccessibilityLabel: getTabAccessibilityLabel(route.name),
                     tabBarStyle: {
-                        backgroundColor: '#14213D',
+                        backgroundColor: "#14213D",
                         height: 90,
                         paddingTop: 14,
                         paddingBottom: 8,
+                        borderTopWidth: 0,
+                        elevation: 0,
+                        shadowOpacity: 0,
                     },
-                    tabBarIcon: ({focused, color, size}) => {
-                        let iconName;
+                    tabBarLabelStyle: {
+                        fontSize: 10,
+                    },
+                    tabBarIcon: ({ focused, color, size }) => {
+                        const iconName = getTabIconName(route.name, focused);
 
-                        if (route.name === 'search') {
-                            iconName = focused ? 'search' : 'search-outline';
-                        } else if (route.name === 'map') {
-                            iconName = focused ? 'map' : 'map-outline';
-                        } else if (route.name === 'calendar') {
-                            iconName = focused ? 'calendar' : 'calendar-outline';
-                        } else if (route.name === 'person') {
-                            iconName = focused ? 'person' : 'person-outline';
-                        } else if (route.name === "admin") {
-                            iconName = focused ? "shield-checkmark" : "shield-checkmark-outline";
-                        }
-
-                        return <Ionicons name={iconName} size={size} color={color}/>;
+                        return (
+                            <Ionicons
+                                name={iconName}
+                                size={size}
+                                color={color}
+                                accessible={false}
+                            />
+                        );
                     },
                 })}
             >
                 <Tab.Screen
                     name="search"
                     component={ActionStackScreen}
-                    options={{title: 'Ontdek'}}
+                    options={{
+                        title: "Ontdek",
+                    }}
                 />
+
                 <Tab.Screen
                     name="map"
                     component={MapScreen}
-                    options={{title: 'Kaart'}}
+                    options={{
+                        title: "Kaart",
+                    }}
                 />
+
                 <Tab.Screen
                     name="calendar"
                     component={AgendaStackScreen}
-                    options={{title: 'Agenda'}}
+                    options={{
+                        title: "Agenda",
+                    }}
                 />
+
                 <Tab.Screen
                     name="person"
-                    options={{title: 'Profiel'}}
+                    options={{
+                        title: "Profiel",
+                    }}
                 >
                     {(props) => (
                         <ProfileScreen
                             {...props}
-                            userId={user?.id} // Pass the logged-in user's ID from AuthContext
+                            userId={user?.id || user?.user_id || user?.user?.id}
                         />
                     )}
                 </Tab.Screen>
+
                 {isAdmin && (
                     <Tab.Screen
                         name="admin"
                         component={AdminScreen}
-                        options={{title: "Admin"}}
+                        options={{
+                            title: "Admin",
+                        }}
                     />
                 )}
             </Tab.Navigator>
