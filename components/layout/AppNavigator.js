@@ -1,10 +1,10 @@
 // components/layout/AppNavigator.js
 
-import React, { useContext } from "react";
-import { View, ActivityIndicator } from "react-native";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { createStackNavigator } from "@react-navigation/stack";
-import { Ionicons } from "@expo/vector-icons";
+import React, {useContext} from "react";
+import {View, ActivityIndicator} from "react-native";
+import {createBottomTabNavigator} from "@react-navigation/bottom-tabs";
+import {createStackNavigator} from "@react-navigation/stack";
+import {Ionicons} from "@expo/vector-icons";
 
 import ActionScreen from "../../screens/ActionScreen";
 import DonationScreen from "../../screens/DonationScreen";
@@ -15,7 +15,7 @@ import AppHeader from "./AppHeader";
 import DetailScreen from "../../screens/DetailScreen";
 import AgendaScreen from "../../screens/AgendaScreen";
 import ProfileScreen from "../../screens/ProfileScreen";
-import { AuthContext } from "../../context/AuthContext";
+import {AuthContext} from "../../context/AuthContext";
 
 const Tab = createBottomTabNavigator();
 const ActionStack = createStackNavigator();
@@ -79,8 +79,8 @@ function AgendaStackScreen() {
     );
 }
 
-export default function AppNavigator({ route }) {
-    const { user, isLoading } = useContext(AuthContext);
+export default function AppNavigator({route}) {
+    const {user, isLoading} = useContext(AuthContext);
 
     /*
         Admin kan later via user.role of route param.
@@ -94,7 +94,7 @@ export default function AppNavigator({ route }) {
     if (isLoading) {
         return (
             <View className="flex-1 bg-offWhite items-center justify-center">
-                <ActivityIndicator size="large" color="#14213D" />
+                <ActivityIndicator size="large" color="#14213D"/>
             </View>
         );
     }
@@ -103,9 +103,9 @@ export default function AppNavigator({ route }) {
         <View className="flex-1 bg-offWhite">
             <Tab.Navigator
                 initialRouteName="search"
-                screenOptions={({ route }) => ({
+                screenOptions={({route}) => ({
                     headerShown: true,
-                    header: () => <AppHeader />,
+                    header: () => <AppHeader/>,
                     headerStyle: {
                         backgroundColor: "#14213D",
                         elevation: 0,
@@ -129,7 +129,15 @@ export default function AppNavigator({ route }) {
                     tabBarLabelStyle: {
                         fontSize: 10,
                     },
-                    tabBarIcon: ({ focused, color, size }) => {
+                    tabBarAccessibilityLabel: (() => {
+                        if (route.name === "search") return "Ontdek acties en protesten";
+                        if (route.name === "map") return "Kaart met protestlocaties in Rotterdam";
+                        if (route.name === "calendar") return "Agenda met geplande evenementen";
+                        if (route.name === "person") return "Jouw persoonlijke profiel";
+                        if (route.name === "admin") return "Admin dashboard voor organisatoren";
+                        return undefined;
+                    })(),
+                    tabBarIcon: ({focused, color, size}) => {
                         let iconName = "ellipse-outline";
 
                         if (route.name === "search") {
@@ -151,6 +159,7 @@ export default function AppNavigator({ route }) {
                                 name={iconName}
                                 size={size}
                                 color={color}
+                                accessible={false}
                             />
                         );
                     },
@@ -159,32 +168,26 @@ export default function AppNavigator({ route }) {
                 <Tab.Screen
                     name="search"
                     component={ActionStackScreen}
-                    options={{ title: "Ontdek" }}
-                />
-
-                <Tab.Screen
-                    name="map"
-                    component={MapScreen}
-                    options={{ title: "Kaart" }}
+                    options={{title: "Ontdek"}}
                 />
 
                 <Tab.Screen
                     name="calendar"
                     component={AgendaStackScreen}
-                    options={{ title: "Agenda" }}
+                    options={{title: "Agenda"}}
                 />
 
                 <Tab.Screen
                     name="person"
                     component={ProfileScreen}
-                    options={{ title: "Profiel" }}
+                    options={{title: "Profiel"}}
                 />
 
                 {isAdmin && (
                     <Tab.Screen
                         name="admin"
                         component={AdminScreen}
-                        options={{ title: "Admin" }}
+                        options={{title: "Admin"}}
                     />
                 )}
             </Tab.Navigator>
