@@ -76,7 +76,9 @@ export default function HomeScreen() {
         useCallback(() => {
             const normalizedRouteAssignment = normalizeAssignmentParam(routeProjectType);
 
-            setSelectedAssignment(normalizedRouteAssignment);
+            if (normalizedRouteAssignment !== "Alle") {
+                setSelectedAssignment(normalizedRouteAssignment);
+            }
 
             if (protests.length === 0 && !loading) {
                 loadProtests();
@@ -115,6 +117,26 @@ export default function HomeScreen() {
         } finally {
             setRefreshing(false);
         }
+    }
+
+    function resetRouteProjectFilter() {
+        navigation.setParams({
+            type: "Alle",
+            projectType: "Alle",
+        });
+    }
+
+    function handleSelectedAssignmentChange(value) {
+        resetRouteProjectFilter();
+        setSelectedAssignment(value);
+    }
+
+    function handleSelectedTopicChange(value) {
+        setSelectedTopic(value);
+    }
+
+    function handleSelectedMomentChange(value) {
+        setSelectedMoment(value);
     }
 
     function normalizeText(value) {
@@ -365,11 +387,12 @@ export default function HomeScreen() {
     }
 
     function closePreview() {
-        setPreviewVisible(false);
         setSelectedProtest(null);
+        setPreviewVisible(false);
     }
 
     function clearFilters() {
+        resetRouteProjectFilter();
         setSearch("");
         setSelectedTopic(null);
         setSelectedAssignment("Alle");
@@ -677,11 +700,11 @@ export default function HomeScreen() {
                 visible={filterVisible}
                 onClose={() => setFilterVisible(false)}
                 selectedTopic={selectedTopic}
-                setSelectedTopic={setSelectedTopic}
+                setSelectedTopic={handleSelectedTopicChange}
                 selectedAssignment={selectedAssignment}
-                setSelectedAssignment={setSelectedAssignment}
+                setSelectedAssignment={handleSelectedAssignmentChange}
                 selectedMoment={selectedMoment}
-                setSelectedMoment={setSelectedMoment}
+                setSelectedMoment={handleSelectedMomentChange}
                 topics={filterOptions.topics}
                 assignments={filterOptions.assignments}
                 moments={filterOptions.moments}

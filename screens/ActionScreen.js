@@ -1,6 +1,8 @@
-import React, {useState} from "react";
-import {ScrollView, Text, View} from "react-native";
-import {useNavigation} from "@react-navigation/native";
+// screens/ActionScreen.js
+
+import React, { useState } from "react";
+import { ScrollView, Text, View } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
 import ActionCard from "../components/actions/ActionCard";
 import ActionModal from "../components/actions/ActionModal";
@@ -9,35 +11,40 @@ const ACTION_DETAILS = {
     stickers: {
         title: "Stickers ontwerpen",
         details: [
-            {header: "Wat is het?", text: "Ontwerp stickers die de boodschap van de demonstratie versterken."},
+            {
+                header: "Wat is het?",
+                text: "Ontwerp stickers die de boodschap van de demonstratie versterken.",
+            },
             {
                 header: "Digitaal",
-                text: "Lever een ontwerp aan. Wij drukken de stickers en nemen ze mee naar de demonstratie."
+                text: "Lever een ontwerp aan. Wij drukken de stickers en nemen ze mee naar de demonstratie.",
             },
             {
                 header: "Zelf maken",
-                text: "Heb je zelf stickers gemaakt? Stuur ze naar ons op. Wij zorgen dat ze tijdens de demonstratie worden verspreid."
-            }
-        ]
+                text: "Heb je zelf stickers gemaakt? Stuur ze naar ons op. Wij zorgen dat ze tijdens de demonstratie worden verspreid.",
+            },
+        ],
     },
+
     spandoeken: {
         title: "Spandoeken ontwerpen",
         details: [
             {
                 header: "Wat is het?",
-                text: "Ontwerp of maak een spandoek en help de demonstratie zichtbaar te maken."
+                text: "Ontwerp of maak een spandoek en help de demonstratie zichtbaar te maken.",
             },
             {
                 header: "Productie",
-                text: "Lever je ontwerp aan. Wij drukken het en nemen het mee naar de demonstratie."
+                text: "Lever je ontwerp aan. Wij drukken het en nemen het mee naar de demonstratie.",
             },
             {
                 header: "Zelf meenemen",
-                text: "Maak zelf een spandoek en stuur het op. Wij zorgen dat het op de juiste plek terechtkomt."
-            }
-        ]
-    }
+                text: "Maak zelf een spandoek en stuur het op. Wij zorgen dat het op de juiste plek terechtkomt.",
+            },
+        ],
+    },
 };
+
 export default function ActionScreen() {
     const navigation = useNavigation();
 
@@ -47,16 +54,24 @@ export default function ActionScreen() {
     function goToProject(projectType) {
         navigation.navigate("HomeScreen", {
             type: projectType,
+            projectType: projectType,
+            filterSource: "ActionScreen",
+            filterAppliedAt: Date.now(),
         });
     }
 
     function goToDonation() {
-        navigation.navigate("DonationScreen", {}); // Pass an empty object for parameters
+        navigation.navigate("DonationScreen");
     }
 
     function openInfoModal(actionKey) {
         setSelectedAction(ACTION_DETAILS[actionKey]);
         setModalVisible(true);
+    }
+
+    function closeInfoModal() {
+        setModalVisible(false);
+        setSelectedAction(null);
     }
 
     return (
@@ -85,8 +100,8 @@ export default function ActionScreen() {
                     >
                         Maak impact op jouw manier
                     </Text>
+
                     <View className="flex flex-col">
-                        {/* Stickers */}
                         <ActionCard
                             image={require("../assets/tle4-stickers.jpg")}
                             title="Stickers ontwerpen"
@@ -96,7 +111,6 @@ export default function ActionScreen() {
                             onPressInfo={() => openInfoModal("stickers")}
                         />
 
-                        {/* Spandoeken */}
                         <ActionCard
                             image={require("../assets/tle4-spandoek.avif")}
                             title="Spandoeken ontwerpen"
@@ -106,7 +120,6 @@ export default function ActionScreen() {
                             onPressInfo={() => openInfoModal("spandoeken")}
                         />
 
-                        {/* Donaties */}
                         <ActionCard
                             image={require("../assets/tle4-doneren.jpg")}
                             title="Donaties"
@@ -120,10 +133,9 @@ export default function ActionScreen() {
 
             <ActionModal
                 visible={modalVisible}
-                onClose={() => setModalVisible(false)}
+                onClose={closeInfoModal}
                 actionData={selectedAction}
             />
-
         </View>
     );
 }
