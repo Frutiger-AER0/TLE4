@@ -131,6 +131,7 @@ export default function AppNavigator({route}) {
                     },
                     tabBarAccessibilityLabel: (() => {
                         if (route.name === "search") return "Ontdek acties en protesten";
+                        if (route.name === "map") return "Kaart met protestlocaties in Rotterdam";
                         if (route.name === "calendar") return "Agenda met geplande evenementen";
                         if (route.name === "person") return "Jouw persoonlijke profiel";
                         if (route.name === "admin") return "Admin dashboard voor organisatoren";
@@ -141,6 +142,8 @@ export default function AppNavigator({route}) {
 
                         if (route.name === "search") {
                             iconName = focused ? "search" : "search-outline";
+                        } else if (route.name === "map") {
+                            iconName = focused ? "map" : "map-outline";
                         } else if (route.name === "calendar") {
                             iconName = focused ? "calendar" : "calendar-outline";
                         } else if (route.name === "person") {
@@ -166,6 +169,12 @@ export default function AppNavigator({route}) {
                     name="search"
                     component={ActionStackScreen}
                     options={{title: "Ontdek"}}
+                />
+
+                <Tab.Screen
+                    name="map"
+                    component={MapScreen}
+                    options={{title: "Kaart"}}
                 />
 
                 <Tab.Screen
