@@ -1,6 +1,6 @@
 // screens/HomeScreen.js
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
     View,
     Text,
@@ -12,7 +12,11 @@ import {
     RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import {
+    useFocusEffect,
+    useNavigation,
+    useRoute,
+} from "@react-navigation/native";
 import tw from "twrnc";
 
 import PreviewModal from "../components/PreviewModal";
@@ -20,6 +24,25 @@ import FilterModal from "../components/filters/FilterModal";
 import { fetchProtests } from "../components/services/ProtestApi";
 
 const MOMENT_OPTIONS = ["Alle", "Vandaag", "Deze week", "Dit weekend"];
+
+const DEFAULT_TOPICS = [
+    "Algemeen",
+    "Klimaat",
+    "Palestina",
+    "LGBTQ",
+    "Woningnood",
+    "Racisme",
+    "Onderwijs",
+    "Zorg",
+    "Dierenrechten",
+];
+
+const DEFAULT_ASSIGNMENTS = [
+    "Alle",
+    "Stickers",
+    "Spandoek",
+    "Donatie",
+];
 
 export default function HomeScreen() {
     const navigation = useNavigation();
@@ -37,8 +60,8 @@ export default function HomeScreen() {
     const [refreshing, setRefreshing] = useState(false);
     const [errorText, setErrorText] = useState("");
 
-    const [previewVisible, setPreviewVisible] = useState(false);
     const [selectedProtest, setSelectedProtest] = useState(null);
+    const [previewVisible, setPreviewVisible] = useState(false);
 
     const [filterVisible, setFilterVisible] = useState(false);
     const [selectedTopic, setSelectedTopic] = useState(null);
@@ -49,11 +72,17 @@ export default function HomeScreen() {
         loadProtests();
     }, []);
 
-    useEffect(() => {
-        if (routeProjectType && routeProjectType !== "Alle") {
-            setSelectedAssignment(normalizeAssignmentParam(routeProjectType));
-        }
-    }, [routeProjectType]);
+    useFocusEffect(
+        useCallback(() => {
+            const normalizedRouteAssignment = normalizeAssignmentParam(routeProjectType);
+
+            setSelectedAssignment(normalizedRouteAssignment);
+
+            if (protests.length === 0 && !loading) {
+                loadProtests();
+            }
+        }, [routeProjectType, protests.length, loading])
+    );
 
     async function loadProtests() {
         try {
@@ -88,69 +117,144 @@ export default function HomeScreen() {
         }
     }
 
-    function normalizeAssignmentParam(value) {
-        if (!value) return "Alle";
+    function normalizeText(value) {
+        return (value || "")
+            .toString()
+            .toLowerCase()
+            .trim();
+    }
 
-        const cleanValue = value.toLowerCase();
+    function normalizeAssignmentParam(value) {
+        const cleanValue = normalizeText(value);
+
+        if (!cleanValue || cleanValue === "alle") {
+            return "Alle";
+        }
 
         if (cleanValue.includes("sticker")) {
             return "Stickers";
         }
 
-        if (cleanValue.includes("spandoek")) {
+        if (
+            cleanValue.includes("spandoek") ||
+            cleanValue.includes("spandoeken") ||
+            cleanValue.includes("banner")
+        ) {
             return "Spandoek";
         }
 
-        if (cleanValue.includes("donatie")) {
+        if (
+            cleanValue.includes("donatie") ||
+            cleanValue.includes("doneren") ||
+            cleanValue.includes("donation")
+        ) {
             return "Donatie";
         }
 
         return value;
     }
 
-    const filterOptions = useMemo(() => {
-        const topics = Array.from(
-            new Set(
-                protests
-                    .map((item) => item.topic)
-                    .filter(Boolean)
-            )
-        );
+    function getItemAssignmentText(item) {
+        return [
+            item.type,
+            item.subtitle,
+            item.projectLabel,
+            item.actionTitle,
+            item.actionDescription,
+        ]
+            .filter(Boolean)
+            .join(" ");
+    }
 
-        const assignments = Array.from(
-            new Set(
-                protests
-                    .map((item) => item.type)
-                    .filter(Boolean)
-            )
-        );
+    function matchesAssignmentFilter(item, assignment) {
+        const cleanAssignment = normalizeText(assignment);
+
+        if (!cleanAssignment || cleanAssignment === "alle") {
+            return true;
+        }
+
+        const itemAssignmentText = normalizeText(getItemAssignmentText(item));
+
+        if (cleanAssignment.includes("sticker")) {
+            return itemAssignmentText.includes("sticker");
+        }
+
+        if (cleanAssignment.includes("spandoek")) {
+            return (
+                itemAssignmentText.includes("spandoek") ||
+                itemAssignmentText.includes("spandoeken") ||
+                itemAssignmentText.includes("banner")
+            );
+        }
+
+        if (cleanAssignment.includes("donatie")) {
+            return (
+                itemAssignmentText.includes("donatie") ||
+                itemAssignmentText.includes("doneren") ||
+                itemAssignmentText.includes("donation")
+            );
+        }
+
+        return itemAssignmentText.includes(cleanAssignment);
+    }
+
+    function mergeUniqueOptions(defaultOptions, apiOptions) {
+        const result = [...defaultOptions];
+
+        apiOptions.forEach((option) => {
+            if (!option) return;
+
+            const alreadyExists = result.some((item) => {
+                return normalizeText(item) === normalizeText(option);
+            });
+
+            if (!alreadyExists) {
+                result.push(option);
+            }
+        });
+
+        return result;
+    }
+
+    const filterOptions = useMemo(() => {
+        const apiTopics = protests
+            .map((item) => item.topic)
+            .filter(Boolean);
+
+        const apiAssignments = protests
+            .map((item) => normalizeAssignmentParam(item.type || item.subtitle))
+            .filter(Boolean)
+            .filter((item) => item !== "Alle");
 
         return {
-            topics: topics.length > 0 ? topics : ["Algemeen"],
-            assignments: ["Alle", ...assignments],
+            topics: mergeUniqueOptions(DEFAULT_TOPICS, apiTopics),
+            assignments: mergeUniqueOptions(DEFAULT_ASSIGNMENTS, apiAssignments),
             moments: MOMENT_OPTIONS,
         };
     }, [protests]);
 
     const filteredProtests = useMemo(() => {
         return protests.filter((item) => {
-            const searchValue = search.trim().toLowerCase();
+            const searchValue = normalizeText(search);
 
             const matchesSearch =
                 !searchValue ||
-                item.title?.toLowerCase().includes(searchValue) ||
-                item.description?.toLowerCase().includes(searchValue) ||
-                item.location?.toLowerCase().includes(searchValue) ||
-                item.topic?.toLowerCase().includes(searchValue) ||
-                item.type?.toLowerCase().includes(searchValue);
+                normalizeText(item.title).includes(searchValue) ||
+                normalizeText(item.description).includes(searchValue) ||
+                normalizeText(item.location).includes(searchValue) ||
+                normalizeText(item.topic).includes(searchValue) ||
+                normalizeText(item.type).includes(searchValue) ||
+                normalizeText(item.subtitle).includes(searchValue);
 
             const matchesTopic =
-                selectedTopic ? item.topic === selectedTopic : true;
+                selectedTopic
+                    ? normalizeText(item.topic) === normalizeText(selectedTopic)
+                    : true;
 
-            const matchesAssignment =
-                selectedAssignment === "Alle"
-                    ? true
-                    : item.type?.toLowerCase() === selectedAssignment.toLowerCase();
+            const matchesAssignment = matchesAssignmentFilter(
+                item,
+                selectedAssignment
+            );
 
             const matchesMoment = matchesSelectedMoment(item, selectedMoment);
 
@@ -266,6 +370,7 @@ export default function HomeScreen() {
     }
 
     function clearFilters() {
+        setSearch("");
         setSelectedTopic(null);
         setSelectedAssignment("Alle");
         setSelectedMoment("Alle");
@@ -279,7 +384,8 @@ export default function HomeScreen() {
         return (
             selectedTopic ||
             selectedAssignment !== "Alle" ||
-            selectedMoment !== "Alle"
+            selectedMoment !== "Alle" ||
+            search.trim().length > 0
         );
     }
 
@@ -349,7 +455,11 @@ export default function HomeScreen() {
                             </Text>
                         </View>
 
-                        <Ionicons name="chevron-forward" size={24} color="#0A1A3A" />
+                        <Ionicons
+                            name="chevron-forward"
+                            size={24}
+                            color="#0A1A3A"
+                        />
                     </View>
 
                     <Text
@@ -422,6 +532,16 @@ export default function HomeScreen() {
 
                 {hasActiveFilters() && (
                     <View style={tw`flex-row flex-wrap mt-3`}>
+                        {search.trim().length > 0 && (
+                            <View
+                                style={tw`bg-[#F4C430] rounded-full px-3 py-1 mr-2 mb-2`}
+                            >
+                                <Text style={tw`text-[#0A1A3A] text-xs font-bold`}>
+                                    Zoek: {search}
+                                </Text>
+                            </View>
+                        )}
+
                         {selectedTopic && (
                             <View
                                 style={tw`bg-[#F4C430] rounded-full px-3 py-1 mr-2 mb-2`}
@@ -492,58 +612,60 @@ export default function HomeScreen() {
         );
     }
 
-    return (
-        <View style={tw`flex-1 bg-white`}>
-            {loading ? (
-                <View style={tw`flex-1 items-center justify-center px-5`}>
+    function renderEmptyList() {
+        if (loading) {
+            return (
+                <View style={tw`bg-[#E6D8F5] rounded-xl p-5 items-center`}>
                     <ActivityIndicator size="large" color="#0A1A3A" />
 
                     <Text style={tw`text-[#0A1A3A] mt-3 font-semibold`}>
                         Demonstraties laden...
                     </Text>
                 </View>
-            ) : (
-                <FlatList
-                    data={filteredProtests}
-                    keyExtractor={(item, index) => `${item.id}-${index}`}
-                    renderItem={renderProtestCard}
-                    showsVerticalScrollIndicator={false}
-                    contentContainerStyle={tw`px-5 pb-32`}
-                    ListHeaderComponent={renderHeader}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={refreshProtests}
-                            tintColor="#0A1A3A"
-                        />
-                    }
-                    ListEmptyComponent={
-                        <View style={tw`bg-[#E6D8F5] rounded-xl p-5`}>
-                            <Text style={tw`text-[#0A1A3A] font-bold`}>
-                                Geen demonstraties gevonden.
-                            </Text>
+            );
+        }
 
-                            <Text style={tw`text-[#0A1A3A] text-sm mt-1 leading-5`}>
-                                Pas je zoekopdracht of filters aan. Als de database leeg is,
-                                voeg dan eerst protesten toe via de backend.
-                            </Text>
+        return (
+            <View style={tw`bg-[#E6D8F5] rounded-xl p-5`}>
+                <Text style={tw`text-[#0A1A3A] font-bold`}>
+                    Geen demonstraties gevonden.
+                </Text>
 
-                            <TouchableOpacity
-                                onPress={() => {
-                                    setSearch("");
-                                    clearFilters();
-                                    loadProtests();
-                                }}
-                                style={tw`bg-[#0A1A3A] rounded-xl py-3 mt-4 items-center`}
-                            >
-                                <Text style={tw`text-white font-bold`}>
-                                    Opnieuw laden
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                    }
-                />
-            )}
+                <Text style={tw`text-[#0A1A3A] text-sm mt-1 leading-5`}>
+                    Pas je zoekopdracht of filters aan. Als de database leeg is,
+                    voeg dan eerst protesten toe via de backend.
+                </Text>
+
+                <TouchableOpacity
+                    onPress={clearFilters}
+                    style={tw`bg-[#0A1A3A] rounded-xl py-3 mt-4 items-center`}
+                >
+                    <Text style={tw`text-white font-bold`}>
+                        Filters wissen
+                    </Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
+
+    return (
+        <View style={tw`flex-1 bg-white`}>
+            <FlatList
+                data={loading ? [] : filteredProtests}
+                keyExtractor={(item, index) => `${item.id}-${index}`}
+                renderItem={renderProtestCard}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={tw`px-5 pb-32`}
+                ListHeaderComponent={renderHeader}
+                ListEmptyComponent={renderEmptyList}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={refreshProtests}
+                        tintColor="#0A1A3A"
+                    />
+                }
+            />
 
             <PreviewModal
                 visible={previewVisible}
