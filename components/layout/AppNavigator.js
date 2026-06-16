@@ -21,6 +21,54 @@ const Tab = createBottomTabNavigator();
 const ActionStack = createStackNavigator();
 const AgendaStack = createStackNavigator();
 
+function getTabIconName(routeName, focused) {
+    if (routeName === "search") {
+        return focused ? "search" : "search-outline";
+    }
+
+    if (routeName === "map") {
+        return focused ? "map" : "map-outline";
+    }
+
+    if (routeName === "calendar") {
+        return focused ? "calendar" : "calendar-outline";
+    }
+
+    if (routeName === "person") {
+        return focused ? "person" : "person-outline";
+    }
+
+    if (routeName === "admin") {
+        return focused ? "shield-checkmark" : "shield-checkmark-outline";
+    }
+
+    return "ellipse-outline";
+}
+
+function getTabAccessibilityLabel(routeName) {
+    if (routeName === "search") {
+        return "Ontdek acties en protesten";
+    }
+
+    if (routeName === "map") {
+        return "Kaart met protestlocaties in Rotterdam";
+    }
+
+    if (routeName === "calendar") {
+        return "Agenda met geplande evenementen";
+    }
+
+    if (routeName === "person") {
+        return "Jouw persoonlijke profiel";
+    }
+
+    if (routeName === "admin") {
+        return "Admin dashboard voor organisatoren";
+    }
+
+    return undefined;
+}
+
 function ActionStackScreen() {
     return (
         <ActionStack.Navigator
@@ -82,13 +130,11 @@ function AgendaStackScreen() {
 export default function AppNavigator({ route }) {
     const { user, isLoading } = useContext(AuthContext);
 
-    /*
-        Admin kan later via user.role of route param.
-        Voor nu blijft route param mogelijk.
-    */
     const isAdmin =
         route?.params?.isAdmin === true ||
         user?.isAdmin === true ||
+        user?.is_admin === true ||
+        user?.is_admin === 1 ||
         user?.role === "admin";
 
     if (isLoading) {
@@ -117,6 +163,7 @@ export default function AppNavigator({ route }) {
                     },
                     tabBarActiveTintColor: "#F4C430",
                     tabBarInactiveTintColor: "#F8F9FA",
+                    tabBarAccessibilityLabel: getTabAccessibilityLabel(route.name),
                     tabBarStyle: {
                         backgroundColor: "#14213D",
                         height: 90,
@@ -130,27 +177,14 @@ export default function AppNavigator({ route }) {
                         fontSize: 10,
                     },
                     tabBarIcon: ({ focused, color, size }) => {
-                        let iconName = "ellipse-outline";
-
-                        if (route.name === "search") {
-                            iconName = focused ? "search" : "search-outline";
-                        } else if (route.name === "map") {
-                            iconName = focused ? "map" : "map-outline";
-                        } else if (route.name === "calendar") {
-                            iconName = focused ? "calendar" : "calendar-outline";
-                        } else if (route.name === "person") {
-                            iconName = focused ? "person" : "person-outline";
-                        } else if (route.name === "admin") {
-                            iconName = focused
-                                ? "shield-checkmark"
-                                : "shield-checkmark-outline";
-                        }
+                        const iconName = getTabIconName(route.name, focused);
 
                         return (
                             <Ionicons
                                 name={iconName}
                                 size={size}
                                 color={color}
+                                accessible={false}
                             />
                         );
                     },
@@ -159,29 +193,37 @@ export default function AppNavigator({ route }) {
                 <Tab.Screen
                     name="search"
                     component={ActionStackScreen}
-                    options={{ title: "Ontdek" }}
+                    options={{
+                        title: "Ontdek",
+                    }}
                 />
 
                 <Tab.Screen
                     name="map"
                     component={MapScreen}
-                    options={{ title: "Kaart" }}
+                    options={{
+                        title: "Kaart",
+                    }}
                 />
 
                 <Tab.Screen
                     name="calendar"
                     component={AgendaStackScreen}
-                    options={{ title: "Agenda" }}
+                    options={{
+                        title: "Agenda",
+                    }}
                 />
 
                 <Tab.Screen
                     name="person"
-                    options={{ title: "Profiel" }}
+                    options={{
+                        title: "Profiel",
+                    }}
                 >
                     {(props) => (
                         <ProfileScreen
                             {...props}
-                            userId={user?.id} // Pass the logged-in user's ID from AuthContext
+                            userId={user?.id || user?.user_id || user?.user?.id}
                         />
                     )}
                 </Tab.Screen>
@@ -190,7 +232,9 @@ export default function AppNavigator({ route }) {
                     <Tab.Screen
                         name="admin"
                         component={AdminScreen}
-                        options={{ title: "Admin" }}
+                        options={{
+                            title: "Admin",
+                        }}
                     />
                 )}
             </Tab.Navigator>
