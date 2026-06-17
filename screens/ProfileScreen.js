@@ -209,12 +209,6 @@ export default function ProfileScreen({ navigation }) {
     }
 
     async function fetchUserData(foundUserId) {
-        /*
-            Staat alvast klaar voor later.
-            Op dit moment bestaat /user-data volgens Postman nog niet.
-            Zodra backend user_data toevoegt, kan deze functie direct data tonen.
-        */
-
         const endpoints = [
             `${API_BASE_URL}/user-data`,
             `${API_BASE_URL}/user_data`,
@@ -249,14 +243,6 @@ export default function ProfileScreen({ navigation }) {
     }
 
     async function saveUserDataIfAvailable(userId) {
-        /*
-            Toekomstige database-opslag voor user_data:
-            - username
-            - profile_img
-
-            Omdat /user-data nu nog 404 geeft, mag dit niet de profiel-update blokkeren.
-        */
-
         const body = {
             user_id: userId,
             username: usernameInput.trim(),
@@ -415,12 +401,6 @@ export default function ProfileScreen({ navigation }) {
             body: JSON.stringify(body),
         });
 
-        /*
-            De backend geeft bij PUT alleen:
-            { message: "User updated successfully" }
-
-            Daarom halen we daarna de user opnieuw op.
-        */
         return requestJson(`${API_BASE_URL}/users/${userId}`);
     }
 
@@ -513,10 +493,54 @@ export default function ProfileScreen({ navigation }) {
         setRepeatPasswordInput("");
     }
 
+    function renderAccountRow(iconName, label, value, accessibilityLabel) {
+        return (
+            <View
+                className="flex-row items-center mb-4"
+                accessible={true}
+                accessibilityLabel={accessibilityLabel || `${label}: ${value}`}
+            >
+                <View
+                    className="w-10 h-10 rounded-xl bg-lightPurple items-center justify-center mr-3"
+                    accessible={false}
+                    importantForAccessibility="no"
+                >
+                    <Ionicons
+                        name={iconName}
+                        size={22}
+                        color="#14213D"
+                        accessible={false}
+                        importantForAccessibility="no"
+                    />
+                </View>
+
+                <View className="flex-1">
+                    <Text className="text-darkBlue text-xs">
+                        {label}
+                    </Text>
+
+                    <Text className="text-darkBlue font-bold">
+                        {value}
+                    </Text>
+                </View>
+            </View>
+        );
+    }
+
     if (loading) {
         return (
-            <View className="flex-1 bg-offWhite items-center justify-center px-5">
-                <ActivityIndicator size="large" color="#14213D" />
+            <View
+                className="flex-1 bg-offWhite items-center justify-center px-5"
+                accessible={true}
+                accessibilityRole="progressbar"
+                accessibilityLabel="Profiel wordt geladen"
+            >
+                <ActivityIndicator
+                    size="large"
+                    color="#14213D"
+                    accessible={false}
+                    importantForAccessibility="no"
+                />
 
                 <Text className="text-darkBlue text-base mt-3">
                     Profiel laden...
@@ -528,20 +552,36 @@ export default function ProfileScreen({ navigation }) {
     if (errorText) {
         return (
             <View className="flex-1 bg-offWhite items-center justify-center px-5">
-                <Ionicons name="warning-outline" size={46} color="#842BD7" />
+                <Ionicons
+                    name="warning-outline"
+                    size={46}
+                    color="#842BD7"
+                    accessible={false}
+                    importantForAccessibility="no"
+                />
 
-                <Text className="text-darkBlue text-xl font-bold mt-4 text-center">
+                <Text
+                    className="text-darkBlue text-xl font-bold mt-4 text-center"
+                    accessibilityRole="header"
+                >
                     Profiel kon niet worden geladen
                 </Text>
 
-                <Text className="text-darkBlue text-sm mt-2 text-center">
+                <Text
+                    className="text-darkBlue text-sm mt-2 text-center"
+                    accessibilityLabel={`Foutmelding: ${errorText}`}
+                >
                     {errorText}
                 </Text>
 
                 <TouchableOpacity
                     onPress={loadProfile}
                     activeOpacity={0.85}
-                    className="bg-darkBlue rounded-xl px-6 py-3 mt-5"
+                    className="bg-darkBlue rounded-xl px-6 py-3 mt-5 min-h-12 items-center justify-center"
+                    accessible={true}
+                    accessibilityRole="button"
+                    accessibilityLabel="Profiel opnieuw laden"
+                    accessibilityHint="Probeert de profielgegevens opnieuw op te halen."
                 >
                     <Text className="text-white font-bold">
                         Opnieuw proberen
@@ -551,7 +591,11 @@ export default function ProfileScreen({ navigation }) {
                 <TouchableOpacity
                     onPress={handleLogout}
                     activeOpacity={0.85}
-                    className="bg-lightPurple rounded-xl px-6 py-3 mt-3"
+                    className="bg-lightPurple rounded-xl px-6 py-3 mt-3 min-h-12 items-center justify-center"
+                    accessible={true}
+                    accessibilityRole="button"
+                    accessibilityLabel="Uitloggen"
+                    accessibilityHint="Logt je uit en brengt je terug naar het beginscherm."
                 >
                     <Text className="text-darkBlue font-bold">
                         Uitloggen
@@ -574,6 +618,7 @@ export default function ProfileScreen({ navigation }) {
                 className="flex-1 bg-offWhite"
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
+                accessibilityLabel="Profielpagina"
                 contentContainerStyle={{
                     paddingHorizontal: 20,
                     paddingTop: 20,
@@ -581,7 +626,10 @@ export default function ProfileScreen({ navigation }) {
                 }}
             >
                 <View className="flex-row items-center justify-between mb-5">
-                    <Text className="text-darkBlue text-2xl font-bold">
+                    <Text
+                        className="text-darkBlue text-2xl font-bold"
+                        accessibilityRole="header"
+                    >
                         Mijn Profiel
                     </Text>
 
@@ -589,7 +637,11 @@ export default function ProfileScreen({ navigation }) {
                         <TouchableOpacity
                             onPress={() => setEditMode(true)}
                             activeOpacity={0.85}
-                            className="bg-darkBlue rounded-xl px-4 py-2"
+                            className="bg-darkBlue rounded-xl px-4 py-2 min-h-11 items-center justify-center"
+                            accessible={true}
+                            accessibilityRole="button"
+                            accessibilityLabel="Profiel bewerken"
+                            accessibilityHint="Opent de bewerkmodus voor je profielgegevens."
                         >
                             <Text className="text-white font-bold">
                                 Bewerken
@@ -598,7 +650,11 @@ export default function ProfileScreen({ navigation }) {
                     )}
                 </View>
 
-                <View className="bg-lightPurple rounded-2xl p-5 items-center">
+                <View
+                    className="bg-lightPurple rounded-2xl p-5 items-center"
+                    accessible={true}
+                    accessibilityLabel={`Profiel van ${editMode ? usernameInput || "Gebruiker" : getUsername()}. Email: ${editMode ? emailInput || "Geen email" : getEmail()}. Lid sinds ${formatCreatedAt(getCreatedAt())}.`}
+                >
                     {profileImage ? (
                         <Image
                             source={profileImage}
@@ -609,6 +665,9 @@ export default function ProfileScreen({ navigation }) {
                                 backgroundColor: "#ffffff",
                             }}
                             resizeMode="cover"
+                            accessible={true}
+                            accessibilityRole="image"
+                            accessibilityLabel={`Profielfoto van ${editMode ? usernameInput || "Gebruiker" : getUsername()}`}
                         />
                     ) : (
                         <View
@@ -620,8 +679,17 @@ export default function ProfileScreen({ navigation }) {
                                 alignItems: "center",
                                 justifyContent: "center",
                             }}
+                            accessible={true}
+                            accessibilityRole="image"
+                            accessibilityLabel="Standaard profielfoto"
                         >
-                            <Ionicons name="person-outline" size={54} color="white" />
+                            <Ionicons
+                                name="person-outline"
+                                size={54}
+                                color="white"
+                                accessible={false}
+                                importantForAccessibility="no"
+                            />
                         </View>
                     )}
 
@@ -640,80 +708,51 @@ export default function ProfileScreen({ navigation }) {
 
                 {!editMode && (
                     <>
-                        <View className="bg-white rounded-2xl p-5 mt-5">
-                            <Text className="text-darkBlue text-lg font-bold mb-4">
+                        <View
+                            className="bg-white rounded-2xl p-5 mt-5"
+                            accessible={false}
+                        >
+                            <Text
+                                className="text-darkBlue text-lg font-bold mb-4"
+                                accessibilityRole="header"
+                            >
                                 Accountgegevens
                             </Text>
 
-                            <View className="flex-row items-center mb-4">
-                                <View className="w-10 h-10 rounded-xl bg-lightPurple items-center justify-center mr-3">
-                                    <Ionicons name="person-outline" size={22} color="#14213D" />
-                                </View>
+                            {renderAccountRow(
+                                "person-outline",
+                                "Gebruikersnaam",
+                                getUsername()
+                            )}
 
-                                <View className="flex-1">
-                                    <Text className="text-darkBlue text-xs">
-                                        Gebruikersnaam
-                                    </Text>
+                            {renderAccountRow(
+                                "mail-outline",
+                                "Email",
+                                getEmail()
+                            )}
 
-                                    <Text className="text-darkBlue font-bold">
-                                        {getUsername()}
-                                    </Text>
-                                </View>
-                            </View>
+                            {renderAccountRow(
+                                "calendar-outline",
+                                "Account aangemaakt",
+                                formatCreatedAt(getCreatedAt())
+                            )}
 
-                            <View className="flex-row items-center mb-4">
-                                <View className="w-10 h-10 rounded-xl bg-lightPurple items-center justify-center mr-3">
-                                    <Ionicons name="mail-outline" size={22} color="#14213D" />
-                                </View>
-
-                                <View className="flex-1">
-                                    <Text className="text-darkBlue text-xs">
-                                        Email
-                                    </Text>
-
-                                    <Text className="text-darkBlue font-bold">
-                                        {getEmail()}
-                                    </Text>
-                                </View>
-                            </View>
-
-                            <View className="flex-row items-center mb-4">
-                                <View className="w-10 h-10 rounded-xl bg-lightPurple items-center justify-center mr-3">
-                                    <Ionicons name="calendar-outline" size={22} color="#14213D" />
-                                </View>
-
-                                <View className="flex-1">
-                                    <Text className="text-darkBlue text-xs">
-                                        Account aangemaakt
-                                    </Text>
-
-                                    <Text className="text-darkBlue font-bold">
-                                        {formatCreatedAt(getCreatedAt())}
-                                    </Text>
-                                </View>
-                            </View>
-
-                            <View className="flex-row items-center">
-                                <View className="w-10 h-10 rounded-xl bg-lightPurple items-center justify-center mr-3">
-                                    <Ionicons name="lock-closed-outline" size={22} color="#14213D" />
-                                </View>
-
-                                <View className="flex-1">
-                                    <Text className="text-darkBlue text-xs">
-                                        Wachtwoord
-                                    </Text>
-
-                                    <Text className="text-darkBlue font-bold">
-                                        ••••••••
-                                    </Text>
-                                </View>
-                            </View>
+                            {renderAccountRow(
+                                "lock-closed-outline",
+                                "Wachtwoord",
+                                "verborgen",
+                                "Wachtwoord: verborgen om veiligheidsredenen."
+                            )}
                         </View>
 
                         <TouchableOpacity
                             onPress={handleLogout}
                             activeOpacity={0.85}
-                            className="bg-darkBlue rounded-xl py-4 mt-6 items-center"
+                            className="bg-darkBlue rounded-xl py-4 mt-6 items-center min-h-12 justify-center"
+                            accessible={true}
+                            accessibilityRole="button"
+                            accessibilityLabel="Uitloggen"
+                            accessibilityHint="Logt je uit en brengt je terug naar het beginscherm."
                         >
                             <Text className="text-white font-bold">
                                 Uitloggen
@@ -724,7 +763,10 @@ export default function ProfileScreen({ navigation }) {
 
                 {editMode && (
                     <View className="bg-white rounded-2xl p-5 mt-5">
-                        <Text className="text-darkBlue text-lg font-bold mb-4">
+                        <Text
+                            className="text-darkBlue text-lg font-bold mb-4"
+                            accessibilityRole="header"
+                        >
                             Profiel bewerken
                         </Text>
 
@@ -736,7 +778,11 @@ export default function ProfileScreen({ navigation }) {
                             value={usernameInput}
                             onChangeText={setUsernameInput}
                             placeholder="Gebruikersnaam"
-                            className="border border-gray-300 rounded-xl px-4 py-3 mb-4 bg-white text-darkBlue"
+                            className="border border-gray-300 rounded-xl px-4 py-3 mb-4 bg-white text-darkBlue min-h-12"
+                            accessible={true}
+                            accessibilityLabel="Gebruikersnaam"
+                            accessibilityHint="Vul hier je gebruikersnaam in."
+                            returnKeyType="next"
                         />
 
                         <Text className="text-darkBlue text-sm font-bold mb-2">
@@ -749,7 +795,11 @@ export default function ProfileScreen({ navigation }) {
                             placeholder="Email"
                             keyboardType="email-address"
                             autoCapitalize="none"
-                            className="border border-gray-300 rounded-xl px-4 py-3 mb-4 bg-white text-darkBlue"
+                            className="border border-gray-300 rounded-xl px-4 py-3 mb-4 bg-white text-darkBlue min-h-12"
+                            accessible={true}
+                            accessibilityLabel="Emailadres"
+                            accessibilityHint="Vul hier je emailadres in."
+                            returnKeyType="next"
                         />
 
                         <Text className="text-darkBlue text-sm font-bold mb-2">
@@ -761,12 +811,23 @@ export default function ProfileScreen({ navigation }) {
                             onChangeText={setProfileImgInput}
                             placeholder="https://voorbeeld.nl/profielfoto.jpg"
                             autoCapitalize="none"
-                            className="border border-gray-300 rounded-xl px-4 py-3 mb-5 bg-white text-darkBlue"
+                            className="border border-gray-300 rounded-xl px-4 py-3 mb-5 bg-white text-darkBlue min-h-12"
+                            accessible={true}
+                            accessibilityLabel="Profielfoto URL"
+                            accessibilityHint="Vul een volledige link naar je profielfoto in."
+                            returnKeyType="next"
                         />
 
-                        <View className="h-[1px] bg-gray-200 mb-5" />
+                        <View
+                            className="h-[1px] bg-gray-200 mb-5"
+                            accessible={false}
+                            importantForAccessibility="no"
+                        />
 
-                        <Text className="text-darkBlue text-lg font-bold mb-3">
+                        <Text
+                            className="text-darkBlue text-lg font-bold mb-3"
+                            accessibilityRole="header"
+                        >
                             Wachtwoord wijzigen
                         </Text>
 
@@ -779,7 +840,11 @@ export default function ProfileScreen({ navigation }) {
                             onChangeText={setOldPasswordInput}
                             placeholder="Oud wachtwoord"
                             secureTextEntry
-                            className="border border-gray-300 rounded-xl px-4 py-3 mb-3 bg-white text-darkBlue"
+                            className="border border-gray-300 rounded-xl px-4 py-3 mb-3 bg-white text-darkBlue min-h-12"
+                            accessible={true}
+                            accessibilityLabel="Oud wachtwoord"
+                            accessibilityHint="Vul je oude wachtwoord in."
+                            returnKeyType="next"
                         />
 
                         <TextInput
@@ -787,7 +852,11 @@ export default function ProfileScreen({ navigation }) {
                             onChangeText={setNewPasswordInput}
                             placeholder="Nieuw wachtwoord"
                             secureTextEntry
-                            className="border border-gray-300 rounded-xl px-4 py-3 mb-3 bg-white text-darkBlue"
+                            className="border border-gray-300 rounded-xl px-4 py-3 mb-3 bg-white text-darkBlue min-h-12"
+                            accessible={true}
+                            accessibilityLabel="Nieuw wachtwoord"
+                            accessibilityHint="Vul je nieuwe wachtwoord in."
+                            returnKeyType="next"
                         />
 
                         <TextInput
@@ -795,17 +864,33 @@ export default function ProfileScreen({ navigation }) {
                             onChangeText={setRepeatPasswordInput}
                             placeholder="Herhaal nieuw wachtwoord"
                             secureTextEntry
-                            className="border border-gray-300 rounded-xl px-4 py-3 mb-5 bg-white text-darkBlue"
+                            className="border border-gray-300 rounded-xl px-4 py-3 mb-5 bg-white text-darkBlue min-h-12"
+                            accessible={true}
+                            accessibilityLabel="Herhaal nieuw wachtwoord"
+                            accessibilityHint="Vul je nieuwe wachtwoord nog een keer in."
+                            returnKeyType="done"
                         />
 
                         <TouchableOpacity
                             onPress={saveProfileChanges}
                             disabled={saving}
                             activeOpacity={0.85}
-                            className="bg-darkBlue rounded-xl py-4 items-center"
+                            className="bg-darkBlue rounded-xl py-4 items-center min-h-12 justify-center"
+                            accessible={true}
+                            accessibilityRole="button"
+                            accessibilityLabel={saving ? "Profiel wordt opgeslagen" : "Profiel opslaan"}
+                            accessibilityHint="Slaat je aangepaste profielgegevens op."
+                            accessibilityState={{
+                                disabled: saving,
+                                busy: saving,
+                            }}
                         >
                             {saving ? (
-                                <ActivityIndicator color="#ffffff" />
+                                <ActivityIndicator
+                                    color="#ffffff"
+                                    accessible={false}
+                                    importantForAccessibility="no"
+                                />
                             ) : (
                                 <Text className="text-white font-bold">
                                     Opslaan
@@ -817,7 +902,14 @@ export default function ProfileScreen({ navigation }) {
                             onPress={cancelEdit}
                             disabled={saving}
                             activeOpacity={0.85}
-                            className="bg-lightPurple rounded-xl py-4 items-center mt-3"
+                            className="bg-lightPurple rounded-xl py-4 items-center mt-3 min-h-12 justify-center"
+                            accessible={true}
+                            accessibilityRole="button"
+                            accessibilityLabel="Bewerken annuleren"
+                            accessibilityHint="Sluit de bewerkmodus zonder wijzigingen op te slaan."
+                            accessibilityState={{
+                                disabled: saving,
+                            }}
                         >
                             <Text className="text-darkBlue font-bold">
                                 Annuleren
