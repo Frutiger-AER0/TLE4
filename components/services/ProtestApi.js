@@ -5,14 +5,29 @@ const API_BASE_URL = "http://145.24.237.86:8000";
 const API_PATHS = {
     protests: "/protests",
 
+    protestById: (id) => `/protests/${id}`,
+
     protestDetails: [
         "/protest_details",
         "/protest-details",
     ],
 
+    protestDetailByProtestId: (id) => [
+        `/protest_details/${id}`,
+        `/protest-details/${id}`,
+        `/protests/${id}/details`,
+        `/protests/${id}/detail`,
+    ],
+
     protestProjects: [
         "/protest_projects",
         "/protest-projects",
+    ],
+
+    protestProjectByProtestId: (id) => [
+        `/protest_projects/${id}`,
+        `/protest-projects/${id}`,
+        `/protests/${id}/projects`,
     ],
 
     projects: "/projects",
@@ -32,12 +47,6 @@ const API_PATHS = {
     deleteUserProject: (id) => `/user_projects/${id}`,
 };
 
-/*
-    Dit bestand staat in:
-    components/services/ProtestApi.js
-
-    Daarom is dit pad correct.
-*/
 const fallbackImage = require("../../assets/demo1.jpeg");
 
 async function request(path, options = {}) {
@@ -89,6 +98,20 @@ async function requestOptional(pathOrPaths) {
     return [];
 }
 
+async function requestOptionalObject(pathOrPaths) {
+    const paths = Array.isArray(pathOrPaths) ? pathOrPaths : [pathOrPaths];
+
+    for (const path of paths) {
+        try {
+            return await request(path);
+        } catch (error) {
+            console.log(`Optional detail endpoint failed: ${path}`, error.message);
+        }
+    }
+
+    return null;
+}
+
 function normalizeApiList(data) {
     if (Array.isArray(data)) {
         return data;
@@ -109,6 +132,24 @@ function normalizeApiList(data) {
         data?.user_projects ||
         data?.userProjects ||
         []
+    );
+}
+
+function normalizeApiObject(data) {
+    if (!data) {
+        return null;
+    }
+
+    if (Array.isArray(data)) {
+        return data[0] || null;
+    }
+
+    return (
+        data?.data ||
+        data?.item ||
+        data?.result ||
+        data?.protest ||
+        data
     );
 }
 
@@ -202,7 +243,12 @@ function getImageSource(cardImg) {
         return { uri: `${API_BASE_URL}${cardImg}` };
     }
 
-    return { uri: `${API_BASE_URL}/${cardImg}` };
+    /*
+        Jouw backend geeft bij card_img nu een lange hash/bestandsnaam terug.
+        Als jouw backend images via /uploads serveert, is dit correct.
+        Als images via een andere map worden geserveerd, moet alleen deze regel worden aangepast.
+    */
+    return { uri: `${API_BASE_URL}/uploads/${cardImg}` };
 }
 
 function getFirstItem(value) {
@@ -235,6 +281,85 @@ function findByForeignKey(items, key, id) {
     });
 }
 
+function mergeProtestWithDetail(protest, detailData) {
+    const detail = normalizeApiObject(detailData);
+
+    if (!detail) {
+        return protest;
+    }
+
+    return {
+        ...protest,
+        ...detail,
+
+        id: protest.id || detail.id,
+
+        name:
+            detail.name ||
+            protest.name,
+
+        subtitle:
+            detail.subtitle ||
+            protest.subtitle,
+
+        description:
+            detail.description ||
+            protest.description,
+
+        location:
+            detail.location ||
+            protest.location,
+
+        predicted_members:
+            detail.predicted_members ??
+            protest.predicted_members,
+
+        card_img:
+            detail.card_img ||
+            protest.card_img,
+
+        latitude:
+            detail.latitude ||
+            protest.latitude,
+
+        longitude:
+            detail.longitude ||
+            protest.longitude,
+
+        created_at:
+            protest.created_at ||
+            detail.created_at,
+
+        updated_at:
+            detail.updated_at ||
+            protest.updated_at,
+
+        protest_details:
+            detail.protest_details ||
+            detail.protest_detail ||
+            protest.protest_details ||
+            protest.protest_detail,
+
+        protest_projects:
+            detail.protest_projects ||
+            detail.protest_project ||
+            protest.protest_projects ||
+            protest.protest_project,
+
+        projects:
+            detail.projects ||
+            protest.projects,
+
+        topic:
+            detail.topic ||
+            protest.topic,
+
+        tags:
+            detail.tags ||
+            protest.tags,
+    };
+}
+
 function enrichProtestRecord(
     protest,
     protestDetails,
@@ -245,25 +370,49 @@ function enrichProtestRecord(
 ) {
     const detail =
         getFirstItem(findByForeignKey(protestDetails, "protest_id", protest.id)) ||
+        getFirstItem(protest.protest_details) ||
+        protest.protest_detail ||
         null;
 
     const linkedProtestProjects =
-        findByForeignKey(protestProjects, "protest_id", protest.id) || [];
+        findByForeignKey(protestProjects, "protest_id", protest.id);
 
-    const firstProtestProject = getFirstItem(linkedProtestProjects);
+    const fallbackProtestProjects = Array.isArray(protest.protest_projects)
+        ? protest.protest_projects
+        : protest.protest_project
+            ? [protest.protest_project]
+            : [];
+
+    const allLinkedProtestProjects =
+        linkedProtestProjects.length > 0
+            ? linkedProtestProjects
+            : fallbackProtestProjects;
+
+    const firstProtestProject = getFirstItem(allLinkedProtestProjects);
 
     const project =
         firstProtestProject
-            ? findById(projects, firstProtestProject.project_id)
-            : null;
+            ? (
+                firstProtestProject.project ||
+                findById(projects, firstProtestProject.project_id)
+            )
+            : (
+                protest.project ||
+                getFirstItem(protest.projects) ||
+                null
+            );
 
     const projectDetail =
         firstProtestProject
-            ? getFirstItem(
-                findByForeignKey(
-                    protestProjectDetails,
-                    "protest_project_id",
-                    firstProtestProject.id
+            ? (
+                getFirstItem(firstProtestProject.protest_project_details) ||
+                firstProtestProject.protest_project_detail ||
+                getFirstItem(
+                    findByForeignKey(
+                        protestProjectDetails,
+                        "protest_project_id",
+                        firstProtestProject.id
+                    )
                 )
             )
             : null;
@@ -296,6 +445,48 @@ function enrichProtestRecord(
 
         user_project: userProject || null,
     };
+}
+
+function inferTopic(record, protest) {
+    return (
+        record?.topic?.name ||
+        protest?.topic?.name ||
+        record?.topic ||
+        protest?.topic ||
+        getFirstItem(record?.topics)?.name ||
+        getFirstItem(protest?.topics)?.name ||
+        "Algemeen"
+    );
+}
+
+function inferProjectName(project, record, protest) {
+    const value =
+        project?.name ||
+        record?.project_name ||
+        record?.projectName ||
+        record?.type ||
+        record?.assignment_type ||
+        protest?.project_name ||
+        protest?.type ||
+        null;
+
+    if (!value) {
+        return "Algemeen";
+    }
+
+    return value;
+}
+
+function inferStartTime(protestDetail, record, protest) {
+    return (
+        protestDetail?.start_time ||
+        protestDetail?.startTime ||
+        record?.start_time ||
+        record?.startTime ||
+        protest?.start_time ||
+        protest?.startTime ||
+        null
+    );
 }
 
 export function normalizeProtest(record) {
@@ -334,11 +525,7 @@ export function normalizeProtest(record) {
         record?.pivot ||
         null;
 
-    const startTime =
-        protestDetail?.start_time ||
-        record?.start_time ||
-        protest?.start_time ||
-        null;
+    const startTime = inferStartTime(protestDetail, record, protest);
 
     const cardImg =
         protest?.card_img ||
@@ -346,18 +533,33 @@ export function normalizeProtest(record) {
         null;
 
     const predictedMembers =
-        protest?.predicted_members ||
-        record?.predicted_members ||
+        protest?.predicted_members ??
+        record?.predicted_members ??
         null;
 
-    const projectName =
-        project?.name ||
-        record?.project_name ||
-        record?.type ||
-        "Project";
+    const projectName = inferProjectName(project, record, protest);
+
+    const title =
+        protest?.name ||
+        record?.name ||
+        "Naam demonstratie";
+
+    const subtitle =
+        protest?.subtitle ||
+        record?.subtitle ||
+        (projectName !== "Algemeen" ? projectName : "Demonstratie");
+
+    const description =
+        protest?.description ||
+        record?.description ||
+        protest?.subtitle ||
+        record?.subtitle ||
+        "Geen beschrijving beschikbaar.";
 
     return {
         id: protest?.id,
+
+        raw: record,
 
         protestProjectId:
             protestProject?.id ||
@@ -370,20 +572,11 @@ export function normalizeProtest(record) {
             record?.user_project_id ||
             null,
 
-        title:
-            protest?.name ||
-            record?.name ||
-            "Naam demonstratie",
+        title,
 
-        subtitle:
-            projectName === "Project"
-                ? "Demonstratie"
-                : projectName,
+        subtitle,
 
-        description:
-            protest?.description ||
-            record?.description ||
-            "Geen beschrijving beschikbaar.",
+        description,
 
         location:
             protest?.location ||
@@ -423,12 +616,7 @@ export function normalizeProtest(record) {
 
         image: getImageSource(cardImg),
 
-        topic:
-            record?.topic?.name ||
-            protest?.topic?.name ||
-            record?.topic ||
-            protest?.topic ||
-            "Algemeen",
+        topic: inferTopic(record, protest),
 
         tags:
             record?.tags ||
@@ -438,25 +626,29 @@ export function normalizeProtest(record) {
         link:
             protestDetail?.link ||
             record?.link ||
+            protest?.link ||
             null,
 
         why:
             protest?.description ||
             record?.description ||
+            protest?.subtitle ||
+            record?.subtitle ||
             "Informatie over deze demonstratie.",
 
         actionTitle:
-            projectName && projectName !== "Project"
+            projectName && projectName !== "Algemeen"
                 ? `Kom in actie met ${projectName}!`
                 : "Kom in actie!",
 
         actionDescription:
             protestProjectDetail?.steps ||
             project?.description ||
+            description ||
             "Kies een actie en draag bij aan deze demonstratie.",
 
         projectLabel:
-            projectName && projectName !== "Project"
+            projectName && projectName !== "Algemeen"
                 ? `${projectName} - Low effort`
                 : "High Impact - Low effort",
 
@@ -471,16 +663,24 @@ export function normalizeProtest(record) {
     };
 }
 
+async function fetchDetailedProtest(protest) {
+    const detailData = await requestOptionalObject(
+        API_PATHS.protestById(protest.id)
+    );
+
+    return mergeProtestWithDetail(protest, detailData);
+}
+
 export async function fetchProtests() {
+    const protests = await requestOptional(API_PATHS.protests);
+
     const [
-        protests,
         protestDetails,
         protestProjects,
         projects,
         protestProjectDetails,
         userProjects,
     ] = await Promise.all([
-        requestOptional(API_PATHS.protests),
         requestOptional(API_PATHS.protestDetails),
         requestOptional(API_PATHS.protestProjects),
         requestOptional(API_PATHS.projects),
@@ -488,7 +688,13 @@ export async function fetchProtests() {
         requestOptional(API_PATHS.userProjects),
     ]);
 
-    const enriched = protests.map((protest) => {
+    const protestsWithDetails = await Promise.all(
+        protests.map(async (protest) => {
+            return fetchDetailedProtest(protest);
+        })
+    );
+
+    const enriched = protestsWithDetails.map((protest) => {
         return enrichProtestRecord(
             protest,
             protestDetails,
@@ -499,7 +705,23 @@ export async function fetchProtests() {
         );
     });
 
-    return enriched.map(normalizeProtest);
+    const normalized = enriched.map(normalizeProtest);
+
+    console.log("fetchProtests count:", normalized.length);
+    console.log(
+        "fetchProtests normalized:",
+        normalized.map((item) => ({
+            id: item.id,
+            title: item.title,
+            subtitle: item.subtitle,
+            type: item.type,
+            topic: item.topic,
+            date: item.date,
+            startTimeRaw: item.startTimeRaw,
+        }))
+    );
+
+    return normalized;
 }
 
 export async function fetchUserProjects() {
