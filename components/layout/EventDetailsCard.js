@@ -1,64 +1,96 @@
 import React from "react";
-import {View, Text, TouchableOpacity} from "react-native";
-import {Ionicons} from "@expo/vector-icons";
-// import MapScreen from "../../screens/MapScreen";
-import {useNavigation} from "@react-navigation/native";
+import { View, Text, TouchableOpacity, Alert } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { saveUserProject } from "../services/ProtestApi";
 
-export default function EventDetailsCard({locationId = "rotterdam-schouwburgplein"}) {
+// Functie om de datum en tijd te formatteren
+const formatDateTime = (isoString) => {
+    // FIX: Als er geen datum/tijd uit de database komt, gebruik een standaard fallback.
+    if (!isoString) {
+        return { formattedDate: '15 Mei 2026', formattedTime: '18:30' };
+    }
+    
+    const date = new Date(isoString);
+    // Extra check voor ongeldige datum
+    if (isNaN(date.getTime())) {
+        return { formattedDate: '15 Mei 2026', formattedTime: '18:30' };
+    }
+
+    const dateOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+    const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: false };
+    
+    const formattedDate = date.toLocaleDateString('nl-NL', dateOptions);
+    const formattedTime = date.toLocaleTimeString('nl-NL', timeOptions);
+    
+    return { formattedDate, formattedTime };
+};
+
+// Functie om het protest op te slaan in de in-app agenda
+async function handleAddToAgenda(protest) {
+    if (!protest?.protestProjectId) {
+        Alert.alert("Fout", "Kan dit project niet toevoegen, project ID ontbreekt.");
+        return;
+    }
+
+    try {
+        const MOCK_USER_ID = 1;
+        await saveUserProject(protest.protestProjectId, MOCK_USER_ID);
+        Alert.alert("Opgeslagen", `${protest.title} is toegevoegd aan 'Mijn Agenda'.`);
+    } catch (error) {
+        console.error("Error saving to agenda:", error);
+        Alert.alert("Fout", "Kon het protest niet toevoegen aan de agenda.");
+    }
+}
+
+export default function EventDetailsCard({ protest }) {
     const navigation = useNavigation();
+    if (!protest) return null;
+
+    const { formattedDate, formattedTime } = formatDateTime(protest.start_time || protest.startTimeRaw);
+
     return (
-        <View className="p-5 w-full">
-            {/* Bovenste gedeelte: Titel en nieuwe link */}
+        <View className="bg-lightPurple p-5 w-full">
             <View>
                 <Text className="text-darkBlue text-2xl font-bold">
-                    Waarom demonstreren we?
+                    Waar demonstreren we?
                 </Text>
-                <TouchableOpacity className="mt-2 flex-row items-center">
-                    <Text className="text-blue underline font-semibold text-base mr-1">
-                        Informatie over de demonstratie
-                    </Text>
-                    <Ionicons name="arrow-forward" size={16} color="#0047AB"/>
-                </TouchableOpacity>
             </View>
 
-            {/* Onderste gedeelte: 2 Rechthoeken naast elkaar (met meer ruimte bovenaan) */}
             <View className="flex-row justify-between mt-8">
-
-                {/* Kaart 1: Tijd & Agenda */}
                 <View className="flex-1 bg-darkBlue rounded-2xl p-3 mr-2 justify-between">
                     <View>
-                        {/* Icoon staat nu boven de tekst */}
-                        <Ionicons name="calendar-outline" size={24} color="white"/>
-                        <Text className="text-white font-bold text-base mt-2">15 Mei 2026</Text>
-                        <Text className="text-white text-sm mt-1 italic">Aanvang: 18:30</Text>
-                        <Text className="text-white text-sm mt-1 italic">Start Mars: 19:00</Text>
+                        <Ionicons name="calendar-outline" size={24} color="white" />
+                        <Text className="text-white font-bold text-base mt-2">{formattedDate}</Text>
+                        <Text className="text-white text-sm mt-1 italic">Aanvang: {formattedTime}</Text>
                     </View>
-                    <TouchableOpacity className="mt-2 flex-row items-center">
+                    <TouchableOpacity
+                        onPress={() => handleAddToAgenda(protest)}
+                        className="mt-2 flex-row items-center"
+                    >
                         <Text className="text-white text-sm underline font-semibold mr-1">
                             Agenda toevoegen
                         </Text>
-                        <Ionicons name="arrow-forward" size={16} color="white"/>
+                        <Ionicons name="arrow-forward" size={16} color="white" />
                     </TouchableOpacity>
                 </View>
 
-                {/* Kaart 2: Locatie & Kaart */}
                 <View className="flex-1 bg-darkBlue rounded-2xl p-3 ml-2 justify-between">
                     <View>
-                        {/* Icoon staat nu boven de tekst */}
-                        <Ionicons name="location-outline" size={24} color="white"/>
-                        <Text className="text-white font-bold text-base mt-2">Schouwburgplein</Text>
-                        <Text className="text-white text-sm mt-1">Rotterdam</Text>
+                        <Ionicons name="location-outline" size={24} color="white" />
+                        <Text className="text-white font-bold text-base mt-2">{protest.location}</Text>
+                        <Text className="text-white text-sm mt-1">{protest.city || 'Stad onbekend'}</Text>
                     </View>
-                    <TouchableOpacity
-                        onPress={() => navigation.navigate("map", {id: locationId})}
+                    <TouchableOpacity 
+                        onPress={() => navigation.navigate("map", { item: protest })}
                         className="mt-2 flex-row items-center"
-                    ><Text className="text-white text-sm underline font-semibold mr-1">
-                        Kaart bekijken
-                    </Text>
-                        <Ionicons name="arrow-forward" size={16} color="white"/>
+                    >
+                        <Text className="text-white text-sm underline font-semibold mr-1">
+                            Kaart bekijken
+                        </Text>
+                        <Ionicons name="arrow-forward" size={16} color="white" />
                     </TouchableOpacity>
                 </View>
-
             </View>
         </View>
     );
