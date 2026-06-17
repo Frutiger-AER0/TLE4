@@ -1,10 +1,10 @@
 // components/layout/AppNavigator.js
 
-import React, {useContext} from "react";
-import {View, ActivityIndicator} from "react-native";
-import {createBottomTabNavigator} from "@react-navigation/bottom-tabs";
-import {createStackNavigator} from "@react-navigation/stack";
-import {Ionicons} from "@expo/vector-icons";
+import React, { useContext } from "react";
+import { View, ActivityIndicator, Text } from "react-native";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createStackNavigator } from "@react-navigation/stack";
+import { Ionicons } from "@expo/vector-icons";
 
 import ActionScreen from "../../screens/ActionScreen";
 import DonationScreen from "../../screens/DonationScreen";
@@ -15,7 +15,7 @@ import AppHeader from "./AppHeader";
 import DetailScreen from "../../screens/DetailScreen";
 import AgendaScreen from "../../screens/AgendaScreen";
 import ProfileScreen from "../../screens/ProfileScreen";
-import {AuthContext} from "../../context/AuthContext";
+import { AuthContext } from "../../context/AuthContext";
 
 const Tab = createBottomTabNavigator();
 const ActionStack = createStackNavigator();
@@ -129,8 +129,8 @@ function AgendaStackScreen() {
     );
 }
 
-export default function AppNavigator({route}) {
-    const {user, isLoading} = useContext(AuthContext);
+export default function AppNavigator({ route }) {
+    const { user, isLoading } = useContext(AuthContext);
 
     const isAdmin =
         route?.params?.isAdmin === true ||
@@ -141,8 +141,22 @@ export default function AppNavigator({route}) {
 
     if (isLoading) {
         return (
-            <View className="flex-1 bg-offWhite items-center justify-center">
-                <ActivityIndicator size="large" color="#14213D"/>
+            <View
+                className="flex-1 bg-offWhite items-center justify-center"
+                accessible={true}
+                accessibilityRole="progressbar"
+                accessibilityLabel="De app wordt geladen"
+            >
+                <ActivityIndicator
+                    size="large"
+                    color="#14213D"
+                    accessible={false}
+                    importantForAccessibility="no"
+                />
+
+                <Text className="text-darkBlue mt-3 font-semibold">
+                    App laden...
+                </Text>
             </View>
         );
     }
@@ -151,9 +165,9 @@ export default function AppNavigator({route}) {
         <View className="flex-1 bg-offWhite">
             <Tab.Navigator
                 initialRouteName="search"
-                screenOptions={({route}) => ({
+                screenOptions={({ route }) => ({
                     headerShown: true,
-                    header: () => <AppHeader/>,
+                    header: () => <AppHeader />,
                     headerStyle: {
                         backgroundColor: "#14213D",
                         elevation: 0,
@@ -166,6 +180,7 @@ export default function AppNavigator({route}) {
                     tabBarActiveTintColor: "#F4C430",
                     tabBarInactiveTintColor: "#F8F9FA",
                     tabBarAccessibilityLabel: getTabAccessibilityLabel(route.name),
+                    tabBarHideOnKeyboard: true,
                     tabBarStyle: {
                         backgroundColor: "#14213D",
                         height: 90,
@@ -178,7 +193,7 @@ export default function AppNavigator({route}) {
                     tabBarLabelStyle: {
                         fontSize: 10,
                     },
-                    tabBarIcon: ({focused, color, size}) => {
+                    tabBarIcon: ({ focused, color, size }) => {
                         const iconName = getTabIconName(route.name, focused);
 
                         return (
@@ -187,6 +202,7 @@ export default function AppNavigator({route}) {
                                 size={size}
                                 color={color}
                                 accessible={false}
+                                importantForAccessibility="no"
                             />
                         );
                     },
@@ -199,7 +215,7 @@ export default function AppNavigator({route}) {
                         title: "Ontdek",
                     }}
                 />
-                
+
                 <Tab.Screen
                     name="calendar"
                     component={AgendaStackScreen}

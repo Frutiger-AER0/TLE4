@@ -412,13 +412,23 @@ export default function HomeScreen() {
         );
     }
 
+    function getCardAccessibilityLabel(item) {
+        return `${item.title}. ${item.date} om ${item.timeStart}. Locatie: ${item.location}. Type: ${item.type}. Tik om preview te openen.`;
+    }
+
     function renderInfoPill(icon, text) {
         return (
             <View style={tw`flex-row items-center mr-3 mb-2`}>
-                <Ionicons name={icon} size={14} color="#842BD7" />
+                <Ionicons
+                    name={icon}
+                    size={14}
+                    color="#842BD7"
+                    accessible={false}
+                    importantForAccessibility="no"
+                />
 
                 <Text
-                    numberOfLines={1}
+                    numberOfLines={2}
                     style={tw`text-[#0A1A3A] text-xs ml-1 max-w-32`}
                 >
                     {text}
@@ -433,25 +443,44 @@ export default function HomeScreen() {
                 activeOpacity={0.9}
                 onPress={() => openPreview(item)}
                 style={tw`mb-5 bg-[#E6D8F5] rounded-2xl overflow-hidden`}
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel={getCardAccessibilityLabel(item)}
+                accessibilityHint="Opent een korte preview van deze demonstratie."
             >
-                <View>
+                <View accessible={false}>
                     <Image
                         source={item.image}
                         style={tw`w-full h-40 bg-gray-200`}
                         resizeMode="cover"
+                        accessible={true}
+                        accessibilityRole="image"
+                        accessibilityLabel={`Afbeelding van ${item.title}`}
                     />
 
                     <TouchableOpacity
                         onPress={() => openPreview(item)}
                         activeOpacity={0.85}
-                        style={tw`absolute top-3 right-3 bg-[#0057B8] rounded-xl p-2`}
+                        style={tw`absolute top-3 right-3 bg-[#0057B8] rounded-xl p-3`}
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Bekijk preview van ${item.title}`}
+                        accessibilityHint="Opent de preview van deze demonstratie."
                     >
-                        <Ionicons name="bookmark-outline" size={22} color="white" />
+                        <Ionicons
+                            name="bookmark-outline"
+                            size={22}
+                            color="white"
+                            accessible={false}
+                            importantForAccessibility="no"
+                        />
                     </TouchableOpacity>
 
                     {item.topic && (
                         <View
                             style={tw`absolute bottom-3 left-3 bg-[#F4C430] rounded-full px-3 py-1`}
+                            accessible={true}
+                            accessibilityLabel={`Onderwerp: ${item.topic}`}
                         >
                             <Text style={tw`text-[#0A1A3A] text-xs font-bold`}>
                                 {item.topic}
@@ -464,14 +493,15 @@ export default function HomeScreen() {
                     <View style={tw`flex-row items-start justify-between`}>
                         <View style={tw`flex-1 pr-3`}>
                             <Text
-                                numberOfLines={2}
+                                numberOfLines={3}
                                 style={tw`text-[#0A1A3A] font-bold text-lg`}
+                                accessibilityRole="header"
                             >
                                 {item.title}
                             </Text>
 
                             <Text
-                                numberOfLines={1}
+                                numberOfLines={2}
                                 style={tw`text-[#0A1A3A] italic text-sm mt-1`}
                             >
                                 {item.subtitle}
@@ -482,11 +512,13 @@ export default function HomeScreen() {
                             name="chevron-forward"
                             size={24}
                             color="#0A1A3A"
+                            accessible={false}
+                            importantForAccessibility="no"
                         />
                     </View>
 
                     <Text
-                        numberOfLines={2}
+                        numberOfLines={3}
                         style={tw`text-[#0A1A3A] text-sm mt-3 leading-5`}
                     >
                         {item.description}
@@ -514,18 +546,35 @@ export default function HomeScreen() {
             <View>
                 <TouchableOpacity
                     onPress={goBackToActions}
-                    style={tw`flex-row items-center mt-5 mb-4`}
+                    style={tw`flex-row items-center mt-5 mb-4 min-h-12`}
                     activeOpacity={0.8}
+                    accessible={true}
+                    accessibilityRole="button"
+                    accessibilityLabel="Terug naar acties"
+                    accessibilityHint="Gaat terug naar de pagina waar je een actietype kunt kiezen."
                 >
-                    <Ionicons name="arrow-back" size={30} color="#0A1A3A" />
+                    <Ionicons
+                        name="arrow-back"
+                        size={30}
+                        color="#0A1A3A"
+                        accessible={false}
+                        importantForAccessibility="no"
+                    />
 
                     <Text style={tw`text-[#0A1A3A] text-2xl font-bold ml-3`}>
                         Terug
                     </Text>
                 </TouchableOpacity>
 
-                <View style={tw`bg-[#E6D8F5] rounded-2xl p-4 mb-4`}>
-                    <Text style={tw`text-[#0A1A3A] text-xl font-bold`}>
+                <View
+                    style={tw`bg-[#E6D8F5] rounded-2xl p-4 mb-4`}
+                    accessible={true}
+                    accessibilityLabel="Introductie. Zoek een protest dat bij jouw doel past. Bekijk de details, datum, locatie en hoe je creatief kunt bijdragen."
+                >
+                    <Text
+                        style={tw`text-[#0A1A3A] text-xl font-bold`}
+                        accessibilityRole="header"
+                    >
                         Demonstraties vinden
                     </Text>
 
@@ -541,23 +590,43 @@ export default function HomeScreen() {
                         placeholderTextColor="#827095"
                         value={search}
                         onChangeText={setSearch}
-                        style={tw`flex-1 bg-[#E6D8F5] rounded-xl px-4 py-3 text-[#0A1A3A]`}
+                        style={tw`flex-1 bg-[#E6D8F5] rounded-xl px-4 py-3 text-[#0A1A3A] min-h-12`}
+                        accessible={true}
+                        accessibilityLabel="Zoekveld demonstraties"
+                        accessibilityHint="Typ een naam, locatie of onderwerp om demonstraties te zoeken."
+                        returnKeyType="search"
                     />
 
                     <TouchableOpacity
                         onPress={() => setFilterVisible(true)}
                         activeOpacity={0.85}
-                        style={tw`ml-2 bg-[#0057B8] p-3 rounded-xl`}
+                        style={tw`ml-2 bg-[#0057B8] p-3 rounded-xl min-w-12 min-h-12 items-center justify-center`}
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel="Filters openen"
+                        accessibilityHint="Opent de filteropties voor onderwerp, type bijdrage en moment."
                     >
-                        <Ionicons name="filter" size={22} color="white" />
+                        <Ionicons
+                            name="filter"
+                            size={22}
+                            color="white"
+                            accessible={false}
+                            importantForAccessibility="no"
+                        />
                     </TouchableOpacity>
                 </View>
 
                 {hasActiveFilters() && (
-                    <View style={tw`flex-row flex-wrap mt-3`}>
+                    <View
+                        style={tw`flex-row flex-wrap mt-3`}
+                        accessible={true}
+                        accessibilityLabel="Actieve filters"
+                    >
                         {search.trim().length > 0 && (
                             <View
                                 style={tw`bg-[#F4C430] rounded-full px-3 py-1 mr-2 mb-2`}
+                                accessible={true}
+                                accessibilityLabel={`Actieve zoekterm: ${search}`}
                             >
                                 <Text style={tw`text-[#0A1A3A] text-xs font-bold`}>
                                     Zoek: {search}
@@ -568,6 +637,8 @@ export default function HomeScreen() {
                         {selectedTopic && (
                             <View
                                 style={tw`bg-[#F4C430] rounded-full px-3 py-1 mr-2 mb-2`}
+                                accessible={true}
+                                accessibilityLabel={`Actief onderwerpfilter: ${selectedTopic}`}
                             >
                                 <Text style={tw`text-[#0A1A3A] text-xs font-bold`}>
                                     {selectedTopic}
@@ -578,6 +649,8 @@ export default function HomeScreen() {
                         {selectedAssignment !== "Alle" && (
                             <View
                                 style={tw`bg-[#F4C430] rounded-full px-3 py-1 mr-2 mb-2`}
+                                accessible={true}
+                                accessibilityLabel={`Actief typefilter: ${selectedAssignment}`}
                             >
                                 <Text style={tw`text-[#0A1A3A] text-xs font-bold`}>
                                     {selectedAssignment}
@@ -588,6 +661,8 @@ export default function HomeScreen() {
                         {selectedMoment !== "Alle" && (
                             <View
                                 style={tw`bg-[#F4C430] rounded-full px-3 py-1 mr-2 mb-2`}
+                                accessible={true}
+                                accessibilityLabel={`Actief momentfilter: ${selectedMoment}`}
                             >
                                 <Text style={tw`text-[#0A1A3A] text-xs font-bold`}>
                                     {selectedMoment}
@@ -597,7 +672,11 @@ export default function HomeScreen() {
 
                         <TouchableOpacity
                             onPress={clearFilters}
-                            style={tw`bg-[#0A1A3A] rounded-full px-3 py-1 mb-2`}
+                            style={tw`bg-[#0A1A3A] rounded-full px-4 py-2 mb-2 min-h-11 items-center justify-center`}
+                            accessible={true}
+                            accessibilityRole="button"
+                            accessibilityLabel="Filters wissen"
+                            accessibilityHint="Wist de zoekterm en alle actieve filters."
                         >
                             <Text style={tw`text-white text-xs font-bold`}>
                                 Wissen
@@ -606,8 +685,15 @@ export default function HomeScreen() {
                     </View>
                 )}
 
-                <View style={tw`flex-row items-center justify-between mt-5 mb-3`}>
-                    <Text style={tw`text-[#0A1A3A] text-xl font-bold`}>
+                <View
+                    style={tw`flex-row items-center justify-between mt-5 mb-3`}
+                    accessible={true}
+                    accessibilityLabel={`${filteredProtests.length} demonstraties gevonden`}
+                >
+                    <Text
+                        style={tw`text-[#0A1A3A] text-xl font-bold`}
+                        accessibilityRole="header"
+                    >
                         Beschikbare demonstraties
                     </Text>
 
@@ -620,7 +706,11 @@ export default function HomeScreen() {
                     <TouchableOpacity
                         onPress={loadProtests}
                         activeOpacity={0.85}
-                        style={tw`bg-red-100 rounded-xl p-4 mb-4`}
+                        style={tw`bg-red-100 rounded-xl p-4 mb-4 min-h-12`}
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Foutmelding: ${errorText}`}
+                        accessibilityHint="Tik om opnieuw te proberen demonstraties te laden."
                     >
                         <Text style={tw`text-red-700 font-bold`}>
                             {errorText}
@@ -638,8 +728,18 @@ export default function HomeScreen() {
     function renderEmptyList() {
         if (loading) {
             return (
-                <View style={tw`bg-[#E6D8F5] rounded-xl p-5 items-center`}>
-                    <ActivityIndicator size="large" color="#0A1A3A" />
+                <View
+                    style={tw`bg-[#E6D8F5] rounded-xl p-5 items-center`}
+                    accessible={true}
+                    accessibilityRole="progressbar"
+                    accessibilityLabel="Demonstraties worden geladen"
+                >
+                    <ActivityIndicator
+                        size="large"
+                        color="#0A1A3A"
+                        accessible={false}
+                        importantForAccessibility="no"
+                    />
 
                     <Text style={tw`text-[#0A1A3A] mt-3 font-semibold`}>
                         Demonstraties laden...
@@ -649,8 +749,15 @@ export default function HomeScreen() {
         }
 
         return (
-            <View style={tw`bg-[#E6D8F5] rounded-xl p-5`}>
-                <Text style={tw`text-[#0A1A3A] font-bold`}>
+            <View
+                style={tw`bg-[#E6D8F5] rounded-xl p-5`}
+                accessible={true}
+                accessibilityLabel="Geen demonstraties gevonden. Pas je zoekopdracht of filters aan."
+            >
+                <Text
+                    style={tw`text-[#0A1A3A] font-bold`}
+                    accessibilityRole="header"
+                >
                     Geen demonstraties gevonden.
                 </Text>
 
@@ -661,7 +768,11 @@ export default function HomeScreen() {
 
                 <TouchableOpacity
                     onPress={clearFilters}
-                    style={tw`bg-[#0A1A3A] rounded-xl py-3 mt-4 items-center`}
+                    style={tw`bg-[#0A1A3A] rounded-xl py-3 mt-4 items-center min-h-12 justify-center`}
+                    accessible={true}
+                    accessibilityRole="button"
+                    accessibilityLabel="Filters wissen"
+                    accessibilityHint="Wist alle filters en toont opnieuw alle beschikbare demonstraties."
                 >
                     <Text style={tw`text-white font-bold`}>
                         Filters wissen
@@ -686,8 +797,10 @@ export default function HomeScreen() {
                         refreshing={refreshing}
                         onRefresh={refreshProtests}
                         tintColor="#0A1A3A"
+                        accessibilityLabel="Demonstraties opnieuw laden"
                     />
                 }
+                accessibilityLabel="Lijst met beschikbare demonstraties"
             />
 
             <PreviewModal

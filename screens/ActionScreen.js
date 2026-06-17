@@ -21,7 +21,7 @@ const ACTION_DETAILS = {
             },
             {
                 header: "Zelf maken",
-                text: "Heb je zelf stickers gemaakt? Stuur ze naar ons op. Wij zorgen dat ze tijdens de demonstratie worden verspreid.",
+                text: "Heb je zelf stickers gemaakt? Stuur ze naar ons op. Wij zorgen dat het tijdens de demonstratie wordt verspreid.",
             },
         ],
     },
@@ -75,10 +75,16 @@ export default function ActionScreen() {
     }
 
     return (
-        <View className="flex-1 bg-offWhite">
+        <View
+            className="flex-1 bg-offWhite"
+            accessible={false}
+        >
             <ScrollView
                 className="flex-1 bg-offWhite"
                 showsVerticalScrollIndicator={false}
+                contentInsetAdjustmentBehavior="automatic"
+                accessibilityLabel="Actiepagina"
+                accessibilityHint="Op deze pagina kies je hoe je impact wilt maken."
                 contentContainerStyle={{
                     paddingTop: 20,
                     paddingBottom: 120,
@@ -92,6 +98,7 @@ export default function ActionScreen() {
                 >
                     <Text
                         className="text-darkBlue"
+                        accessibilityRole="header"
                         style={{
                             fontSize: 22,
                             fontWeight: "700",
@@ -101,12 +108,19 @@ export default function ActionScreen() {
                         Maak impact op jouw manier
                     </Text>
 
-                    <View className="flex flex-col">
+                    <View
+                        className="flex flex-col"
+                        accessibilityLabel="Lijst met manieren om bij te dragen"
+                    >
                         <ActionCard
                             image={require("../assets/tle4-stickers.jpg")}
                             title="Stickers ontwerpen"
                             description="Jouw ontwerp, onze productie. Verspreid de boodschap met stickers."
                             buttonText="Bekijk projecten"
+                            accessibilityLabel="Stickers ontwerpen"
+                            accessibilityHint="Bekijk demonstraties waarbij je stickers kunt ontwerpen."
+                            infoAccessibilityLabel="Meer informatie over stickers ontwerpen"
+                            infoAccessibilityHint="Opent uitleg over hoe stickers ontwerpen werkt."
                             onPress={() => goToProject("Stickers")}
                             onPressInfo={() => openInfoModal("stickers")}
                         />
@@ -116,6 +130,10 @@ export default function ActionScreen() {
                             title="Spandoeken ontwerpen"
                             description="Help mee met een spandoek. Lever een ontwerp aan. Wij regelen de rest."
                             buttonText="Bekijk projecten"
+                            accessibilityLabel="Spandoeken ontwerpen"
+                            accessibilityHint="Bekijk demonstraties waarbij je spandoeken kunt ontwerpen."
+                            infoAccessibilityLabel="Meer informatie over spandoeken ontwerpen"
+                            infoAccessibilityHint="Opent uitleg over hoe spandoeken ontwerpen werkt."
                             onPress={() => goToProject("Spandoek")}
                             onPressInfo={() => openInfoModal("spandoeken")}
                         />
@@ -125,6 +143,8 @@ export default function ActionScreen() {
                             title="Donaties"
                             description="Draag bij aan de beweging. Jouw donatie komt 100% terecht waar die het meeste impact maakt, bij jouw doel."
                             buttonText="Doneer"
+                            accessibilityLabel="Donaties"
+                            accessibilityHint="Ga naar de donatiepagina."
                             onPress={goToDonation}
                         />
                     </View>
