@@ -1,10 +1,13 @@
 import React, {useEffect, useState} from 'react';
 import MapView, {Marker} from 'react-native-maps';
-import {StyleSheet, View, Text, ActivityIndicator} from 'react-native';
+import {StyleSheet, View, Text, ActivityIndicator, TouchableOpacity} from 'react-native';
 import * as Location from 'expo-location';
 import {fetchUserProjects} from "../components/services/ProtestApi";
+import {Ionicons} from "@expo/vector-icons";
+import {useNavigation} from "@react-navigation/native";
 
 export default function MapScreen({route}) {
+    const navigation = useNavigation();
     const targetId = route?.params?.id || null;
     const item = route?.params?.item || null;
     const [location, setLocation] = useState(null);
@@ -118,6 +121,18 @@ export default function MapScreen({route}) {
                     )
                 })}
             </MapView>
+
+            <View
+                className="left-4 right-4 mt-8 flex-row w-full absolute justify-between items-center"
+            >
+                <TouchableOpacity
+                    onPress={() => navigation.goBack()}
+                    className="bg-blue px-4 py-2.5 rounded-full"
+                >
+
+                    <Ionicons name="arrow-back" size={24} color="#F8F9FA"/>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 }
