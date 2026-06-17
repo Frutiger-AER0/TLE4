@@ -618,13 +618,13 @@ export default function HomeScreen() {
 
                 {hasActiveFilters() && (
                     <View
-                        style={tw`flex-row flex-wrap mt-3`}
+                        style={tw`flex-row flex-wrap mt-4 mb-2 items-center`}
                         accessible={true}
                         accessibilityLabel="Actieve filters"
                     >
                         {search.trim().length > 0 && (
                             <View
-                                style={tw`bg-[#F4C430] rounded-full px-3 py-1 mr-2 mb-2`}
+                                style={tw`bg-[#F4C430] rounded-full px-4 min-h-11 mr-2 mb-2 items-center justify-center`}
                                 accessible={true}
                                 accessibilityLabel={`Actieve zoekterm: ${search}`}
                             >
@@ -636,7 +636,7 @@ export default function HomeScreen() {
 
                         {selectedTopic && (
                             <View
-                                style={tw`bg-[#F4C430] rounded-full px-3 py-1 mr-2 mb-2`}
+                                style={tw`bg-[#F4C430] rounded-full px-4 min-h-11 mr-2 mb-2 items-center justify-center`}
                                 accessible={true}
                                 accessibilityLabel={`Actief onderwerpfilter: ${selectedTopic}`}
                             >
@@ -648,7 +648,7 @@ export default function HomeScreen() {
 
                         {selectedAssignment !== "Alle" && (
                             <View
-                                style={tw`bg-[#F4C430] rounded-full px-3 py-1 mr-2 mb-2`}
+                                style={tw`bg-[#F4C430] rounded-full px-4 min-h-11 mr-2 mb-2 items-center justify-center`}
                                 accessible={true}
                                 accessibilityLabel={`Actief typefilter: ${selectedAssignment}`}
                             >
@@ -660,7 +660,7 @@ export default function HomeScreen() {
 
                         {selectedMoment !== "Alle" && (
                             <View
-                                style={tw`bg-[#F4C430] rounded-full px-3 py-1 mr-2 mb-2`}
+                                style={tw`bg-[#F4C430] rounded-full px-4 min-h-11 mr-2 mb-2 items-center justify-center`}
                                 accessible={true}
                                 accessibilityLabel={`Actief momentfilter: ${selectedMoment}`}
                             >
@@ -672,7 +672,7 @@ export default function HomeScreen() {
 
                         <TouchableOpacity
                             onPress={clearFilters}
-                            style={tw`bg-[#0A1A3A] rounded-full px-4 py-2 mb-2 min-h-11 items-center justify-center`}
+                            style={tw`bg-[#0A1A3A] rounded-full px-4 min-h-11 mr-2 mb-2 items-center justify-center`}
                             accessible={true}
                             accessibilityRole="button"
                             accessibilityLabel="Filters wissen"
