@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import MapView, {Marker} from 'react-native-maps';
 import {StyleSheet, View, Text, ActivityIndicator, TouchableOpacity} from 'react-native';
 import * as Location from 'expo-location';
-import {fetchUserProjects} from "../components/services/ProtestApi";
+import {fetchProtests} from "../components/services/ProtestApi";
 import {Ionicons} from "@expo/vector-icons";
 import {useNavigation} from "@react-navigation/native";
 
@@ -45,7 +45,7 @@ export default function MapScreen({route}) {
                     }
                 );
 
-                const savedProtests = await fetchUserProjects();
+                const savedProtests = await fetchProtests();
 
                 if (targetId) {
                     const singleProtest = savedProtests.filter(p => p.id === targetId);
