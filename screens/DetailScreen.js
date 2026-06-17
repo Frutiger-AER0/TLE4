@@ -93,6 +93,18 @@ export default function DetailScreen({ route }) {
         }
     }
 
+    function handleUploadComplete() {
+        // Ga terug naar het vorige scherm en geef een seintje dat er ververst moet worden.
+        // Het vorige scherm (bijv. ActionScreen) kan hierop reageren.
+        if (navigation.canGoBack()) {
+            navigation.navigate({
+                name: route.params?.origin || 'ActionScreen', // Ga terug naar de bron of default naar ActionScreen
+                params: { refresh: true },
+                merge: true,
+            });
+        }
+    }
+
     function goBack() {
         if (navigation.canGoBack()) {
             navigation.goBack();
@@ -206,7 +218,7 @@ export default function DetailScreen({ route }) {
                 </View>
 
                 <ActionCard protest={protest} />
-                <SubmitForum protest={protest} />
+                <SubmitForum protest={protest} onUploadComplete={handleUploadComplete} />
             </ScrollView>
         </View>
     );
