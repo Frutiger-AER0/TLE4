@@ -266,22 +266,36 @@ export default function ProfileScreen({ navigation }) {
         }
     }
 
+    async function updateUserMainFields(userId) {
+        const body = {
+            username: usernameInput.trim(),
+            email: emailInput.trim(),
+        };
+
+        await requestJson(`${API_BASE_URL}/users/${userId}`, {
+            method: "PUT",
+            body: JSON.stringify(body),
+        });
+
+        const updatedUserData = await requestJson(`${API_BASE_URL}/users/${userId}`);
+        return normalizeApiObject(updatedUserData);
+    }
+
     async function updateUserDetails(userId) {
         const body = {
             profile_img: profileImgInput.trim(),
         };
 
-        try {
-            const data = await requestJson(`${API_BASE_URL}/users/${userId}/details`, {
-                method: "PUT",
-                body: JSON.stringify(body),
-            });
-
-            return normalizeApiObject(data);
-        } catch (error) {
-            console.log("PUT /users/:id/details failed:", error.message);
-            return null;
+        if (newPasswordInput.trim()) {
+            body.password = newPasswordInput.trim();
         }
+
+        const data = await requestJson(`${API_BASE_URL}/users/${userId}/details`, {
+            method: "PUT",
+            body: JSON.stringify(body),
+        });
+
+        return normalizeApiObject(data);
     }
 
     async function loadProfile() {
@@ -387,35 +401,6 @@ export default function ProfileScreen({ navigation }) {
         );
     }
 
-    async function updateUserMainFields(userId) {
-        const body = {
-            username: usernameInput.trim(),
-            email: emailInput.trim(),
-        };
-
-        if (
-            profileUser?.is_admin !== undefined ||
-            activeUser?.is_admin !== undefined
-        ) {
-            body.is_admin = profileUser?.is_admin ?? activeUser?.is_admin;
-        }
-
-        if (
-            profileUser?.password !== undefined ||
-            activeUser?.password !== undefined
-        ) {
-            body.password = profileUser?.password ?? activeUser?.password;
-        }
-
-        await requestJson(`${API_BASE_URL}/users/${userId}`, {
-            method: "PUT",
-            body: JSON.stringify(body),
-        });
-
-        const updatedUserData = await requestJson(`${API_BASE_URL}/users/${userId}`);
-        return normalizeApiObject(updatedUserData);
-    }
-
     async function saveProfileChanges() {
         const userId = getActiveUserId();
 
@@ -434,12 +419,39 @@ export default function ProfileScreen({ navigation }) {
             return;
         }
 
-        if (oldPasswordInput || newPasswordInput || repeatPasswordInput) {
-            Alert.alert(
-                "Niet ondersteund",
-                "Wachtwoord wijzigen staat alvast in de UI, maar de backend heeft hier geen aparte werkende route voor."
-            );
-            return;
+        const wantsToChangePassword =
+            oldPasswordInput.trim() ||
+            newPasswordInput.trim() ||
+            repeatPasswordInput.trim();
+
+        if (wantsToChangePassword) {
+            if (!oldPasswordInput.trim()) {
+                Alert.alert("Validatie", "Vul je oude wachtwoord in.");
+                return;
+            }
+
+            if (!newPasswordInput.trim()) {
+                Alert.alert("Validatie", "Vul een nieuw wachtwoord in.");
+                return;
+            }
+
+            if (!repeatPasswordInput.trim()) {
+                Alert.alert("Validatie", "Herhaal je nieuwe wachtwoord.");
+                return;
+            }
+
+            if (newPasswordInput.trim() !== repeatPasswordInput.trim()) {
+                Alert.alert("Validatie", "De nieuwe wachtwoorden komen niet overeen.");
+                return;
+            }
+
+            if (newPasswordInput.trim().length < 6) {
+                Alert.alert(
+                    "Validatie",
+                    "Het nieuwe wachtwoord moet minimaal 6 tekens hebben."
+                );
+                return;
+            }
         }
 
         try {
@@ -465,12 +477,20 @@ export default function ProfileScreen({ navigation }) {
                     profileImgInput.trim(),
             };
 
+            if (newPasswordInput.trim()) {
+                updatedStoredUser.password = newPasswordInput.trim();
+            }
+
             await login(updatedStoredUser);
 
             setProfileUser(updatedUser);
             setUserDetails(updatedDetails);
             setStoredUser(updatedStoredUser);
             setEditMode(false);
+
+            setOldPasswordInput("");
+            setNewPasswordInput("");
+            setRepeatPasswordInput("");
 
             Alert.alert("Opgeslagen", "Je profiel is bijgewerkt.");
         } catch (error) {
@@ -839,7 +859,7 @@ export default function ProfileScreen({ navigation }) {
                         </Text>
 
                         <Text className="text-darkBlue text-xs mb-4">
-                            Deze velden staan alvast klaar, maar opslaan werkt pas zodra de backend een wachtwoord-update route ondersteunt.
+                            Vul je oude wachtwoord in en kies daarna een nieuw wachtwoord.
                         </Text>
 
                         <TextInput
