@@ -1,7 +1,5 @@
-// components/actions/ActionCard.js
-
 import React from "react";
-import { View, Text, Image, TouchableOpacity } from "react-native";
+import {View, Text, Image, TouchableOpacity} from "react-native";
 
 export default function ActionCard({
                                        image,
@@ -9,6 +7,7 @@ export default function ActionCard({
                                        description,
                                        buttonText,
                                        onPress,
+                                       onPressInfo,
                                    }) {
     return (
         <View
@@ -53,28 +52,66 @@ export default function ActionCard({
                     {description}
                 </Text>
 
-                <TouchableOpacity
-                    onPress={onPress}
-                    activeOpacity={0.85}
+                <View
                     style={{
-                        alignSelf: "flex-end",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "flex-end",
                         marginTop: 18,
-                        backgroundColor: "#8B2BD6",
-                        paddingHorizontal: 24,
-                        paddingVertical: 12,
-                        borderRadius: 12,
+                        gap: 12,
                     }}
                 >
-                    <Text
+                    {onPressInfo && (
+                        <TouchableOpacity
+                            onPress={onPressInfo}
+                            activeOpacity={0.85}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Meer informatie over ${title}`}
+                            style={{
+                                backgroundColor: "rgba(139, 43, 214, 0.1)", // Subtiele paarse tint passend bij je app
+                                paddingHorizontal: 16,
+                                height: 44, // Symmetrisch met de hoofdknop
+                                borderRadius: 12,
+                                justifyContent: "center",
+                                alignItems: "center",
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    color: "#8B2BD6",
+                                    fontWeight: "700",
+                                    fontSize: 14,
+                                }}
+                            >
+                                Meer Info
+                            </Text>
+                        </TouchableOpacity>
+                    )}
+
+                    <TouchableOpacity
+                        onPress={onPress}
+                        activeOpacity={0.85}
+                        accessibilityRole="button"
                         style={{
-                            color: "white",
-                            fontWeight: "700",
-                            fontSize: 14,
+                            backgroundColor: "#8B2BD6",
+                            paddingHorizontal: 24,
+                            height: 44,
+                            borderRadius: 12,
+                            justifyContent: "center",
+                            alignItems: "center",
                         }}
                     >
-                        {buttonText}
-                    </Text>
-                </TouchableOpacity>
+                        <Text
+                            style={{
+                                color: "white",
+                                fontWeight: "700",
+                                fontSize: 14,
+                            }}
+                        >
+                            {buttonText}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
             </View>
         </View>
     );

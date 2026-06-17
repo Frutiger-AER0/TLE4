@@ -7,7 +7,7 @@ export default function RegistryScreen({navigation}) {
     return (
         <View className="flex-1 bg-offWhite">
             <AppHeader/>
-            <View className="flex-1 items-center justify-center pt-6 px-6">
+            <View className="flex-1 items-center justify-center -mt-40">
 
                 <RegistryForm onSuccess={() => navigation.navigate("Login")}/>
 
@@ -19,8 +19,8 @@ export default function RegistryScreen({navigation}) {
                         Heb je al een account? <Text className="text-purple font-bold underline">Login</Text>
                     </Text>
                 </TouchableOpacity>
-
             </View>
+
         </View>
     );
 }

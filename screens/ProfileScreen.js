@@ -8,6 +8,10 @@ import {
     ScrollView,
     Image,
     TouchableOpacity,
+    TextInput,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -28,8 +32,6 @@ function getPossibleUserId(userObject) {
         userObject?.data?.user_id ||
         userObject?.data?.user?.id ||
         userObject?.data?.user?.user_id ||
-        userObject?.userData?.id ||
-        userObject?.userData?.user_id ||
         null
     );
 }
@@ -42,7 +44,6 @@ function getPossibleEmail(userObject) {
         userObject?.user?.email ||
         userObject?.data?.email ||
         userObject?.data?.user?.email ||
-        userObject?.userData?.email ||
         null
     );
 }
@@ -59,20 +60,107 @@ function getPossibleUsername(userObject) {
         userObject?.data?.name ||
         userObject?.data?.user?.username ||
         userObject?.data?.user?.name ||
-        userObject?.userData?.username ||
-        userObject?.userData?.name ||
         null
     );
 }
 
+function getPossibleCreatedAt(userObject) {
+    if (!userObject) return null;
+
+    return (
+        userObject?.created_at ||
+        userObject?.createdAt ||
+        userObject?.user?.created_at ||
+        userObject?.data?.created_at ||
+        userObject?.data?.user?.created_at ||
+        null
+    );
+}
+
+function formatCreatedAt(value) {
+    if (!value) {
+        return "Niet bekend";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return "Niet bekend";
+    }
+
+    return date.toLocaleDateString("nl-NL", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+    });
+}
+
+function buildImageSource(imageUrl) {
+    if (!imageUrl || typeof imageUrl !== "string") {
+        return null;
+    }
+
+    if (imageUrl.startsWith("http")) {
+        return { uri: imageUrl };
+    }
+
+    return null;
+}
+
+async function requestJson(url, options = {}) {
+    const response = await fetch(url, {
+        headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            ...(options.headers || {}),
+        },
+        ...options,
+    });
+
+    const contentType = response.headers.get("content-type") || "";
+
+    let data = null;
+
+    if (contentType.includes("application/json")) {
+        data = await response.json();
+    } else {
+        data = await response.text();
+    }
+
+    if (!response.ok) {
+        const message =
+            data?.message ||
+            data?.detail ||
+            data?.error ||
+            data ||
+            `Server error ${response.status}`;
+
+        throw new Error(message.toString());
+    }
+
+    return data;
+}
+
 export default function ProfileScreen({ navigation }) {
-    const { user: loggedInUser, logout } = useContext(AuthContext);
+    const { user: loggedInUser, login, logout } = useContext(AuthContext);
 
     const [storedUser, setStoredUser] = useState(null);
     const [profileUser, setProfileUser] = useState(null);
     const [userData, setUserData] = useState(null);
+
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const [errorText, setErrorText] = useState("");
+
+    const [editMode, setEditMode] = useState(false);
+
+    const [usernameInput, setUsernameInput] = useState("");
+    const [emailInput, setEmailInput] = useState("");
+    const [profileImgInput, setProfileImgInput] = useState("");
+
+    const [oldPasswordInput, setOldPasswordInput] = useState("");
+    const [newPasswordInput, setNewPasswordInput] = useState("");
+    const [repeatPasswordInput, setRepeatPasswordInput] = useState("");
 
     const activeUser = loggedInUser || storedUser;
 
@@ -93,63 +181,125 @@ export default function ProfileScreen({ navigation }) {
         return parsedUser;
     }
 
+    async function getLocalProfileImage(userId) {
+        if (!userId) {
+            return "";
+        }
+
+        const savedImage = await AsyncStorage.getItem(`profile_img_${userId}`);
+        return savedImage || "";
+    }
+
     async function findUserByEmail(email) {
         if (!email) {
             return null;
         }
 
-        const response = await fetch(`${API_BASE_URL}/users`, {
-            headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json",
-            },
-        });
-
-        if (!response.ok) {
-            return null;
-        }
-
-        const data = await response.json();
+        const data = await requestJson(`${API_BASE_URL}/users`);
 
         const users = Array.isArray(data)
             ? data
             : data.data || data.users || [];
 
-        return users.find((item) => {
-            return item.email?.toLowerCase() === email.toLowerCase();
-        }) || null;
+        return (
+            users.find((item) => {
+                return item.email?.toLowerCase() === email.toLowerCase();
+            }) || null
+        );
     }
 
     async function fetchUserData(foundUserId) {
-        try {
-            const userDataResponse = await fetch(`${API_BASE_URL}/user-data`, {
-                headers: {
-                    Accept: "application/json",
-                    "Content-Type": "application/json",
-                },
-            });
+        /*
+            Staat alvast klaar voor later.
+            Op dit moment bestaat /user-data volgens Postman nog niet.
+            Zodra backend user_data toevoegt, kan deze functie direct data tonen.
+        */
 
-            if (!userDataResponse.ok) {
-                return;
+        const endpoints = [
+            `${API_BASE_URL}/user-data`,
+            `${API_BASE_URL}/user_data`,
+        ];
+
+        for (const endpoint of endpoints) {
+            try {
+                const data = await requestJson(endpoint);
+
+                const list = Array.isArray(data)
+                    ? data
+                    : data.data || data.user_data || [];
+
+                const found = list.find((item) => {
+                    return (
+                        item.user_id === foundUserId ||
+                        item.user_id === Number(foundUserId)
+                    );
+                });
+
+                if (found) {
+                    setUserData(found);
+                    return found;
+                }
+            } catch (error) {
+                console.log("user_data endpoint not ready:", endpoint, error.message);
             }
-
-            const userDataJson = await userDataResponse.json();
-
-            const userDataList = Array.isArray(userDataJson)
-                ? userDataJson
-                : userDataJson.data || userDataJson.user_data || [];
-
-            const foundUserData = userDataList.find((item) => {
-                return (
-                    item.user_id === foundUserId ||
-                    item.user_id === Number(foundUserId)
-                );
-            });
-
-            setUserData(foundUserData || null);
-        } catch (error) {
-            console.log("user-data endpoint niet beschikbaar:", error.message);
         }
+
+        setUserData(null);
+        return null;
+    }
+
+    async function saveUserDataIfAvailable(userId) {
+        /*
+            Toekomstige database-opslag voor user_data:
+            - username
+            - profile_img
+
+            Omdat /user-data nu nog 404 geeft, mag dit niet de profiel-update blokkeren.
+        */
+
+        const body = {
+            user_id: userId,
+            username: usernameInput.trim(),
+            profile_img: profileImgInput.trim(),
+        };
+
+        const endpoints = [];
+
+        if (userData?.id) {
+            endpoints.push({
+                url: `${API_BASE_URL}/user-data/${userData.id}`,
+                method: "PUT",
+            });
+            endpoints.push({
+                url: `${API_BASE_URL}/user_data/${userData.id}`,
+                method: "PUT",
+            });
+        }
+
+        endpoints.push({
+            url: `${API_BASE_URL}/user-data`,
+            method: "POST",
+        });
+
+        endpoints.push({
+            url: `${API_BASE_URL}/user_data`,
+            method: "POST",
+        });
+
+        for (const endpoint of endpoints) {
+            try {
+                await requestJson(endpoint.url, {
+                    method: endpoint.method,
+                    body: JSON.stringify(body),
+                });
+
+                return true;
+            } catch (error) {
+                console.log("save user_data not ready:", endpoint.method, endpoint.url);
+            }
+        }
+
+        return false;
     }
 
     async function loadProfile() {
@@ -172,28 +322,38 @@ export default function ProfileScreen({ navigation }) {
 
             if (!foundUserId) {
                 setErrorText(
-                    "Geen gebruikers-ID gevonden. De login-response bevat waarschijnlijk alleen email/wachtwoord of geen user object."
+                    "Geen gebruikers-ID gevonden. Log opnieuw in of controleer de login-response."
                 );
                 return;
             }
 
             if (!foundUser) {
-                const userResponse = await fetch(`${API_BASE_URL}/users/${foundUserId}`, {
-                    headers: {
-                        Accept: "application/json",
-                        "Content-Type": "application/json",
-                    },
-                });
-
-                if (!userResponse.ok) {
-                    throw new Error(`Gebruiker ophalen mislukt. Status: ${userResponse.status}`);
-                }
-
-                foundUser = await userResponse.json();
+                foundUser = await requestJson(`${API_BASE_URL}/users/${foundUserId}`);
             }
 
+            const foundUserData = await fetchUserData(foundUserId);
+            const localProfileImage = await getLocalProfileImage(foundUserId);
+
             setProfileUser(foundUser);
-            await fetchUserData(foundUserId);
+
+            setUsernameInput(
+                foundUserData?.username ||
+                foundUser?.username ||
+                getPossibleUsername(userSource) ||
+                ""
+            );
+
+            setEmailInput(
+                foundUser?.email ||
+                getPossibleEmail(userSource) ||
+                ""
+            );
+
+            setProfileImgInput(
+                foundUserData?.profile_img ||
+                localProfileImage ||
+                ""
+            );
         } catch (error) {
             console.log("Profile load error:", error.message);
             setErrorText(error.message);
@@ -202,20 +362,11 @@ export default function ProfileScreen({ navigation }) {
         }
     }
 
-    async function handleLogout() {
-        await logout();
-
-        navigation.reset({
-            index: 0,
-            routes: [{ name: "Opening" }],
-        });
-    }
-
     function getActiveUserId() {
         return (
             getPossibleUserId(profileUser) ||
             getPossibleUserId(activeUser) ||
-            "Niet gevonden"
+            null
         );
     }
 
@@ -223,7 +374,6 @@ export default function ProfileScreen({ navigation }) {
         return (
             userData?.username ||
             profileUser?.username ||
-            profileUser?.name ||
             getPossibleUsername(activeUser) ||
             "Gebruiker"
         );
@@ -237,28 +387,130 @@ export default function ProfileScreen({ navigation }) {
         );
     }
 
-    function getProfileImage() {
-        const profileImg =
+    function getCreatedAt() {
+        return (
+            getPossibleCreatedAt(profileUser) ||
+            getPossibleCreatedAt(activeUser) ||
+            null
+        );
+    }
+
+    function getCurrentProfileImage() {
+        return (
             userData?.profile_img ||
-            profileUser?.profile_img ||
+            profileImgInput ||
             activeUser?.profile_img ||
-            activeUser?.user?.profile_img ||
-            activeUser?.data?.user?.profile_img ||
-            null;
+            ""
+        );
+    }
 
-        if (!profileImg || typeof profileImg !== "string") {
-            return null;
+    async function updateUserMainFields(userId) {
+        const body = {
+            username: usernameInput.trim(),
+            email: emailInput.trim(),
+        };
+
+        await requestJson(`${API_BASE_URL}/users/${userId}`, {
+            method: "PUT",
+            body: JSON.stringify(body),
+        });
+
+        /*
+            De backend geeft bij PUT alleen:
+            { message: "User updated successfully" }
+
+            Daarom halen we daarna de user opnieuw op.
+        */
+        return requestJson(`${API_BASE_URL}/users/${userId}`);
+    }
+
+    async function saveProfileChanges() {
+        const userId = getActiveUserId();
+
+        if (!userId) {
+            Alert.alert("Fout", "Geen gebruiker gevonden.");
+            return;
         }
 
-        if (profileImg.startsWith("http")) {
-            return { uri: profileImg };
+        if (!usernameInput.trim()) {
+            Alert.alert("Validatie", "Gebruikersnaam mag niet leeg zijn.");
+            return;
         }
 
-        if (profileImg.startsWith("/")) {
-            return { uri: `${API_BASE_URL}${profileImg}` };
+        if (!emailInput.trim()) {
+            Alert.alert("Validatie", "Email mag niet leeg zijn.");
+            return;
         }
 
-        return { uri: `${API_BASE_URL}/${profileImg}` };
+        if (profileImgInput.trim() && !profileImgInput.trim().startsWith("http")) {
+            Alert.alert(
+                "Validatie",
+                "Gebruik een volledige image URL, bijvoorbeeld https://voorbeeld.nl/foto.jpg"
+            );
+            return;
+        }
+
+        if (oldPasswordInput || newPasswordInput || repeatPasswordInput) {
+            Alert.alert(
+                "Niet ondersteund",
+                "Wachtwoord wijzigen staat alvast in de UI, maar de backend heeft hier nog geen werkende route voor."
+            );
+            return;
+        }
+
+        try {
+            setSaving(true);
+
+            const updatedUser = await updateUserMainFields(userId);
+
+            await AsyncStorage.setItem(
+                `profile_img_${userId}`,
+                profileImgInput.trim()
+            );
+
+            await saveUserDataIfAvailable(userId);
+
+            const updatedStoredUser = {
+                ...(activeUser || {}),
+                ...updatedUser,
+                id: userId,
+                username: updatedUser?.username || usernameInput.trim(),
+                email: updatedUser?.email || emailInput.trim(),
+                created_at: updatedUser?.created_at || getCreatedAt(),
+                profile_img: profileImgInput.trim(),
+            };
+
+            await login(updatedStoredUser);
+
+            setProfileUser(updatedUser);
+            setStoredUser(updatedStoredUser);
+            setEditMode(false);
+
+            Alert.alert("Opgeslagen", "Je profiel is bijgewerkt.");
+        } catch (error) {
+            Alert.alert("Opslaan mislukt", error.message);
+        } finally {
+            setSaving(false);
+        }
+    }
+
+    async function handleLogout() {
+        await logout();
+
+        navigation.reset({
+            index: 0,
+            routes: [{ name: "Opening" }],
+        });
+    }
+
+    function cancelEdit() {
+        setEditMode(false);
+        setUsernameInput(getUsername());
+        setEmailInput(getEmail());
+        setProfileImgInput(getCurrentProfileImage());
+        setOldPasswordInput("");
+        setNewPasswordInput("");
+        setRepeatPasswordInput("");
     }
 
     if (loading) {
@@ -309,131 +561,271 @@ export default function ProfileScreen({ navigation }) {
         );
     }
 
-    const profileImage = getProfileImage();
+    const profileImage = buildImageSource(
+        editMode ? profileImgInput : getCurrentProfileImage()
+    );
 
     return (
-        <ScrollView
+        <KeyboardAvoidingView
             className="flex-1 bg-offWhite"
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{
-                paddingHorizontal: 20,
-                paddingTop: 20,
-                paddingBottom: 120,
-            }}
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
-            <Text className="text-darkBlue text-2xl font-bold mb-5">
-                Mijn Profiel
-            </Text>
+            <ScrollView
+                className="flex-1 bg-offWhite"
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={{
+                    paddingHorizontal: 20,
+                    paddingTop: 20,
+                    paddingBottom: 120,
+                }}
+            >
+                <View className="flex-row items-center justify-between mb-5">
+                    <Text className="text-darkBlue text-2xl font-bold">
+                        Mijn Profiel
+                    </Text>
 
-            <View className="bg-lightPurple rounded-2xl p-5 items-center">
-                {profileImage ? (
-                    <Image
-                        source={profileImage}
-                        style={{
-                            width: 96,
-                            height: 96,
-                            borderRadius: 48,
-                            backgroundColor: "#ffffff",
-                        }}
-                        resizeMode="cover"
-                    />
-                ) : (
-                    <View
-                        style={{
-                            width: 96,
-                            height: 96,
-                            borderRadius: 48,
-                            backgroundColor: "#14213D",
-                            alignItems: "center",
-                            justifyContent: "center",
-                        }}
-                    >
-                        <Ionicons name="person-outline" size={48} color="white" />
-                    </View>
+                    {!editMode && (
+                        <TouchableOpacity
+                            onPress={() => setEditMode(true)}
+                            activeOpacity={0.85}
+                            className="bg-darkBlue rounded-xl px-4 py-2"
+                        >
+                            <Text className="text-white font-bold">
+                                Bewerken
+                            </Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
+
+                <View className="bg-lightPurple rounded-2xl p-5 items-center">
+                    {profileImage ? (
+                        <Image
+                            source={profileImage}
+                            style={{
+                                width: 108,
+                                height: 108,
+                                borderRadius: 54,
+                                backgroundColor: "#ffffff",
+                            }}
+                            resizeMode="cover"
+                        />
+                    ) : (
+                        <View
+                            style={{
+                                width: 108,
+                                height: 108,
+                                borderRadius: 54,
+                                backgroundColor: "#14213D",
+                                alignItems: "center",
+                                justifyContent: "center",
+                            }}
+                        >
+                            <Ionicons name="person-outline" size={54} color="white" />
+                        </View>
+                    )}
+
+                    <Text className="text-darkBlue text-2xl font-bold mt-4">
+                        {editMode ? usernameInput || "Gebruiker" : getUsername()}
+                    </Text>
+
+                    <Text className="text-darkBlue text-sm mt-1">
+                        {editMode ? emailInput || "Geen email" : getEmail()}
+                    </Text>
+
+                    <Text className="text-darkBlue text-xs mt-2">
+                        Lid sinds {formatCreatedAt(getCreatedAt())}
+                    </Text>
+                </View>
+
+                {!editMode && (
+                    <>
+                        <View className="bg-white rounded-2xl p-5 mt-5">
+                            <Text className="text-darkBlue text-lg font-bold mb-4">
+                                Accountgegevens
+                            </Text>
+
+                            <View className="flex-row items-center mb-4">
+                                <View className="w-10 h-10 rounded-xl bg-lightPurple items-center justify-center mr-3">
+                                    <Ionicons name="person-outline" size={22} color="#14213D" />
+                                </View>
+
+                                <View className="flex-1">
+                                    <Text className="text-darkBlue text-xs">
+                                        Gebruikersnaam
+                                    </Text>
+
+                                    <Text className="text-darkBlue font-bold">
+                                        {getUsername()}
+                                    </Text>
+                                </View>
+                            </View>
+
+                            <View className="flex-row items-center mb-4">
+                                <View className="w-10 h-10 rounded-xl bg-lightPurple items-center justify-center mr-3">
+                                    <Ionicons name="mail-outline" size={22} color="#14213D" />
+                                </View>
+
+                                <View className="flex-1">
+                                    <Text className="text-darkBlue text-xs">
+                                        Email
+                                    </Text>
+
+                                    <Text className="text-darkBlue font-bold">
+                                        {getEmail()}
+                                    </Text>
+                                </View>
+                            </View>
+
+                            <View className="flex-row items-center mb-4">
+                                <View className="w-10 h-10 rounded-xl bg-lightPurple items-center justify-center mr-3">
+                                    <Ionicons name="calendar-outline" size={22} color="#14213D" />
+                                </View>
+
+                                <View className="flex-1">
+                                    <Text className="text-darkBlue text-xs">
+                                        Account aangemaakt
+                                    </Text>
+
+                                    <Text className="text-darkBlue font-bold">
+                                        {formatCreatedAt(getCreatedAt())}
+                                    </Text>
+                                </View>
+                            </View>
+
+                            <View className="flex-row items-center">
+                                <View className="w-10 h-10 rounded-xl bg-lightPurple items-center justify-center mr-3">
+                                    <Ionicons name="lock-closed-outline" size={22} color="#14213D" />
+                                </View>
+
+                                <View className="flex-1">
+                                    <Text className="text-darkBlue text-xs">
+                                        Wachtwoord
+                                    </Text>
+
+                                    <Text className="text-darkBlue font-bold">
+                                        ••••••••
+                                    </Text>
+                                </View>
+                            </View>
+                        </View>
+
+                        <TouchableOpacity
+                            onPress={handleLogout}
+                            activeOpacity={0.85}
+                            className="bg-darkBlue rounded-xl py-4 mt-6 items-center"
+                        >
+                            <Text className="text-white font-bold">
+                                Uitloggen
+                            </Text>
+                        </TouchableOpacity>
+                    </>
                 )}
 
-                <Text className="text-darkBlue text-2xl font-bold mt-4">
-                    {getUsername()}
-                </Text>
+                {editMode && (
+                    <View className="bg-white rounded-2xl p-5 mt-5">
+                        <Text className="text-darkBlue text-lg font-bold mb-4">
+                            Profiel bewerken
+                        </Text>
 
-                <Text className="text-darkBlue text-sm mt-1">
-                    {getEmail()}
-                </Text>
-            </View>
-
-            <View className="bg-white rounded-2xl p-5 mt-5">
-                <Text className="text-darkBlue text-lg font-bold mb-4">
-                    Accountgegevens
-                </Text>
-
-                <View className="flex-row items-center mb-4">
-                    <View className="w-10 h-10 rounded-xl bg-lightPurple items-center justify-center mr-3">
-                        <Ionicons name="person-outline" size={22} color="#14213D" />
-                    </View>
-
-                    <View className="flex-1">
-                        <Text className="text-darkBlue text-xs">
+                        <Text className="text-darkBlue text-sm font-bold mb-2">
                             Gebruikersnaam
                         </Text>
 
-                        <Text className="text-darkBlue font-bold">
-                            {getUsername()}
-                        </Text>
-                    </View>
-                </View>
+                        <TextInput
+                            value={usernameInput}
+                            onChangeText={setUsernameInput}
+                            placeholder="Gebruikersnaam"
+                            className="border border-gray-300 rounded-xl px-4 py-3 mb-4 bg-white text-darkBlue"
+                        />
 
-                <View className="flex-row items-center mb-4">
-                    <View className="w-10 h-10 rounded-xl bg-lightPurple items-center justify-center mr-3">
-                        <Ionicons name="mail-outline" size={22} color="#14213D" />
-                    </View>
-
-                    <View className="flex-1">
-                        <Text className="text-darkBlue text-xs">
+                        <Text className="text-darkBlue text-sm font-bold mb-2">
                             Email
                         </Text>
 
-                        <Text className="text-darkBlue font-bold">
-                            {getEmail()}
-                        </Text>
-                    </View>
-                </View>
+                        <TextInput
+                            value={emailInput}
+                            onChangeText={setEmailInput}
+                            placeholder="Email"
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            className="border border-gray-300 rounded-xl px-4 py-3 mb-4 bg-white text-darkBlue"
+                        />
 
-                <View className="flex-row items-center">
-                    <View className="w-10 h-10 rounded-xl bg-lightPurple items-center justify-center mr-3">
-                        <Ionicons name="key-outline" size={22} color="#14213D" />
-                    </View>
-
-                    <View className="flex-1">
-                        <Text className="text-darkBlue text-xs">
-                            Gebruikers-ID
+                        <Text className="text-darkBlue text-sm font-bold mb-2">
+                            Profielfoto URL
                         </Text>
 
-                        <Text className="text-darkBlue font-bold">
-                            {getActiveUserId()}
+                        <TextInput
+                            value={profileImgInput}
+                            onChangeText={setProfileImgInput}
+                            placeholder="https://voorbeeld.nl/profielfoto.jpg"
+                            autoCapitalize="none"
+                            className="border border-gray-300 rounded-xl px-4 py-3 mb-5 bg-white text-darkBlue"
+                        />
+
+                        <View className="h-[1px] bg-gray-200 mb-5" />
+
+                        <Text className="text-darkBlue text-lg font-bold mb-3">
+                            Wachtwoord wijzigen
                         </Text>
+
+                        <Text className="text-darkBlue text-xs mb-4">
+                            Deze velden staan alvast klaar, maar opslaan werkt pas zodra de backend een wachtwoord-update route ondersteunt.
+                        </Text>
+
+                        <TextInput
+                            value={oldPasswordInput}
+                            onChangeText={setOldPasswordInput}
+                            placeholder="Oud wachtwoord"
+                            secureTextEntry
+                            className="border border-gray-300 rounded-xl px-4 py-3 mb-3 bg-white text-darkBlue"
+                        />
+
+                        <TextInput
+                            value={newPasswordInput}
+                            onChangeText={setNewPasswordInput}
+                            placeholder="Nieuw wachtwoord"
+                            secureTextEntry
+                            className="border border-gray-300 rounded-xl px-4 py-3 mb-3 bg-white text-darkBlue"
+                        />
+
+                        <TextInput
+                            value={repeatPasswordInput}
+                            onChangeText={setRepeatPasswordInput}
+                            placeholder="Herhaal nieuw wachtwoord"
+                            secureTextEntry
+                            className="border border-gray-300 rounded-xl px-4 py-3 mb-5 bg-white text-darkBlue"
+                        />
+
+                        <TouchableOpacity
+                            onPress={saveProfileChanges}
+                            disabled={saving}
+                            activeOpacity={0.85}
+                            className="bg-darkBlue rounded-xl py-4 items-center"
+                        >
+                            {saving ? (
+                                <ActivityIndicator color="#ffffff" />
+                            ) : (
+                                <Text className="text-white font-bold">
+                                    Opslaan
+                                </Text>
+                            )}
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            onPress={cancelEdit}
+                            disabled={saving}
+                            activeOpacity={0.85}
+                            className="bg-lightPurple rounded-xl py-4 items-center mt-3"
+                        >
+                            <Text className="text-darkBlue font-bold">
+                                Annuleren
+                            </Text>
+                        </TouchableOpacity>
                     </View>
-                </View>
-            </View>
-
-            <View className="bg-white rounded-2xl p-5 mt-5">
-                <Text className="text-darkBlue text-lg font-bold mb-3">
-                    Profielstatus
-                </Text>
-
-                <Text className="text-darkBlue text-sm leading-5">
-                    Dit profiel is gekoppeld aan de ingelogde gebruiker. Later kunnen hier ook interesses, pronouns, opgeslagen protesten en afgeronde creatieve projecten worden getoond.
-                </Text>
-            </View>
-
-            <TouchableOpacity
-                onPress={handleLogout}
-                activeOpacity={0.85}
-                className="bg-darkBlue rounded-xl py-4 mt-6 items-center"
-            >
-                <Text className="text-white font-bold">
-                    Uitloggen
-                </Text>
-            </TouchableOpacity>
-        </ScrollView>
+                )}
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 }
