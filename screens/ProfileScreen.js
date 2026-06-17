@@ -77,6 +77,40 @@ function getPossibleCreatedAt(userObject) {
     );
 }
 
+function getPossibleProfileImg(userObject) {
+    if (!userObject) return "";
+
+    return (
+        userObject?.profile_img ||
+        userObject?.profileImg ||
+        userObject?.profile_image ||
+        userObject?.image ||
+        userObject?.user?.profile_img ||
+        userObject?.data?.profile_img ||
+        userObject?.data?.user?.profile_img ||
+        ""
+    );
+}
+
+function normalizeApiObject(data) {
+    if (!data) {
+        return null;
+    }
+
+    if (Array.isArray(data)) {
+        return data[0] || null;
+    }
+
+    return (
+        data?.data ||
+        data?.user ||
+        data?.details ||
+        data?.user_details ||
+        data?.userDetails ||
+        data
+    );
+}
+
 function formatCreatedAt(value) {
     if (!value) {
         return "Niet bekend";
@@ -95,16 +129,26 @@ function formatCreatedAt(value) {
     });
 }
 
-function buildImageSource(imageUrl) {
-    if (!imageUrl || typeof imageUrl !== "string") {
+function buildImageSource(imageValue) {
+    if (!imageValue || typeof imageValue !== "string") {
         return null;
     }
 
-    if (imageUrl.startsWith("http")) {
-        return { uri: imageUrl };
+    const cleanValue = imageValue.trim();
+
+    if (!cleanValue) {
+        return null;
     }
 
-    return null;
+    if (cleanValue.startsWith("http")) {
+        return { uri: cleanValue };
+    }
+
+    if (cleanValue.startsWith("/")) {
+        return { uri: `${API_BASE_URL}${cleanValue}` };
+    }
+
+    return { uri: `${API_BASE_URL}/users/image/${cleanValue}` };
 }
 
 async function requestJson(url, options = {}) {
@@ -146,7 +190,7 @@ export default function ProfileScreen({ navigation }) {
 
     const [storedUser, setStoredUser] = useState(null);
     const [profileUser, setProfileUser] = useState(null);
-    const [userData, setUserData] = useState(null);
+    const [userDetails, setUserDetails] = useState(null);
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -208,84 +252,36 @@ export default function ProfileScreen({ navigation }) {
         );
     }
 
-    async function fetchUserData(foundUserId) {
-        const endpoints = [
-            `${API_BASE_URL}/user-data`,
-            `${API_BASE_URL}/user_data`,
-        ];
+    async function fetchUserDetails(userId) {
+        try {
+            const data = await requestJson(`${API_BASE_URL}/users/${userId}/details`);
+            const normalizedDetails = normalizeApiObject(data);
 
-        for (const endpoint of endpoints) {
-            try {
-                const data = await requestJson(endpoint);
-
-                const list = Array.isArray(data)
-                    ? data
-                    : data.data || data.user_data || [];
-
-                const found = list.find((item) => {
-                    return (
-                        item.user_id === foundUserId ||
-                        item.user_id === Number(foundUserId)
-                    );
-                });
-
-                if (found) {
-                    setUserData(found);
-                    return found;
-                }
-            } catch (error) {
-                console.log("user_data endpoint not ready:", endpoint, error.message);
-            }
+            setUserDetails(normalizedDetails);
+            return normalizedDetails;
+        } catch (error) {
+            console.log("GET /users/:id/details failed:", error.message);
+            setUserDetails(null);
+            return null;
         }
-
-        setUserData(null);
-        return null;
     }
 
-    async function saveUserDataIfAvailable(userId) {
+    async function updateUserDetails(userId) {
         const body = {
-            user_id: userId,
-            username: usernameInput.trim(),
             profile_img: profileImgInput.trim(),
         };
 
-        const endpoints = [];
-
-        if (userData?.id) {
-            endpoints.push({
-                url: `${API_BASE_URL}/user-data/${userData.id}`,
+        try {
+            const data = await requestJson(`${API_BASE_URL}/users/${userId}/details`, {
                 method: "PUT",
+                body: JSON.stringify(body),
             });
-            endpoints.push({
-                url: `${API_BASE_URL}/user_data/${userData.id}`,
-                method: "PUT",
-            });
+
+            return normalizeApiObject(data);
+        } catch (error) {
+            console.log("PUT /users/:id/details failed:", error.message);
+            return null;
         }
-
-        endpoints.push({
-            url: `${API_BASE_URL}/user-data`,
-            method: "POST",
-        });
-
-        endpoints.push({
-            url: `${API_BASE_URL}/user_data`,
-            method: "POST",
-        });
-
-        for (const endpoint of endpoints) {
-            try {
-                await requestJson(endpoint.url, {
-                    method: endpoint.method,
-                    body: JSON.stringify(body),
-                });
-
-                return true;
-            } catch (error) {
-                console.log("save user_data not ready:", endpoint.method, endpoint.url);
-            }
-        }
-
-        return false;
     }
 
     async function loadProfile() {
@@ -314,16 +310,16 @@ export default function ProfileScreen({ navigation }) {
             }
 
             if (!foundUser) {
-                foundUser = await requestJson(`${API_BASE_URL}/users/${foundUserId}`);
+                const userData = await requestJson(`${API_BASE_URL}/users/${foundUserId}`);
+                foundUser = normalizeApiObject(userData);
             }
 
-            const foundUserData = await fetchUserData(foundUserId);
+            const foundUserDetails = await fetchUserDetails(foundUserId);
             const localProfileImage = await getLocalProfileImage(foundUserId);
 
             setProfileUser(foundUser);
 
             setUsernameInput(
-                foundUserData?.username ||
                 foundUser?.username ||
                 getPossibleUsername(userSource) ||
                 ""
@@ -336,7 +332,8 @@ export default function ProfileScreen({ navigation }) {
             );
 
             setProfileImgInput(
-                foundUserData?.profile_img ||
+                getPossibleProfileImg(foundUserDetails) ||
+                getPossibleProfileImg(foundUser) ||
                 localProfileImage ||
                 ""
             );
@@ -358,7 +355,6 @@ export default function ProfileScreen({ navigation }) {
 
     function getUsername() {
         return (
-            userData?.username ||
             profileUser?.username ||
             getPossibleUsername(activeUser) ||
             "Gebruiker"
@@ -383,9 +379,10 @@ export default function ProfileScreen({ navigation }) {
 
     function getCurrentProfileImage() {
         return (
-            userData?.profile_img ||
+            getPossibleProfileImg(userDetails) ||
+            getPossibleProfileImg(profileUser) ||
             profileImgInput ||
-            activeUser?.profile_img ||
+            getPossibleProfileImg(activeUser) ||
             ""
         );
     }
@@ -396,12 +393,27 @@ export default function ProfileScreen({ navigation }) {
             email: emailInput.trim(),
         };
 
+        if (
+            profileUser?.is_admin !== undefined ||
+            activeUser?.is_admin !== undefined
+        ) {
+            body.is_admin = profileUser?.is_admin ?? activeUser?.is_admin;
+        }
+
+        if (
+            profileUser?.password !== undefined ||
+            activeUser?.password !== undefined
+        ) {
+            body.password = profileUser?.password ?? activeUser?.password;
+        }
+
         await requestJson(`${API_BASE_URL}/users/${userId}`, {
             method: "PUT",
             body: JSON.stringify(body),
         });
 
-        return requestJson(`${API_BASE_URL}/users/${userId}`);
+        const updatedUserData = await requestJson(`${API_BASE_URL}/users/${userId}`);
+        return normalizeApiObject(updatedUserData);
     }
 
     async function saveProfileChanges() {
@@ -422,18 +434,10 @@ export default function ProfileScreen({ navigation }) {
             return;
         }
 
-        if (profileImgInput.trim() && !profileImgInput.trim().startsWith("http")) {
-            Alert.alert(
-                "Validatie",
-                "Gebruik een volledige image URL, bijvoorbeeld https://voorbeeld.nl/foto.jpg"
-            );
-            return;
-        }
-
         if (oldPasswordInput || newPasswordInput || repeatPasswordInput) {
             Alert.alert(
                 "Niet ondersteund",
-                "Wachtwoord wijzigen staat alvast in de UI, maar de backend heeft hier nog geen werkende route voor."
+                "Wachtwoord wijzigen staat alvast in de UI, maar de backend heeft hier geen aparte werkende route voor."
             );
             return;
         }
@@ -442,13 +446,12 @@ export default function ProfileScreen({ navigation }) {
             setSaving(true);
 
             const updatedUser = await updateUserMainFields(userId);
+            const updatedDetails = await updateUserDetails(userId);
 
             await AsyncStorage.setItem(
                 `profile_img_${userId}`,
                 profileImgInput.trim()
             );
-
-            await saveUserDataIfAvailable(userId);
 
             const updatedStoredUser = {
                 ...(activeUser || {}),
@@ -457,17 +460,21 @@ export default function ProfileScreen({ navigation }) {
                 username: updatedUser?.username || usernameInput.trim(),
                 email: updatedUser?.email || emailInput.trim(),
                 created_at: updatedUser?.created_at || getCreatedAt(),
-                profile_img: profileImgInput.trim(),
+                profile_img:
+                    getPossibleProfileImg(updatedDetails) ||
+                    profileImgInput.trim(),
             };
 
             await login(updatedStoredUser);
 
             setProfileUser(updatedUser);
+            setUserDetails(updatedDetails);
             setStoredUser(updatedStoredUser);
             setEditMode(false);
 
             Alert.alert("Opgeslagen", "Je profiel is bijgewerkt.");
         } catch (error) {
+            console.log("saveProfileChanges error:", error.message);
             Alert.alert("Opslaan mislukt", error.message);
         } finally {
             setSaving(false);
@@ -803,18 +810,18 @@ export default function ProfileScreen({ navigation }) {
                         />
 
                         <Text className="text-darkBlue text-sm font-bold mb-2">
-                            Profielfoto URL
+                            Profielfoto token of URL
                         </Text>
 
                         <TextInput
                             value={profileImgInput}
                             onChangeText={setProfileImgInput}
-                            placeholder="https://voorbeeld.nl/profielfoto.jpg"
+                            placeholder="Bijvoorbeeld: profile_img token of https://..."
                             autoCapitalize="none"
                             className="border border-gray-300 rounded-xl px-4 py-3 mb-5 bg-white text-darkBlue min-h-12"
                             accessible={true}
-                            accessibilityLabel="Profielfoto URL"
-                            accessibilityHint="Vul een volledige link naar je profielfoto in."
+                            accessibilityLabel="Profielfoto token of URL"
+                            accessibilityHint="Vul de profile_img token uit de database in, of een volledige afbeelding URL."
                             returnKeyType="next"
                         />
 
