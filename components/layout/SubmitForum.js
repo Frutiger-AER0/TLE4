@@ -12,6 +12,7 @@ import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const API_BASE_URL = "http://145.24.237.86:8000";
+const DEMO_MODE = true; // Zet op 'true' voor demo, 'false' voor live API calls.
 
 export default function SubmitForum({ protest, onUploadComplete }) {
   const [isChecked, setIsChecked] = useState(false);
@@ -61,6 +62,24 @@ export default function SubmitForum({ protest, onUploadComplete }) {
     }
   }
 
+  // Functie om een gesimuleerde upload voor de demo uit te voeren
+  async function handleDemoUpload() {
+    setUploading(true);
+    console.log("DEMO MODE: Simulating upload...");
+
+    // Simuleer een netwerkvertraging
+    setTimeout(() => {
+      Alert.alert('Success (Demo)', 'Bestand succesvol geüpload!');
+      setSelectedFile(null);
+      setIsChecked(false);
+      setUploading(false);
+
+      if (onUploadComplete) {
+        onUploadComplete();
+      }
+    }, 1500);
+  }
+
   async function handleUpload() {
     if (!selectedFile) {
       Alert.alert("Geen bestand", "Selecteer eerst een bestand om te uploaden.");
@@ -71,7 +90,13 @@ export default function SubmitForum({ protest, onUploadComplete }) {
       return;
     }
 
-    // FIX: Zorg dat alle mogelijke ID-namen worden gecontroleerd.
+    // Als DEMO_MODE aan staat, voer de nep-upload uit en stop
+    if (DEMO_MODE) {
+      handleDemoUpload();
+      return;
+    }
+
+    // --- Live API Call ---
     const protestId = protest?.id || protest?.protest_id || protest?.protestProjectId;
     if (!protestId) {
       Alert.alert("Fout", "Kan dit bestand niet koppelen aan een protest. Protest ID ontbreekt.");

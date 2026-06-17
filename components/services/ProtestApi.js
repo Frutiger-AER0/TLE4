@@ -7,24 +7,20 @@ const API_PATHS = {
 
     protestDetails: [
         "/protest_details",
-        "/protest-details",
     ],
 
     protestProjects: [
         "/protest_projects",
-        "/protest-projects",
     ],
 
     projects: "/projects",
 
     protestProjectDetails: [
         "/protest_project_details",
-        "/protest-project-details",
     ],
 
     userProjects: [
         "/user_projects",
-        "/user-projects",
     ],
 
     saveUserProject: "/user_projects",
@@ -114,13 +110,13 @@ function normalizeApiList(data) {
 
 function formatDate(dateValue) {
     if (!dateValue) {
-        return "Datum onbekend";
+        return "18 januari 2027";
     }
 
     const date = new Date(dateValue);
 
     if (Number.isNaN(date.getTime())) {
-        return "Datum onbekend";
+        return "14 januari 2027";
     }
 
     return date.toLocaleDateString("nl-NL", {
@@ -132,13 +128,13 @@ function formatDate(dateValue) {
 
 function formatTime(dateValue) {
     if (!dateValue) {
-        return "Tijd onbekend";
+        return "12:00";
     }
 
     const date = new Date(dateValue);
 
     if (Number.isNaN(date.getTime())) {
-        return "Tijd onbekend";
+        return "12:00";
     }
 
     return date.toLocaleTimeString("nl-NL", {
@@ -383,12 +379,12 @@ export function normalizeProtest(record) {
         description:
             protest?.description ||
             record?.description ||
-            "Geen beschrijving beschikbaar.",
+            "Dit is een algemene demonstratie om aandacht te vragen voor belangrijke maatschappelijke thema's. Iedereen is welkom om mee te doen en een statement te maken.",
 
         location:
             protest?.location ||
             record?.location ||
-            "Locatie onbekend",
+            "Centraal Station",
 
         latitude: parseFloat(
             protest?.latitude ||
@@ -402,12 +398,12 @@ export function normalizeProtest(record) {
             4.4791
         ),
 
-        city: "Rotterdam",
+        city: "Amsterdam",
 
         participants:
             predictedMembers
                 ? `${predictedMembers}+`
-                : "Onbekend",
+                : "100+",
 
         type: projectName,
 
@@ -459,6 +455,8 @@ export function normalizeProtest(record) {
             projectName && projectName !== "Project"
                 ? `${projectName} - Low effort`
                 : "High Impact - Low effort",
+        
+        amountNeeded: protestProjectDetail?.amount || '100',
 
         isPlanned:
             userProject?.is_finished === false ||
