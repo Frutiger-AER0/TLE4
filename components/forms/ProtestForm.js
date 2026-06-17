@@ -1,5 +1,3 @@
-// components/forms/ProtestForm.js
-
 import React, { useState } from "react";
 import {
     ActivityIndicator,
@@ -21,6 +19,7 @@ const API_URL = "http://145.24.237.86:8000/protests";
 
 export default function ProtestForm() {
     const [name, setName] = useState("");
+    const [subtitle, setSubtitle] = useState("");
     const [description, setDescription] = useState("");
     const [location, setLocation] = useState("");
     const [predictedMembers, setPredictedMembers] = useState("");
@@ -39,6 +38,7 @@ export default function ProtestForm() {
 
     function resetForm() {
         setName("");
+        setSubtitle("");
         setDescription("");
         setLocation("");
         setPredictedMembers("");
@@ -105,8 +105,8 @@ export default function ProtestForm() {
             return false;
         }
 
-        if (!description.trim()) {
-            Alert.alert("Validatie", "Beschrijving is verplicht.");
+        if (!subtitle.trim()) {
+            Alert.alert("Validatie", "Subtitel is verplicht.");
             return false;
         }
 
@@ -225,6 +225,7 @@ export default function ProtestForm() {
             const formData = new FormData();
 
             formData.append("name", name.trim());
+            formData.append("subtitle", subtitle.trim());
             formData.append("description", description.trim());
             formData.append("location", location.trim());
             formData.append(
@@ -303,6 +304,21 @@ export default function ProtestForm() {
                     placeholderTextColor="#9CA3AF"
                     value={name}
                     onChangeText={setName}
+                    editable={!loading}
+                />
+            </View>
+
+            <View className="mb-4">
+                <Text className="text-sm font-semibold text-darkBlue mb-2">
+                    Subtitel *
+                </Text>
+
+                <TextInput
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 bg-white text-darkBlue"
+                    placeholder="Bijvoorbeeld: Klimaatmars Rotterdam"
+                    placeholderTextColor="#9CA3AF"
+                    value={subtitle}
+                    onChangeText={setSubtitle}
                     editable={!loading}
                 />
             </View>
