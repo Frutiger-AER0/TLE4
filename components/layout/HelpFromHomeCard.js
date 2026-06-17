@@ -3,12 +3,16 @@ import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function HelpFromHomeCard({ protest }) {
-  // Deze data kan later dynamisch uit de protest prop komen
-  const stickerDesignsNeeded = 150;
-  const bannerDesignsNeeded = 100;
+  // Zoek naar een 'projectNeeds' array in de protestdata.
+  // Als die niet bestaat, gebruik een standaard fallback array.
+  const needs = protest?.projectNeeds && Array.isArray(protest.projectNeeds)
+    ? protest.projectNeeds
+    : [
+        "150 sticker-designs nodig.",
+        "100 spandoek-designs gezocht.",
+      ];
 
   return (
-    // Witte achtergrond met padding
     <View className="bg-white p-5 w-full">
       <Text className="text-darkBlue text-2xl font-bold mb-2">
         Hoe kan jij helpen vanuit huis?
@@ -18,18 +22,14 @@ export default function HelpFromHomeCard({ protest }) {
       </Text>
       
       <View className="bg-darkBlue/10 p-3 rounded-lg">
-        <View className="flex-row items-center mb-2">
-          <Ionicons name="ellipse" size={8} color="#14213D" className="mr-2" />
-          <Text className="text-darkBlue font-semibold ml-2">
-            We hebben {stickerDesignsNeeded} sticker-designs nodig.
-          </Text>
-        </View>
-        <View className="flex-row items-center">
-          <Ionicons name="ellipse" size={8} color="#14213D" className="mr-2" />
-          <Text className="text-darkBlue font-semibold ml-2">
-            {bannerDesignsNeeded} spandoek-designs gezocht.
-          </Text>
-        </View>
+        {needs.map((need, index) => (
+          <View key={index} className="flex-row items-center mb-2 last:mb-0">
+            <Ionicons name="ellipse" size={8} color="#14213D" className="mr-2" />
+            <Text className="text-darkBlue font-semibold ml-2">
+              {need}
+            </Text>
+          </View>
+        ))}
       </View>
     </View>
   );

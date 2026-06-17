@@ -1,76 +1,205 @@
-import React, { useState } from "react";
-import { View, Text, Dimensions, TouchableOpacity, Image, ScrollView } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+    View,
+    Text,
+    Dimensions,
+    TouchableOpacity,
+    Image,
+    ScrollView,
+    ActivityIndicator,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
+
 import EventDetailsCard from "../components/layout/EventDetailsCard";
 import ActionCard from "../components/layout/ActionCard";
 import SubmitForum from "../components/layout/SubmitForum";
 import HelpFromHomeCard from "../components/layout/HelpFromHomeCard";
+import { fetchProtests, normalizeProtest } from "../components/services/ProtestApi";
 
 const { height } = Dimensions.get("window");
 
-// Tijdelijke data om de pagina te tonen zonder database.
-const protest = {
-    id: 1,
-    protestProjectId: 1, // ID voor het koppelen van uploads.
-    name: "Nakba 1948 - 2026",
-    subtitle: "Mars & herdenking",
-    description: "Samen herdenken en opkomen voor gerechtigheid.",
-    location: "Schouwburgplein",
-    city: "Rotterdam",
-    predicted_members: "1.000+",
-    card_img: require('../assets/Palestinedemostration.webp'),
-    topic: "Palestina",
-    start_time: "2026-05-15T18:30:00Z",
-    link: "https://example.com/info",
-    actionTitle: "Waarom demonstreren we?",
-    actionDescription: "Demonstraties in Rotterdam rondom de Nakba (Arabisch voor 'de catastrofe') worden georganiseerd om de massale verdrijving en het verlies van het thuisland van honderdduizenden Palestijnen in 1948 te herdenken. Demonstranten komen in de stad bijeen om aandacht te vragen voor het aanhoudende historische leed, mensenrechten en het recht op terugkeer voor vluchtelingen. Daarnaast dient de protestbijeenkomst in Rotterdam als een platform om solidariteit te tonen met de huidige situatie van Palestijnen en om op te roepen tot vrede en rechtvaardigheid.",
-};
-
-export default function DetailScreen() {
+export default function DetailScreen({ route }) {
     const navigation = useNavigation();
-    const [isSaved, setIsSaved] = useState(false);
+
+    const routeProtest =
+        route?.params?.protest ||
+        route?.params?.item ||
+        null;
+
+    const routeProtestId =
+        route?.params?.protestId ||
+        route?.params?.id ||
+        routeProtest?.id ||
+        null;
+
+    const [protest, setProtest] = useState(
+        routeProtest ? normalizeProtest(routeProtest) : null
+    );
+
+    const [loading, setLoading] = useState(!routeProtest);
+    const [errorText, setErrorText] = useState("");
+    const [isSaved, setIsSaved] = useState(
+        Boolean(routeProtest?.isSaved || routeProtest?.isPlanned)
+    );
+
+    useEffect(() => {
+        console.log("DetailScreen mounted. routeProtestId:", routeProtestId);
+        loadLatestProtest();
+    }, [routeProtestId]);
+
+    async function loadLatestProtest() {
+        if (!routeProtestId) {
+            setLoading(false);
+            if (!routeProtest) {
+                setErrorText("Geen protest gevonden (geen ID).");
+            }
+            return;
+        }
+
+        try {
+            setErrorText("");
+            if (!routeProtest) {
+                setLoading(true);
+            }
+
+            console.log("Fetching all protests...");
+            const allProtests = await fetchProtests();
+            console.log("All protests fetched. Searching for ID:", routeProtestId);
+
+            const foundProtest = allProtests.find((item) => item.id === Number(routeProtestId));
+            console.log("Found protest:", JSON.stringify(foundProtest, null, 2));
+
+            if (foundProtest) {
+                if (!foundProtest.protestProjectId) {
+                    foundProtest.protestProjectId = 1; // Fallback
+                }
+                setProtest(foundProtest);
+                setIsSaved(Boolean(foundProtest.isSaved || foundProtest.isPlanned));
+            } else if (routeProtest) {
+                setProtest(normalizeProtest(routeProtest));
+            } else {
+                setErrorText("Dit protest kon niet worden gevonden in de database.");
+            }
+        } catch (error) {
+            console.error("DetailScreen loadLatestProtest error:", error.message);
+            if (routeProtest) {
+                setProtest(normalizeProtest(routeProtest));
+            } else {
+                setErrorText("Protestgegevens konden niet worden geladen.");
+            }
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    function goBack() {
+        if (navigation.canGoBack()) {
+            navigation.goBack();
+            return;
+        }
+        navigation.navigate("ActionScreen");
+    }
+
+    if (loading) {
+        return (
+            <View className="flex-1 bg-offWhite items-center justify-center px-6">
+                <ActivityIndicator size="large" color="#14213D" />
+                <Text className="text-darkBlue font-semibold mt-4">
+                    Protest laden...
+                </Text>
+            </View>
+        );
+    }
+
+    if (!protest || errorText) {
+        return (
+            <View className="flex-1 bg-offWhite px-6 justify-center">
+                <Text className="text-darkBlue text-2xl font-bold text-center">
+                    Protest niet gevonden
+                </Text>
+                <Text className="text-darkBlue text-center mt-3">
+                    {errorText || "Er ging iets mis bij het laden van dit protest."}
+                </Text>
+                <TouchableOpacity
+                    onPress={goBack}
+                    className="bg-darkBlue rounded-xl py-4 mt-6 items-center"
+                    activeOpacity={0.85}
+                >
+                    <Text className="text-white font-bold">
+                        Terug
+                    </Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
 
     return (
         <View className="flex-1 bg-offWhite">
-            <ScrollView bounces={false}>
-                {/* Bovenste afbeelding van het protest. */}
+            <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
                 <View style={{ height: height * 0.35 }} className="w-full relative">
                     <Image
-                        source={protest.card_img}
+                        source={protest.image}
                         className="h-full w-full"
                         resizeMode="cover"
                     />
                     <View className="absolute inset-0 bg-black/30" />
-                    
-                    {/* Knoppen voor terug, opslaan en delen. */}
                     <View className="absolute top-4 left-4 right-4 flex-row justify-between items-center">
-                        <TouchableOpacity onPress={() => navigation.goBack()} className="bg-blue px-4 py-2.5 rounded-full">
+                        <TouchableOpacity
+                            onPress={goBack}
+                            className="bg-blue px-4 py-2.5 rounded-full"
+                            activeOpacity={0.85}
+                        >
                             <Ionicons name="arrow-back" size={24} color="#F8F9FA" />
                         </TouchableOpacity>
                         <View className="flex-row">
-                            <TouchableOpacity onPress={() => setIsSaved(!isSaved)} className="bg-blue px-4 py-2.5 rounded-full">
-                                <Ionicons name={isSaved ? "bookmark" : "bookmark-outline"} size={24} color="#F8F9FA" />
+                            <TouchableOpacity
+                                onPress={() => setIsSaved(!isSaved)}
+                                className="bg-blue px-4 py-2.5 rounded-full"
+                                activeOpacity={0.85}
+                            >
+                                <Ionicons
+                                    name={isSaved ? "bookmark" : "bookmark-outline"}
+                                    size={24}
+                                    color="#F8F9FA"
+                                />
                             </TouchableOpacity>
-                            <TouchableOpacity onPress={() => console.log('Share')} className="bg-blue px-4 py-2.5 rounded-full ml-3">
-                                <Ionicons name="share-social-outline" size={24} color="#F8F9FA" />
+                            <TouchableOpacity
+                                onPress={() => console.log("Share")}
+                                className="bg-blue px-4 py-2.5 rounded-full ml-3"
+                                activeOpacity={0.85}
+                            >
+                                <Ionicons
+                                    name="share-social-outline"
+                                    size={24}
+                                    color="#F8F9FA"
+                                />
                             </TouchableOpacity>
                         </View>
                     </View>
-
-                    {/* Titel en onderwerp van het protest. */}
                     <View className="absolute bottom-4 left-4 right-4 flex-row justify-between items-end">
-                        <View>
-                            <Text className="text-offWhite text-2xl font-bold">{protest.name}</Text>
-                            <Text className="text-offWhite text-lg italic mt-1">{protest.subtitle}</Text>
+                        <View className="flex-1 pr-3">
+                            <Text
+                                className="text-offWhite text-2xl font-bold"
+                                numberOfLines={2}
+                            >
+                                {protest.title}
+                            </Text>
+                            <Text
+                                className="text-offWhite text-lg italic mt-1"
+                                numberOfLines={1}
+                            >
+                                {protest.subtitle}
+                            </Text>
                         </View>
-                        <View className="bg-yellow px-6 py-2 rounded-full">
-                            <Text className="text-darkBlue font-bold">{protest.topic}</Text>
+                        <View className="bg-yellow px-5 py-2 rounded-full">
+                            <Text className="text-darkBlue font-bold">
+                                {protest.topic}
+                            </Text>
                         </View>
                     </View>
                 </View>
 
-                {/* Container voor de onderstaande content cards. */}
                 <View className="bg-offWhite">
                     <HelpFromHomeCard protest={protest} />
                     <EventDetailsCard protest={protest} />
