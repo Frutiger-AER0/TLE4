@@ -12,6 +12,9 @@ import {
 } from "react-native";
 import {Picker} from '@react-native-picker/picker';
 import {SafeAreaView} from "react-native-safe-area-context"; // Keep SafeAreaView
+import {useNavigation} from '@react-navigation/native'; // Import useNavigation
+import DonationSuccessModal from '../modals/DonationSuccessModal'; // Import the new success modal component
+import DonationErrorModal from '../modals/DonationErrorModal'; // Import the new error modal component
 
 // Custom RadioButton component
 const RadioButton = ({label, selected, onSelect, value}) => (
@@ -83,7 +86,12 @@ const PickerModal = ({isVisible, onClose, selectedValue, onValueChange, options,
 };
 
 
-function DonationForm({onSubmit, initialData, isSubmitting}) {
+function DonationForm({
+                          onSubmit = () => {
+                          }, initialData, isSubmitting
+                      }) {
+    const navigation = useNavigation(); // Initialize navigation
+
     const [formData, setFormData] = useState({
         topic: initialData?.topic || '',
         selectedAmount: initialData?.selectedAmount || '',
@@ -99,6 +107,9 @@ function DonationForm({onSubmit, initialData, isSubmitting}) {
 
     const [isTopicPickerVisible, setTopicPickerVisible] = useState(false);
     const [isPaymentPickerVisible, setPaymentPickerVisible] = useState(false);
+    const [isSuccessModalVisible, setSuccessModalVisible] = useState(false); // State for success modal
+    const [isErrorModalVisible, setIsErrorModalVisible] = useState(false); // State for error modal
+    const [errorMessage, setErrorMessage] = useState(''); // State for error message
 
     useEffect(() => {
         if (initialData) {
@@ -137,9 +148,57 @@ function DonationForm({onSubmit, initialData, isSubmitting}) {
         });
     };
 
-    const handleSubmit = () => {
+    const validateForm = () => {
+        let hasErrors = false;
+
+        if (!formData.topic) {
+            hasErrors = true;
+        }
+        if (!formData.selectedAmount && !formData.customAmount) {
+            hasErrors = true;
+        } else if (formData.selectedAmount === 'other' && !formData.customAmount) {
+            hasErrors = true;
+        }
+        if (!formData.salutation) {
+            hasErrors = true;
+        }
+        if (!formData.firstName) {
+            hasErrors = true;
+        }
+        if (!formData.lastName) {
+            hasErrors = true;
+        }
+        if (!formData.email) {
+            hasErrors = true;
+        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+            hasErrors = true;
+        }
+        if (!formData.payment) {
+            hasErrors = true;
+        }
+
+        if (hasErrors) {
+            setErrorMessage("Het formulier is niet volledig ingevuld. Vul alle verplichte velden in.");
+            setIsErrorModalVisible(true);
+            return false;
+        }
+        return true;
+    };
+
+    const handleSubmit = async () => {
+        if (!validateForm()) {
+            return; // Stop submission if validation fails
+        }
+
         const finalAmount = formData.selectedAmount === 'other' ? formData.customAmount : formData.selectedAmount;
-        onSubmit({...formData, amount: finalAmount});
+        // Assuming onSubmit is an async function or returns a promise
+        await onSubmit({...formData, amount: finalAmount});
+        setSuccessModalVisible(true); // Show success modal after successful submission
+    };
+
+    const handleGoBackToActions = () => {
+        setSuccessModalVisible(false); // Close the modal
+        navigation.goBack(); // Navigate back to the previous screen (actionscreen)
     };
 
     const predefinedAmounts = [10, 25, 50, 100];
@@ -323,7 +382,7 @@ function DonationForm({onSubmit, initialData, isSubmitting}) {
                     </View>
 
                     <TouchableOpacity
-                        className="bg-purple py-3 px-4 rounded-lg flex-row items-center justify-center"
+                        className="bg-purple py-3 px-4 rounded-lg flex-row items-center justify-center mb-4" // Added mb-4 for spacing
                         onPress={handleSubmit}
                         disabled={isSubmitting}
                     >
@@ -331,8 +390,30 @@ function DonationForm({onSubmit, initialData, isSubmitting}) {
                             {isSubmitting ? "Bezig..." : "Doneren"}
                         </Text>
                     </TouchableOpacity>
+
+                    {/* Cancel Button */}
+                    <TouchableOpacity
+                        className="bg-gray-400 py-3 px-4 rounded-lg flex-row items-center justify-center"
+                        onPress={() => navigation.goBack()}
+                    >
+                        <Text className="text-white font-semibold text-base">Annuleren</Text>
+                    </TouchableOpacity>
                 </View>
             </ScrollView>
+
+            {/* Success Modal */}
+            <DonationSuccessModal
+                isVisible={isSuccessModalVisible}
+                onClose={() => setSuccessModalVisible(false)}
+                onGoBackToActions={handleGoBackToActions}
+            />
+
+            {/* Error Modal */}
+            <DonationErrorModal
+                isVisible={isErrorModalVisible}
+                onClose={() => setIsErrorModalVisible(false)}
+                message={errorMessage}
+            />
         </SafeAreaView>
     );
 }
