@@ -210,8 +210,8 @@ export default function ProfileScreen({ navigation }) {
 
     async function fetchUserData(foundUserId) {
         const endpoints = [
-            `${API_BASE_URL}/user-data`,
-            `${API_BASE_URL}/user_data`,
+            `${API_BASE_URL}/users`,
+            `${API_BASE_URL}/users`,
         ];
 
         for (const endpoint of endpoints) {
@@ -220,7 +220,7 @@ export default function ProfileScreen({ navigation }) {
 
                 const list = Array.isArray(data)
                     ? data
-                    : data.data || data.user_data || [];
+                    : data.data || data.users || [];
 
                 const found = list.find((item) => {
                     return (
@@ -253,22 +253,22 @@ export default function ProfileScreen({ navigation }) {
 
         if (userData?.id) {
             endpoints.push({
-                url: `${API_BASE_URL}/user-data/${userData.id}`,
+                url: `${API_BASE_URL}/users/${userData.id}/details`,
                 method: "PUT",
             });
             endpoints.push({
-                url: `${API_BASE_URL}/user_data/${userData.id}`,
+                url: `${API_BASE_URL}/users/${userData.id}/details`,
                 method: "PUT",
             });
         }
 
         endpoints.push({
-            url: `${API_BASE_URL}/user-data`,
+            url: `${API_BASE_URL}/users`,
             method: "POST",
         });
 
         endpoints.push({
-            url: `${API_BASE_URL}/user_data`,
+            url: `${API_BASE_URL}/users`,
             method: "POST",
         });
 
@@ -396,12 +396,12 @@ export default function ProfileScreen({ navigation }) {
             email: emailInput.trim(),
         };
 
-        await requestJson(`${API_BASE_URL}/users/${userId}`, {
+        await requestJson(`${API_BASE_URL}/users/${userId}/details`, {
             method: "PUT",
             body: JSON.stringify(body),
         });
 
-        return requestJson(`${API_BASE_URL}/users/${userId}`);
+        return requestJson(`${API_BASE_URL}/users/${userId}/details`);
     }
 
     async function saveProfileChanges() {
