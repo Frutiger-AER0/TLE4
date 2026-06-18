@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "newproject",
-    "slug": "newproject",
+    "name": "SupporT",
+    "slug": "SupporT",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -25,7 +25,11 @@
       "package": "com.anonymous.newproject"
     },
     "web": {
+      "bundler": "metro",
       "favicon": "./assets/favicon.png"
+    },
+    "experiments": {
+      "baseUrl": "/TLE4"
     },
     "plugins": [
       "@react-native-community/datetimepicker"

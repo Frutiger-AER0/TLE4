@@ -9,7 +9,7 @@ import { Ionicons } from "@expo/vector-icons";
 import ActionScreen from "../../screens/ActionScreen";
 import DonationScreen from "../../screens/DonationScreen";
 import HomeScreen from "../../screens/HomeScreen";
-import MapScreen from "../../screens/MapScreen";
+// import MapScreen from "../../screens/MapScreen";
 import AdminScreen from "../../screens/AdminScreen";
 import AppHeader from "./AppHeader";
 import DetailScreen from "../../screens/DetailScreen";
@@ -92,10 +92,10 @@ function ActionStackScreen() {
                 component={DonationScreen}
             />
 
-            <ActionStack.Screen
-                name="map"
-                component={MapScreen}
-            />
+            {/*<ActionStack.Screen*/}
+            {/*    name="map"*/}
+            {/*    component={MapScreen}*/}
+            {/*/>*/}
         </ActionStack.Navigator>
     );
 }
@@ -121,10 +121,10 @@ function AgendaStackScreen() {
                 component={DetailScreen}
             />
 
-            <AgendaStack.Screen
-                name="map"
-                component={MapScreen}
-            />
+            {/*<AgendaStack.Screen*/}
+            {/*    name="map"*/}
+            {/*    component={MapScreen}*/}
+            {/*/>*/}
         </AgendaStack.Navigator>
     );
 }
