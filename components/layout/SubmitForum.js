@@ -12,6 +12,7 @@ import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const API_BASE_URL = "http://145.24.237.86:8000";
+const DEMO_MODE = true; // Zet op 'true' voor demo, 'false' voor live API calls.
 
 export default function SubmitForum({ protest, onUploadComplete }) {
   const [isChecked, setIsChecked] = useState(false);
@@ -34,21 +35,6 @@ export default function SubmitForum({ protest, onUploadComplete }) {
   function getFileName(file) {
     if (!file?.uri) return `support_upload_${Date.now()}.jpg`;
     return file.fileName || file.uri.split("/").pop() || `support_upload_${Date.now()}.jpg`;
-  }
-
-  function getMimeType(asset) {
-    if (asset?.mimeType) {
-      return asset.mimeType;
-    }
-
-    // some ImagePicker assets expose fileName, or we fall back to uri
-    const fileName = asset?.fileName || asset?.uri || "";
-    const extension = fileName.split(".").pop()?.toLowerCase();
-
-    if (extension === "png") return "image/png";
-    if (extension === "webp") return "image/webp";
-    if (extension === "heic") return "image/heic";
-    return "image/jpeg";
   }
 
   async function pickFile() {
@@ -76,6 +62,24 @@ export default function SubmitForum({ protest, onUploadComplete }) {
     }
   }
 
+  // Functie om een gesimuleerde upload voor de demo uit te voeren
+  async function handleDemoUpload() {
+    setUploading(true);
+    console.log("DEMO MODE: Simulating upload...");
+
+    // Simuleer een netwerkvertraging
+    setTimeout(() => {
+      Alert.alert('Success (Demo)', 'Bestand succesvol geüpload!');
+      setSelectedFile(null);
+      setIsChecked(false);
+      setUploading(false);
+
+      if (onUploadComplete) {
+        onUploadComplete();
+      }
+    }, 1500);
+  }
+
   async function handleUpload() {
     if (!selectedFile) {
       Alert.alert("Geen bestand", "Selecteer eerst een bestand om te uploaden.");
@@ -86,63 +90,63 @@ export default function SubmitForum({ protest, onUploadComplete }) {
       return;
     }
 
+    // Als DEMO_MODE aan staat, voer de nep-upload uit en stop
+    if (DEMO_MODE) {
+      handleDemoUpload();
+      return;
+    }
+
+    // --- Live API Call ---
+    const protestId = protest?.id || protest?.protest_id || protest?.protestProjectId;
+    if (!protestId) {
+      Alert.alert("Fout", "Kan dit bestand niet koppelen aan een protest. Protest ID ontbreekt.");
+      return;
+    }
+
     setUploading(true);
 
+    const formData = new FormData();
+    const uriParts = selectedFile.uri.split('.');
+    const fileType = uriParts[uriParts.length - 1] || 'jpg';
+
+    formData.append('file', {
+      uri: selectedFile.uri,
+      name: getFileName(selectedFile),
+      type: `image/${fileType === 'png' ? 'png' : 'jpeg'}`,
+    });
+
+    const userId = await getCurrentUserId();
+    formData.append('user_id', String(userId));
+    formData.append('protest_id', String(protestId));
+
     try {
-      const userId = await getCurrentUserId();
-
-      // Debug info — will show in Metro / device logs
-      console.debug("SubmitForum: preparing upload", {
-        userId,
-        selectedFile,
-      });
-
-      const formData = new FormData();
-
-      // Build file part like ProtestForm
-      const fileName = selectedFile.fileName || getFileName(selectedFile);
-      const mimeType = getMimeType(selectedFile);
-
-      formData.append("file", {
-        uri: selectedFile.uri,
-        name: fileName,
-        type: mimeType,
-      });
-
-      formData.append("user_id", String(userId));
-
-      console.debug("SubmitForum: appended fields", { fileName, mimeType, userId });
-
-      // Match ProtestForm: don't set headers so fetch sets the multipart boundary correctly
       const response = await fetch(`${API_BASE_URL}/finished_projects`, {
-        method: "POST",
+        method: 'POST',
         body: formData,
+        headers: {
+          'Accept': 'application/json',
+        },
       });
 
-      const contentType = response.headers.get("content-type") || "";
-      let responseBody;
-      if (contentType.includes("application/json")) {
-        responseBody = await response.json();
-      } else {
-        responseBody = await response.text();
-      }
+      const responseText = await response.text();
 
       if (!response.ok) {
-        console.error("Upload failed. Status:", response.status, "Body:", responseBody);
-        throw new Error(typeof responseBody === "string" ? responseBody : JSON.stringify(responseBody));
+        throw new Error(responseText || `Server returned status ${response.status}`);
       }
 
-      console.debug("Upload success", responseBody);
-      Alert.alert("Success", "Bestand succesvol geüpload!");
+      Alert.alert('Success', 'Bestand succesvol geüpload!');
       setSelectedFile(null);
       setIsChecked(false);
+      
+      if (onUploadComplete) {
+          onUploadComplete();
+      }
 
-      if (onUploadComplete) onUploadComplete();
     } catch (error) {
-      console.error("Upload error details:", error);
+      console.error('Upload error details:', error);
       Alert.alert(
-          "Upload Mislukt",
-          (error && error.message) || "Er kon geen verbinding worden gemaakt of de server weigerde de data."
+          'Upload Mislukt',
+          error.message || 'Er kon geen verbinding worden gemaakt of de server weigerde de data.'
       );
     } finally {
       setUploading(false);

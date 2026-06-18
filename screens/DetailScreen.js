@@ -44,9 +44,12 @@ export default function DetailScreen({ route }) {
     );
 
     useEffect(() => {
-        console.log("DetailScreen mounted. routeProtestId:", routeProtestId);
-        loadLatestProtest();
-    }, [routeProtestId]);
+        // Alleen de data opnieuw laden als deze niet al is meegegeven via de route.
+        if (!routeProtest) {
+            console.log("DetailScreen mounted without protest data. Fetching for ID:", routeProtestId);
+            loadLatestProtest();
+        }
+    }, [routeProtestId, routeProtest]);
 
     async function loadLatestProtest() {
         if (!routeProtestId) {
@@ -151,7 +154,7 @@ export default function DetailScreen({ route }) {
             <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
                 <View style={{ height: height * 0.35 }} className="w-full relative">
                     <Image
-                        source={protest.image}
+                        source={typeof protest.image === 'string' ? { uri: protest.image } : protest.image}
                         className="h-full w-full"
                         resizeMode="cover"
                     />
